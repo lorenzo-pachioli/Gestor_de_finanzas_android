@@ -1,0 +1,215 @@
+package com.notificationcapture.app;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+
+public class AgregarFragment extends Fragment {
+
+    private Spinner spinnerApp;
+    private EditText etTitle;
+    private EditText etText;
+    private SwitchCompat swType;
+    private TextView tvIngreso;
+    private TextView tvEgreso;
+    private Spinner spinnerCategory;
+    private Button btnCreate;
+    private NotificationRepository repository;
+
+    // Removed hardcoded walletApps
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_agregar, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        repository = new NotificationRepository(requireContext());
+
+        spinnerApp = view.findViewById(R.id.spinnerApp);
+        etTitle = view.findViewById(R.id.etTitle);
+        etText = view.findViewById(R.id.etText);
+        swType = view.findViewById(R.id.swType);
+        tvIngreso = view.findViewById(R.id.tvIngreso);
+        tvEgreso = view.findViewById(R.id.tvEgreso);
+        spinnerCategory = view.findViewById(R.id.spinnerCategory);
+        btnCreate = view.findViewById(R.id.btnCreate);
+
+        // Configurar spinner de apps
+        UniversalSpinnerAdapter<String> adapterApps = new UniversalSpinnerAdapter<>(
+                requireContext(),
+                repository.getWallets());
+        spinnerApp.setAdapter(adapterApps);
+
+        // Configurar listener del switch
+        swType.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            updateToggleUI(isChecked);
+        });
+
+        // Listeners para los textos
+        tvIngreso.setOnClickListener(v -> swType.setChecked(false));
+        tvEgreso.setOnClickListener(v -> swType.setChecked(true));
+
+        // Estado inicial (Egreso = true/checked, Ingreso = false/unchecked)
+        // Por defecto queremos que inicie en Egreso si así estaba antes, o lo que
+        // definamos.
+        // El xml tiene checked="false" (Ingreso). Si queremos Egreso por defecto:
+        swType.setChecked(true); // Inicia en Egreso
+        updateToggleUI(true);
+
+        // Configurar spinner de categorías
+        // updateToggleUI ya llama a configurarSpinnerCat
+
+        btnCreate.setOnClickListener(v -> createNotification());
+    }
+
+    private void updateToggleUI(boolean isEgreso) {
+        if (isEgreso) {
+            // Modo Egreso (Switch ON, Derecha)
+            tvIngreso.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_unselected));
+            tvEgreso.setTextColor(ContextCompat.getColor(requireContext(), R.color.red)); // Usar color definido si
+                                                                                          // existe, o hardcodeado
+                                                                                          // temporalmente si no carga
+        } else {
+            // Modo Ingreso (Switch OFF, Izquierda)
+            tvIngreso.setTextColor(ContextCompat.getColor(requireContext(), R.color.green));
+            tvEgreso.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_unselected));
+        }
+        configurarSpinnerCat();
+    }
+
+    private void configurarSpinnerCat() {
+        // Configurar spinner de categorías based on switch
+        // isChecked = true -> Egreso
+        // isChecked = false -> Ingreso
+        boolean isEgreso = swType.isChecked();
+
+        NotificationItem.TransactionType type = isEgreso
+                ? NotificationItem.TransactionType.EGRESO
+                : NotificationItem.TransactionType.INGRESO;
+
+        java.util.List<com.notificationcapture.app.models.Category> categories = repository.getCategories(type);
+        UniversalSpinnerAdapter<com.notificationcapture.app.models.Category> adapterCategories = new UniversalSpinnerAdapter<>(
+                requireContext(), categories);
+        spinnerCategory.setAdapter(adapterCategories);
+    }
+
+    private void createNotification() {
+        String selectedApp = spinnerApp.getSelectedItem().toString();
+        String title = etTitle.getText().toString().trim();
+        String text = etText.getText().toString().trim();
+        com.notificationcapture.app.models.Category selectedCategoryObj = (com.notificationcapture.app.models.Category) spinnerCategory
+                .getSelectedItem();
+        String category = selectedCategoryObj != null ? selectedCategoryObj.getName() : "Sin Categoría";
+
+        // Validaciones
+        if (title.isEmpty()) {
+            Toast.makeText(requireContext(), "El título es obligatorio", Toast.LENGTH_SHORT).show();
+            etTitle.requestFocus();
+            return;
+        }
+
+        if (text.isEmpty()) {
+            Toast.makeText(requireContext(), "El texto es obligatorio", Toast.LENGTH_SHORT).show();
+            etText.requestFocus();
+            return;
+        }
+
+        // Determinar tipo de transacción
+        // Checked (True) = Egreso, Unchecked (False) = Ingreso
+        NotificationItem.TransactionType type = swType.isChecked()
+                ? NotificationItem.TransactionType.EGRESO
+                : NotificationItem.TransactionType.INGRESO;
+
+        // Crear package name
+        String packageName = getPackageNameFromApp(selectedApp);
+
+        // Crear la notificación con tipo y categoría
+        NotificationItem notification = new NotificationItem(
+                packageName,
+                title,
+                text,
+                System.currentTimeMillis(),
+                type,
+                category);
+
+        // Guardar
+        repository.saveNotification(notification);
+
+        // Notificar actualización
+        android.content.Intent intent = new android.content.Intent("com.notificationcapture.NEW_NOTIFICATION");
+        requireContext().sendBroadcast(intent);
+
+        // Limpiar formulario
+        etTitle.setText("");
+        etText.setText("");
+        spinnerApp.setSelection(0);
+        spinnerCategory.setSelection(0);
+        swType.setChecked(true); // Reset to Egreso
+        updateToggleUI(true);
+
+        // Confirmación
+        String typeText = type == NotificationItem.TransactionType.INGRESO ? "Ingreso" : "Egreso";
+        Toast.makeText(requireContext(),
+                "✅ " + typeText + " creado exitosamente",
+                Toast.LENGTH_SHORT).show();
+    }
+
+    private String getPackageNameFromApp(String appName) {
+        switch (appName) {
+            case "Mercado Pago":
+                return "com.mercadopago.wallet";
+            case "Ualá":
+                return "com.uala.app";
+            case "Brubank":
+                return "brubank.app";
+            case "Naranja X":
+                return "com.naranja.app";
+            case "Modo":
+                return "com.reba.contactless";
+            case "Personal Pay":
+                return "personal.pay";
+            case "Bimo":
+                return "bimo.app";
+            case "BIND":
+                return "ar.com.bind";
+            case "Prex":
+                return "ar.com.prex";
+            case "Wilobank":
+                return "ar.wilobank";
+            case "Santander Río":
+                return "ar.com.santander.rio";
+            case "BBVA":
+                return "com.bbva.nxt_argentina";
+            case "Galicia":
+                return "ar.com.bancogalicia";
+            case "Macro":
+                return "com.macro";
+            case "Banco Nación":
+                return "ar.com.bna";
+            case "Mi Argentina":
+                return "ar.gov.anses.mi";
+            case "Claro Pay":
+                return "com.claro.pay";
+            default:
+                return "com.wallet.custom";
+        }
+    }
+}

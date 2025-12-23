@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:gravity="center_vertical">
+
+    <!-- Color indicator (visible only for categories) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/viewColorIndicator"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        app:cardCornerRadius="10dp"
+        app:cardElevation="0dp"
+        android:layout_marginEnd="12dp"
+        android:visibility="gone">
+        <View
+            android:id="@+id/colorView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/text_primary"/>
+    </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/tvName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="16sp"
+        android:textColor="@color/text_primary"
+        android:text="Item Name"/>
+
+    <ImageButton
+        android:id="@+id/btnDelete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@android:drawable/ic_menu_delete"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"
+        app:tint="@color/red"/>
+
+</LinearLayout>

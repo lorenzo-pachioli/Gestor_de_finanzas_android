@@ -1,0 +1,32 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.NotificationCapture" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="android:windowBackground">@color/background_main</item>
+        <item name="android:colorBackground">@color/background_main</item>
+        <item name="android:statusBarColor">@color/background_card</item>
+        <item name="colorPrimary">@color/text_secondary</item>
+        <item name="colorAccent">@color/accent_main</item>
+
+        <!-- Global style for all Material Buttons -->
+        <item name="materialButtonStyle">@style/Widget.App.Button</item>
+
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="floatingActionButtonStyle">@style/Widget.Material3.FloatingActionButton.Primary</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Corner.Full</item>
+
+    </style>
+
+    <style name="Theme.NotificationCapture" parent="Base.Theme.NotificationCapture" />
+
+    <!-- Buttons styles -->
+    <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/background_card</item>
+        <item name="tint">@color/secondary_main</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="cornerRadius">5dp</item>
+        <item name="rippleColor">@color/accent_main</item>
+        <!--<item name="strokeColor">@color/text_secondary</item>
+        <item name="strokeWidth">2dp</item>-->
+    </style>
+</resources>

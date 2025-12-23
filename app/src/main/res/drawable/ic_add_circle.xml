@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="56dp"
+    android:height="56dp"
+    android:viewportWidth="56"
+    android:viewportHeight="56">
+
+    <!-- Círculo de fondo rosa -->
+    <path
+        android:fillColor="@color/accent_main"
+        android:pathData="M28,28m-28,0a28,28 0,1 1,56 0a28,28 0,1 1,-56 0"/>
+
+    <!-- Signo + blanco -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M26,18h4v20h-4z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18,26h20v4h-20z"/>
+
+</vector>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Legacy/Literal colors (To be preserved or used where fixed colors are needed) -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="red">#F44336</color>
+    <color name="green">#4CAF50</color>
+    <color name="grey_unselected">#273449</color>
+
+    <!-- Semantic Colors (Night) -->
+    <color name="background_main">@color/primary_main</color>
+    <color name="background_card">#1E293B</color>
+    <color name="text_primary">#DBEDFE</color>
+    <color name="text_secondary">@color/secondary_main</color>
+    
+    <!-- Branding Axcents -->
+    <color name="primary_main">#0F172A</color>
+    <color name="secondary_main">#7DA5EB</color>
+    <color name="accent_main">#00A896</color>
+    <!--
+    <color name="accent_main">#B8DBD9</color>
+    -->
+    <color name="accent_secondary">#02C39A</color>
+</resources>

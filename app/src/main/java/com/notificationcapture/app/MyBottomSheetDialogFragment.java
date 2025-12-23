@@ -1,0 +1,99 @@
+package com.notificationcapture.app;
+
+import android.app.Dialog;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
+
+    private TextView tvTitle;
+    private RecyclerView recyclerDetails;
+    private static final String ARG_TITLE = "arg_title";
+    private static final String ARG_NOTIFICATIONS = "arg_notifications";
+    private static final String ARG_COLOR_MAP = "arg_color_map";
+
+    public MyBottomSheetDialogFragment() {
+    }
+
+    public static MyBottomSheetDialogFragment newInstance(String title, List<NotificationItem> notifications,
+            Map<String, Integer> colorMap) {
+        MyBottomSheetDialogFragment fragment = new MyBottomSheetDialogFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_TITLE, title);
+        args.putSerializable(ARG_NOTIFICATIONS, (Serializable) notifications);
+        args.putSerializable(ARG_COLOR_MAP, (Serializable) colorMap);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
+        // Infla el layout que creaste
+        View view = inflater.inflate(R.layout.bottom_sheet_layout, container, false);
+        return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        tvTitle = view.findViewById(R.id.tvTitle);
+        recyclerDetails = view.findViewById(R.id.recyclerDetails);
+
+        if (getArguments() != null) {
+            String title = getArguments().getString(ARG_TITLE);
+            List<NotificationItem> notifications = (List<NotificationItem>) getArguments()
+                    .getSerializable(ARG_NOTIFICATIONS);
+            Map<String, Integer> colorMap = (Map<String, Integer>) getArguments().getSerializable(ARG_COLOR_MAP);
+
+            if (title != null)
+                tvTitle.setText(title);
+            if (notifications != null) {
+                android.widget.Toast.makeText(getContext(), "Mostrando " + notifications.size() + " items",
+                        android.widget.Toast.LENGTH_SHORT).show();
+                if (colorMap == null)
+                    colorMap = new HashMap<>();
+
+                NotificationAdapter adapter = new NotificationAdapter(notifications, colorMap, item -> {
+                    // Optional: handle delete if needed, or refresh from repository
+                });
+                recyclerDetails.setLayoutManager(new LinearLayoutManager(getContext()));
+                recyclerDetails.setAdapter(adapter);
+                recyclerDetails.setVisibility(View.VISIBLE);
+            } else {
+                android.widget.Toast.makeText(getContext(), "No se recibieron datos", android.widget.Toast.LENGTH_SHORT)
+                        .show();
+            }
+        } else {
+            android.widget.Toast.makeText(getContext(), "Faltan argumentos", android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Opcional: Sobreescribe onCreateDialog para configurar más propiedades
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        // Opcional: Configurar un estilo para la animación, etc.
+        // dialog.getWindow().getAttributes().windowAnimations = R.style.MyAnimation;
+        return dialog;
+    }
+
+    public void setView(View dialogView) {
+
+    }
+}

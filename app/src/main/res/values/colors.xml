@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="red">#F44336</color>
+    <color name="green">#4CAF50</color>
+    <color name="grey_unselected">#C7C7C7</color>
+
+    <!-- Semantic Colors (Light) -->
+    <color name="background_main">@color/primary_main</color>
+    <color name="background_card">#FFFFFF</color>
+    <color name="text_primary">#1C1C1C</color>
+    <color name="text_secondary">@color/secondary_main</color>
+    
+    <!-- Branding Accents -->
+    <color name="primary_main">#F4F4F9</color>
+    <color name="secondary_main">#626262</color>
+    <color name="accent_main">#00A896</color>
+    <!--
+    <color name="accent_main">#B8DBD9</color>
+    -->
+    <color name="accent_secondary">#02C39A</color>
+</resources>
