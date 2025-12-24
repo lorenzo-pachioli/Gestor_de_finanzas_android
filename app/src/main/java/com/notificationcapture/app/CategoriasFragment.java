@@ -14,12 +14,14 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.tabs.TabLayout;
 
 import com.notificationcapture.app.models.Category;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -29,9 +31,11 @@ public class CategoriasFragment extends Fragment {
 
     private RecyclerView recyclerCategories;
     // private RecyclerView recyclerDetails;
-    private Spinner spinnerPeriod;
-    private TextView tvDetailsHeader;
-    private TextView tvSelectedCategory;
+    private Spinner spinnerMonth;
+    private Spinner spinnerYear;
+    private TabLayout tabLayout;
+
+    private NotificationItem.TransactionType currentType = NotificationItem.TransactionType.EGRESO;
 
     private CategorySummaryAdapter summaryAdapter;
     private NotificationAdapter detailsAdapter;
@@ -70,22 +74,40 @@ public class CategoriasFragment extends Fragment {
     private void initViews(View view) {
         recyclerCategories = view.findViewById(R.id.recyclerCategories);
         // recyclerDetails = view.findViewById(R.id.recyclerDetails);
-        spinnerPeriod = view.findViewById(R.id.spinnerPeriod);
-        // tvDetailsHeader = view.findViewById(R.id.tvDetailsHeader);
-        // tvSelectedCategory = view.findViewById(R.id.tvSelectedCategory);
+        spinnerMonth = view.findViewById(R.id.spinnerMonth);
+        spinnerYear = view.findViewById(R.id.spinnerYear);
+        tabLayout = view.findViewById(R.id.tabLayout);
 
         recyclerCategories.setLayoutManager(new LinearLayoutManager(getContext()));
-        // recyclerDetails.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // Hide details initially (Legacy views no longer initialized)
-        // tvDetailsHeader.setVisibility(View.GONE);
-        // tvSelectedCategory.setVisibility(View.GONE);
-        // recyclerDetails.setVisibility(View.GONE);
+        setupTabLayout();
+    }
+
+    private void setupTabLayout() {
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                if (tab.getPosition() == 0) {
+                    currentType = NotificationItem.TransactionType.EGRESO;
+                } else {
+                    currentType = NotificationItem.TransactionType.INGRESO;
+                }
+                refreshData();
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
     }
 
     private void setupAdapters() {
         // Fetch categories to get colors
-        List<Category> categories = repository.getCategories(NotificationItem.TransactionType.EGRESO);
+        List<Category> categories = repository.getCategories(currentType);
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : categories) {
             colorMap.put(c.getName(), c.getColor());
@@ -105,46 +127,73 @@ public class CategoriasFragment extends Fragment {
     }
 
     private void setupPeriodSpinner() {
-        periodList = new ArrayList<>();
-        periodNames = new ArrayList<>();
-
-        Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat("MMMM yyyy", new Locale("es", "ES"));
-
-        // Generate last 12 months
+        // --- Setup Month Spinner ---
+        List<String> monthNames = new ArrayList<>();
+        SimpleDateFormat monthSdf = new SimpleDateFormat("MMMM", new Locale("es", "ES"));
+        Calendar tempCal = Calendar.getInstance();
         for (int i = 0; i < 12; i++) {
-            periodList.add((Calendar) calendar.clone());
-            String periodName = sdf.format(calendar.getTime());
-            // Capitalize first letter
-            periodName = periodName.substring(0, 1).toUpperCase() + periodName.substring(1);
-            periodNames.add(periodName);
-            calendar.add(Calendar.MONTH, -1);
+            tempCal.set(Calendar.MONTH, i);
+            String monthName = monthSdf.format(tempCal.getTime());
+            monthName = monthName.substring(0, 1).toUpperCase() + monthName.substring(1);
+            monthNames.add(monthName);
         }
 
-        UniversalSpinnerAdapter<String> adapter = new UniversalSpinnerAdapter<>(requireContext(), periodNames);
-        spinnerPeriod.setAdapter(adapter);
+        UniversalSpinnerAdapter<String> monthAdapter = new UniversalSpinnerAdapter<>(requireContext(), monthNames);
+        spinnerMonth.setAdapter(monthAdapter);
+        spinnerMonth.setSelection(Calendar.getInstance().get(Calendar.MONTH));
 
-        spinnerPeriod.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        // --- Setup Year Spinner ---
+        List<String> years = new ArrayList<>();
+        List<NotificationItem> allNotifications = repository.getAllNotifications();
+        Calendar cal = Calendar.getInstance();
+
+        for (NotificationItem item : allNotifications) {
+            cal.setTimeInMillis(item.getTimestamp());
+            String year = String.valueOf(cal.get(Calendar.YEAR));
+            if (!years.contains(year)) {
+                years.add(year);
+            }
+        }
+
+        if (years.isEmpty()) {
+            years.add("2025");
+        }
+        Collections.sort(years, Collections.reverseOrder());
+
+        UniversalSpinnerAdapter<String> yearAdapter = new UniversalSpinnerAdapter<>(requireContext(), years);
+        spinnerYear.setAdapter(yearAdapter);
+
+        // Select current year if present
+        String currentYear = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+        int yearIndex = years.indexOf(currentYear);
+        if (yearIndex != -1) {
+            spinnerYear.setSelection(yearIndex);
+        }
+
+        // --- Listeners ---
+        AdapterView.OnItemSelectedListener periodChangeListener = new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                loadDataForPeriod(periodList.get(position));
-                // Hide details when changing period
-                hideDetails();
+                int selectedMonth = spinnerMonth.getSelectedItemPosition();
+                String selectedYearStr = (String) spinnerYear.getSelectedItem();
+                if (selectedYearStr != null) {
+                    loadDataForPeriod(selectedMonth, Integer.parseInt(selectedYearStr));
+                }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
             }
-        });
+        };
+
+        spinnerMonth.setOnItemSelectedListener(periodChangeListener);
+        spinnerYear.setOnItemSelectedListener(periodChangeListener);
     }
 
-    private void loadDataForPeriod(Calendar period) {
+    private void loadDataForPeriod(int month, int year) {
         if (repository == null)
             repository = new NotificationRepository(requireContext());
         List<NotificationItem> allNotifications = repository.getAllNotifications();
-
-        int month = period.get(Calendar.MONTH);
-        int year = period.get(Calendar.YEAR);
 
         Map<String, Double> categoryTotals = new HashMap<>();
 
@@ -154,8 +203,8 @@ public class CategoriasFragment extends Fragment {
             itemCal.setTimeInMillis(item.getTimestamp());
 
             if (itemCal.get(Calendar.MONTH) == month && itemCal.get(Calendar.YEAR) == year) {
-                // Filter by type (Only EGRESO as "gastos")
-                if (item.getType() == NotificationItem.TransactionType.EGRESO && item.hasAmount()) {
+                // Filter by type
+                if (item.getType() == currentType && item.hasAmount()) {
                     String category = item.getCategory();
                     if (category == null || category.isEmpty()) {
                         category = "Sin Categoría";
@@ -168,7 +217,7 @@ public class CategoriasFragment extends Fragment {
         }
 
         // Update colors as well
-        List<Category> categories = repository.getCategories(NotificationItem.TransactionType.EGRESO);
+        List<Category> categories = repository.getCategories(currentType);
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : categories) {
             colorMap.put(c.getName(), c.getColor());
@@ -179,13 +228,12 @@ public class CategoriasFragment extends Fragment {
 
     private void onCategoryClick(String category, Double totalAmount) {
         // Filter transactions for this category and current period
-        int selectedPosition = spinnerPeriod.getSelectedItemPosition();
-        if (selectedPosition == -1)
+        int month = spinnerMonth.getSelectedItemPosition();
+        String selectedYearStr = (String) spinnerYear.getSelectedItem();
+        if (selectedYearStr == null)
             return;
 
-        Calendar period = periodList.get(selectedPosition);
-        int month = period.get(Calendar.MONTH);
-        int year = period.get(Calendar.YEAR);
+        int year = Integer.parseInt(selectedYearStr);
 
         List<NotificationItem> allNotifications = repository.getAllNotifications();
         List<NotificationItem> filteredList = new ArrayList<>();
@@ -195,7 +243,7 @@ public class CategoriasFragment extends Fragment {
             itemCal.setTimeInMillis(item.getTimestamp());
 
             if (itemCal.get(Calendar.MONTH) == month && itemCal.get(Calendar.YEAR) == year) {
-                if (item.getType() == NotificationItem.TransactionType.EGRESO) {
+                if (item.getType() == currentType) {
                     String itemCategory = item.getCategory();
                     if (itemCategory == null || itemCategory.isEmpty())
                         itemCategory = "Sin Categoría";
@@ -208,7 +256,7 @@ public class CategoriasFragment extends Fragment {
         }
 
         // Fetch categories to get colors
-        List<Category> categories = repository.getCategories(NotificationItem.TransactionType.EGRESO);
+        List<Category> categories = repository.getCategories(currentType);
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : categories) {
             colorMap.put(c.getName(), c.getColor());
@@ -224,27 +272,30 @@ public class CategoriasFragment extends Fragment {
                 .show();
         MyBottomSheetDialogFragment bottomSheet = MyBottomSheetDialogFragment.newInstance(title, filteredList,
                 colorMap);
+        bottomSheet.setOnDismissListener(changed -> {
+            if (changed) {
+                refreshData();
+            }
+        });
         bottomSheet.show(getParentFragmentManager(), "CategoryDetails");
     }
 
     private void hideDetails() {
-        if (tvDetailsHeader != null)
-            tvDetailsHeader.setVisibility(View.GONE);
-        if (tvSelectedCategory != null)
-            tvSelectedCategory.setVisibility(View.GONE);
+        // Legacy views tvDetailsHeader and tvSelectedCategory were removed from layout
     }
 
     private void refreshData() {
-        int selectedPosition = spinnerPeriod.getSelectedItemPosition();
-        if (selectedPosition != -1) {
-            loadDataForPeriod(periodList.get(selectedPosition));
-            hideDetails();
+        int selectedMonth = spinnerMonth.getSelectedItemPosition();
+        String selectedYearStr = (String) spinnerYear.getSelectedItem();
+        if (selectedYearStr != null) {
+            loadDataForPeriod(selectedMonth, Integer.parseInt(selectedYearStr));
         }
     }
 
     private void showTestDialog() {
         MyBottomSheetDialogFragment bottomSheet = MyBottomSheetDialogFragment.newInstance("Test", new ArrayList<>(),
                 new HashMap<>());
+
         bottomSheet.show(getParentFragmentManager(), "EtiquetaUnica");
     }
 }

@@ -16,6 +16,7 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
     private List<Map.Entry<String, Double>> categoryList;
     private Map<String, Integer> categoryColors;
     private OnCategoryClickListener listener;
+    private double totalPeriodAmount;
 
     public interface OnCategoryClickListener {
         void onCategoryClick(String category, Double totalAmount);
@@ -25,9 +26,17 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
             OnCategoryClickListener listener) {
         this.categoryList = new ArrayList<>(categoryData.entrySet());
         this.categoryColors = categoryColors;
+        calculateTotal();
         // Sort by amount descending
         this.categoryList.sort((e1, e2) -> e2.getValue().compareTo(e1.getValue()));
         this.listener = listener;
+    }
+
+    private void calculateTotal() {
+        totalPeriodAmount = 0;
+        for (Map.Entry<String, Double> entry : categoryList) {
+            totalPeriodAmount += entry.getValue();
+        }
     }
 
     @NonNull
@@ -52,6 +61,15 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
                 .replace("#", ".");
         holder.tvTotalAmount.setText(formattedAmount);
 
+        // Percentage Calculation
+        if (totalPeriodAmount > 0) {
+            int percentage = (int) Math.round((total / totalPeriodAmount) * 100);
+            holder.tvCategoryPercentage.setText(percentage + "%");
+            holder.tvCategoryPercentage.setVisibility(View.VISIBLE);
+        } else {
+            holder.tvCategoryPercentage.setVisibility(View.GONE);
+        }
+
         // Apply Colors
         int color = categoryColors.getOrDefault(category, android.graphics.Color.GRAY);
         holder.viewLeftBorder.setBackgroundColor(color);
@@ -74,6 +92,7 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
         if (newColors != null) {
             this.categoryColors = newColors;
         }
+        calculateTotal();
         // Sort by amount descending
         this.categoryList.sort((e1, e2) -> e2.getValue().compareTo(e1.getValue()));
         notifyDataSetChanged();
@@ -82,6 +101,7 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvCategoryName;
         TextView tvTotalAmount;
+        TextView tvCategoryPercentage;
         View viewLeftBorder;
         View viewBackgroundTint;
 
@@ -89,6 +109,7 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
             super(itemView);
             tvCategoryName = itemView.findViewById(R.id.tvCategoryName);
             tvTotalAmount = itemView.findViewById(R.id.tvCategoryAmount);
+            tvCategoryPercentage = itemView.findViewById(R.id.tvCategoryPercentage);
             viewLeftBorder = itemView.findViewById(R.id.viewLeftBorder);
             viewBackgroundTint = itemView.findViewById(R.id.viewBackgroundTint);
         }

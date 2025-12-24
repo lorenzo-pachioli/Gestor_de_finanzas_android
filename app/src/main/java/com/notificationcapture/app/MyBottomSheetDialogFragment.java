@@ -10,6 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -21,6 +23,19 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
     private TextView tvTitle;
     private RecyclerView recyclerDetails;
+    private NotificationAdapter adapter;
+    private boolean dataChanged = false;
+
+    public interface OnDismissListener {
+        void onDismissed(boolean changed);
+    }
+
+    private OnDismissListener dismissListener;
+
+    public void setOnDismissListener(OnDismissListener listener) {
+        this.dismissListener = listener;
+    }
+
     private static final String ARG_TITLE = "arg_title";
     private static final String ARG_NOTIFICATIONS = "arg_notifications";
     private static final String ARG_COLOR_MAP = "arg_color_map";
@@ -68,8 +83,20 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 if (colorMap == null)
                     colorMap = new HashMap<>();
 
-                NotificationAdapter adapter = new NotificationAdapter(notifications, colorMap, item -> {
-                    // Optional: handle delete if needed, or refresh from repository
+                adapter = new NotificationAdapter(notifications, colorMap, item -> {
+                    NotificationRepository repository = new NotificationRepository(requireContext());
+                    repository.deleteNotification(item.getId());
+                    notifications.remove(item);
+                    adapter.notifyDataSetChanged();
+                    dataChanged = true;
+
+                    if (notifications.isEmpty()) {
+                        dismiss();
+                    } else {
+                        // Optional: Update title if it contains total
+                        tvTitle.setText(tvTitle.getText().toString().replaceFirst("\\d+ items?",
+                                notifications.size() + " items"));
+                    }
                 });
                 recyclerDetails.setLayoutManager(new LinearLayoutManager(getContext()));
                 recyclerDetails.setAdapter(adapter);
@@ -83,14 +110,12 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         }
     }
 
-    // Opcional: Sobreescribe onCreateDialog para configurar más propiedades
-    @NonNull
     @Override
-    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        Dialog dialog = super.onCreateDialog(savedInstanceState);
-        // Opcional: Configurar un estilo para la animación, etc.
-        // dialog.getWindow().getAttributes().windowAnimations = R.style.MyAnimation;
-        return dialog;
+    public void onDismiss(@NonNull android.content.DialogInterface dialog) {
+        super.onDismiss(dialog);
+        if (dismissListener != null) {
+            dismissListener.onDismissed(dataChanged);
+        }
     }
 
     public void setView(View dialogView) {

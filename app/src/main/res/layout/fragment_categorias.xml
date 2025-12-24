@@ -4,8 +4,45 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    tools:context=".CategoriasFragment">
+    android:padding="0dp"
+    tools:context=".CategoriasFragment"
+    android:background="@color/background_main">
+
+    <!-- Chrome-like TabLayout -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background_card"
+        app:tabBackground="@drawable/bg_tab_item"
+        app:tabIndicator="@drawable/bg_tab_indicator"
+        app:tabIndicatorGravity="bottom"
+        app:tabIndicatorColor="@color/accent_main"
+        app:tabIndicatorHeight="4dp"
+        app:tabMode="fixed"
+        app:tabSelectedTextColor="@color/text_primary"
+        app:tabTextColor="@color/text_secondary"
+        app:tabRippleColor="@null"
+        android:elevation="0dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+        
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gastos" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ingresos" />
+            
+    </com.google.android.material.tabs.TabLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
 
     <TextView
         android:layout_width="wrap_content"
@@ -15,14 +52,31 @@
         android:textStyle="bold"
         android:textColor="@color/text_primary"
         android:layout_marginBottom="8dp" />
-    <Spinner
-        android:id="@+id/spinnerPeriod"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:padding="5dp"
-        android:background="@drawable/bg_spinner_field"
-        android:textColor="@color/text_secondary"
-        android:layout_marginBottom="16dp" />
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <Spinner
+            android:id="@+id/spinnerMonth"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="2"
+            android:padding="5dp"
+            android:background="@drawable/bg_spinner_field"
+            android:textColor="@color/text_secondary"
+            android:layout_marginEnd="8dp" />
+
+        <Spinner
+            android:id="@+id/spinnerYear"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:padding="5dp"
+            android:background="@drawable/bg_spinner_field"
+            android:textColor="@color/text_secondary" />
+    </LinearLayout>
 
     <TextView
         android:layout_width="wrap_content"
@@ -69,5 +123,7 @@
         android:layout_weight="1.5"
         android:visibility="gone"
         tools:listitem="@layout/item_notification" />-->
+
+    </LinearLayout>
 
 </LinearLayout>
