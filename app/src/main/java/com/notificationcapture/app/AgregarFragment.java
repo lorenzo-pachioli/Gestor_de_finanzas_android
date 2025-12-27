@@ -15,6 +15,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.textfield.TextInputEditText;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class AgregarFragment extends Fragment {
 
@@ -26,7 +32,9 @@ public class AgregarFragment extends Fragment {
     private TextView tvEgreso;
     private Spinner spinnerCategory;
     private Button btnCreate;
+    private TextInputEditText etDate;
     private NotificationRepository repository;
+    private long selectedDateTimestamp;
 
     // Removed hardcoded walletApps
 
@@ -51,6 +59,11 @@ public class AgregarFragment extends Fragment {
         tvEgreso = view.findViewById(R.id.tvEgreso);
         spinnerCategory = view.findViewById(R.id.spinnerCategory);
         btnCreate = view.findViewById(R.id.btnCreate);
+        etDate = view.findViewById(R.id.etDate);
+
+        // Configurar fecha por defecto (hoy)
+        selectedDateTimestamp = System.currentTimeMillis();
+        updateDateField(selectedDateTimestamp);
 
         // Configurar spinner de apps
         UniversalSpinnerAdapter<String> adapterApps = new UniversalSpinnerAdapter<>(
@@ -76,6 +89,9 @@ public class AgregarFragment extends Fragment {
 
         // Configurar spinner de categorías
         // updateToggleUI ya llama a configurarSpinnerCat
+
+        // Configurar selector de fecha
+        etDate.setOnClickListener(v -> showDatePicker());
 
         btnCreate.setOnClickListener(v -> createNotification());
     }
@@ -146,7 +162,7 @@ public class AgregarFragment extends Fragment {
                 packageName,
                 title,
                 text,
-                System.currentTimeMillis(),
+                selectedDateTimestamp,
                 type,
                 category);
 
@@ -164,6 +180,9 @@ public class AgregarFragment extends Fragment {
         spinnerCategory.setSelection(0);
         swType.setChecked(true); // Reset to Egreso
         updateToggleUI(true);
+        // Resetear fecha a hoy
+        selectedDateTimestamp = System.currentTimeMillis();
+        updateDateField(selectedDateTimestamp);
 
         // Confirmación
         String typeText = type == NotificationItem.TransactionType.INGRESO ? "Ingreso" : "Egreso";
@@ -211,5 +230,27 @@ public class AgregarFragment extends Fragment {
             default:
                 return "com.wallet.custom";
         }
+    }
+
+    private void showDatePicker() {
+        // Crear el MaterialDatePicker con la fecha seleccionada actual
+        MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
+                .setTitleText("Seleccionar fecha")
+                .setSelection(selectedDateTimestamp)
+                .build();
+
+        datePicker.addOnPositiveButtonClickListener(selection -> {
+            selectedDateTimestamp = selection;
+            updateDateField(selection);
+        });
+
+        datePicker.show(getParentFragmentManager(), "DATE_PICKER");
+    }
+
+    private void updateDateField(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String formattedDate = sdf.format(new Date(timestamp));
+        etDate.setText(formattedDate);
     }
 }
