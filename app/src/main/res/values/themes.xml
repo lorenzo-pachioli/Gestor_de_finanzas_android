@@ -5,7 +5,34 @@
         <item name="android:windowBackground">@color/background_main</item>
         <item name="android:colorBackground">@color/background_main</item>
         <item name="android:statusBarColor">@color/background_card</item>
-        <item name="colorPrimary">@color/text_secondary</item>
+        
+        <!-- Material3 Color System - Mapped to custom palette -->
+        <item name="colorPrimary">@color/accent_main</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/accent_secondary</item>
+        <item name="colorOnPrimaryContainer">@color/text_primary</item>
+        
+        <item name="colorSecondary">@color/secondary_main</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/background_card</item>
+        <item name="colorOnSecondaryContainer">@color/text_primary</item>
+        
+        <item name="colorTertiary">@color/accent_secondary</item>
+        <item name="colorOnTertiary">@color/white</item>
+        
+        <item name="colorSurface">@color/background_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorSurfaceVariant">@color/background_main</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        
+        <item name="colorError">@color/red</item>
+        <item name="colorOnError">@color/white</item>
+        
+        <item name="android:colorControlNormal">@color/text_secondary</item>
+        <item name="android:colorControlActivated">@color/accent_main</item>
+        <item name="android:colorControlHighlight">@color/accent_main</item>
+        
+        <!-- Legacy compatibility -->
         <item name="colorAccent">@color/accent_main</item>
 
         <!-- Global style for all Material Buttons -->
