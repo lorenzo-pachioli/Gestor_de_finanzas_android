@@ -4,7 +4,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     
     <!-- Months in Spanish (variable names) and English (values) -->
-    <!-- <string name="enero">January</string>
+    <string name="enero">January</string>
     <string name="febrero">February</string>
     <string name="marzo">March</string>
     <string name="abril">April</string>
@@ -15,94 +15,85 @@
     <string name="septiembre">September</string>
     <string name="octubre">October</string>
     <string name="noviembre">November</string>
-    <string name="diciembre">December</string> -->
+    <string name="diciembre">December</string> 
 
-    <string name="enero">Enero</string>
-    <string name="febrero">Febrero</string>
-    <string name="marzo">Marzo</string>
-    <string name="abril">Abril</string>
-    <string name="mayo">Mayo</string>
-    <string name="junio">Junio</string>
-    <string name="julio">Julio</string>
-    <string name="agosto">Agosto</string>
-    <string name="septiembre">Septiembre</string>
-    <string name="octubre">Octubre</string>
-    <string name="noviembre">Noviembre</string>
-    <string name="diciembre">Diciembre</string>
     
     <!-- Summary title template -->
-    <string name="resumen_de">Resumen de %s</string>
+    <string name="resumen_de">Summary of %s</string>
     
     <!-- Fragment Inicio -->
-    <string name="habilitar_acceso_notificaciones">Habilitar Acceso a Notificaciones</string>
-    <string name="ingresos">Ingresos</string>
-    <string name="egresos">Egresos</string>
+    <string name="habilitar_acceso_notificaciones">Enable Notification Access</string>
+    <string name="ingresos">Income</string>
+    <string name="egresos">Expenses</string>
     <string name="balance">Balance</string>
-    <string name="no_notificaciones">No hay notificaciones capturadas</string>
-    <string name="default_amount">$0,00</string>
+    <string name="no_notificaciones">No notifications captured</string>
+    <string name="default_amount">$0.00</string>
     
     <!-- Fragment Agregar -->
-    <string name="agregar_movimiento">Agregar movimiento</string>
-    <string name="descripcion_agregar">Completa los datos para agregar una nueva transacción</string>
-    <string name="tipo_transaccion">Tipo de transacción *</string>
-    <string name="ingreso">Ingreso</string>
-    <string name="egreso">Egreso</string>
-    <string name="categoria_label">Categoría *</string>
-    <string name="aplicacion_origen">Aplicación de origen</string>
-    <string name="titulo_transaccion">Título de la transacción *</string>
-    <string name="hint_titulo">Ej: Pago en supermercado</string>
-    <string name="descripcion_monto">Descripción (incluye el monto) *</string>
-    <string name="hint_descripcion">Ej: Pagaste $1500 en Carrefour</string>
-    <string name="fecha_movimiento">Fecha del movimiento *</string>
-    <string name="seleccionar_fecha">Seleccionar fecha</string>
-    <string name="crear_transaccion">Crear Transacción</string>
-    <string name="campos_obligatorios">* Campos obligatorios</string>
+    <string name="agregar_movimiento">Add transaction</string>
+    <string name="descripcion_agregar">Complete the data to add a new transaction</string>
+    <string name="tipo_transaccion">Transaction type *</string>
+    <string name="ingreso">Income</string>
+    <string name="egreso">Expense</string>
+    <string name="categoria_label">Category *</string>
+    <string name="aplicacion_origen">Source application</string>
+    <string name="titulo_transaccion">Transaction title *</string>
+    <string name="hint_titulo">E.g.: Supermarket payment</string>
+    <string name="descripcion_monto">Description (includes amount) *</string>
+    <string name="hint_descripcion">E.g.: You paid $1500 at Carrefour</string>
+    <string name="fecha_movimiento">Transaction date *</string>
+    <string name="seleccionar_fecha">Select date</string>
+    <string name="crear_transaccion">Create Transaction</string>
+    <string name="campos_obligatorios">* Required fields</string>
     
     <!-- Fragment Perfil -->
-    <string name="configuracion">Configuración</string>
-    <string name="modo_oscuro">Modo Oscuro</string>
-    <string name="categorias">Categorías</string>
-    <string name="agregar">+ Agregar</string>
-    <string name="billeteras_bancos">Billeteras / Bancos</string>
-    <string name="abrir_bottom_sheet">Abrir Bottom Sheet</string>
+    <string name="configuracion">Settings</string>
+    <string name="modo_oscuro">Dark Mode</string>
+    <string name="idioma">Language</string>
+    <string name="espanol">Spanish</string>
+    <string name="english">English</string>
+    <string name="categorias">Categories</string>
+    <string name="agregar">+ Add</string>
+    <string name="billeteras_bancos">Wallets / Banks</string>
+    <string name="abrir_bottom_sheet">Open Bottom Sheet</string>
     
     <!-- Fragment Categorías -->
-    <string name="gastos">Gastos</string>
-    <string name="periodo">Periodo</string>
-    <string name="resumen_categoria">Resumen por Categoría</string>
-    <string name="detalle_movimientos">Detalle de Movimientos</string>
-    <string name="seleccione_categoria">(Seleccione una categoría)</string>
+    <string name="gastos">Expenses</string>
+    <string name="periodo">Period</string>
+    <string name="resumen_categoria">Summary by Category</string>
+    <string name="detalle_movimientos">Transaction Details</string>
+    <string name="seleccione_categoria">(Select a category)</string>
     
     <!-- Item Notification -->
     <string name="app_name_placeholder">App Name</string>
-    <string name="categoria_placeholder">Categoria</string>
+    <string name="categoria_placeholder">Category</string>
     <string name="slash">/</string>
     <string name="notification_title_placeholder">Notification Title</string>
     <string name="notification_text_placeholder">Notification text content</string>
-    <string name="amount_placeholder">$1.000,00</string>
+    <string name="amount_placeholder">$1,000.00</string>
     <string name="date_placeholder">01/01/2024 12:00:00</string>
-    <string name="editar_notificacion">Editar Notificación</string>
-    <string name="titulo">Título</string>
-    <string name="contenido">Contenido</string>
-    <string name="monto">Monto</string>
-    <string name="cancelar">Cancelar</string>
-    <string name="guardar">Guardar</string>
+    <string name="editar_notificacion">Edit Notification</string>
+    <string name="titulo">Title</string>
+    <string name="contenido">Content</string>
+    <string name="monto">Amount</string>
+    <string name="cancelar">Cancel</string>
+    <string name="guardar">Save</string>
     
     <!-- Dialog Add Category -->
-    <string name="nombre_categoria">Nombre de la Categoría</string>
-    <string name="hint_categoria">Ej. Supermercado</string>
-    <string name="seleccionar_color">Seleccionar Color</string>
-    <string name="eliminar">Eliminar</string>
-    <string name="crear">Crear</string>
+    <string name="nombre_categoria">Category Name</string>
+    <string name="hint_categoria">E.g. Supermarket</string>
+    <string name="seleccionar_color">Select Color</string>
+    <string name="eliminar">Delete</string>
+    <string name="crear">Create</string>
     
     <!-- Dialog Add Wallet -->
-    <string name="nombre_billetera">Nombre de la Billetera/Banco</string>
+    <string name="nombre_billetera">Wallet/Bank Name</string>
     
     <!-- Fragment Placeholder -->
-    <string name="proximamente">Próximamente...</string>
+    <string name="proximamente">Coming soon...</string>
     
     <!-- Item Category Summary -->
-    <string name="categoria">Categoría</string>
+    <string name="categoria">Category</string>
     
     <!-- Item Settings List -->
     <string name="item_name">Item Name</string>

@@ -40,8 +40,11 @@ public class PerfilFragment extends Fragment {
     private ArrayAdapter<String> walletAdapter;
     private SwitchCompat swCatType;
     private SwitchCompat swDarkMode;
+    private SwitchCompat swLanguage;
     private TextView tvCatIngreso;
     private TextView tvCatEgreso;
+    private TextView tvEspanol;
+    private TextView tvEnglish;
 
     // Listas para mantener referencia a los objetos actuales
     private List<Category> currentCategories;
@@ -100,8 +103,11 @@ public class PerfilFragment extends Fragment {
         spinnerWallets = view.findViewById(R.id.spinnerWallets);
         swCatType = view.findViewById(R.id.swCatType);
         swDarkMode = view.findViewById(R.id.switchDarkMode);
+        swLanguage = view.findViewById(R.id.swLanguage);
         tvCatIngreso = view.findViewById(R.id.tvCatIngreso);
         tvCatEgreso = view.findViewById(R.id.tvCatEgreso);
+        tvEspanol = view.findViewById(R.id.tvEspanol);
+        tvEnglish = view.findViewById(R.id.tvEnglish);
         Button btnAddCategory = view.findViewById(R.id.btnAddCategory);
         Button btnAddWallet = view.findViewById(R.id.btnAddWallet);
         Button btnShowBottomSheet = view.findViewById(R.id.btnShowBottomSheet);
@@ -129,21 +135,76 @@ public class PerfilFragment extends Fragment {
             prefs.edit().putInt("night_mode", mode).apply();
         });
 
+        // Setup Language Switch - Load saved language
+        String savedLanguage = prefs.getString("app_language", "es"); // Default to Spanish
+        swLanguage.setChecked(savedLanguage.equals("en"));
+
         swCatType.setOnCheckedChangeListener((buttonView, isChecked) -> {
             updateCategoryTypeUI(isChecked);
         });
 
-        // Listeners para etiquetas del switch
+        // Listeners para etiquetas del switch de categorías
         tvCatIngreso.setOnClickListener(v -> swCatType.setChecked(false));
         tvCatEgreso.setOnClickListener(v -> swCatType.setChecked(true));
+
+        // Setup Language Switch
+        swLanguage.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            String newLanguage = isChecked ? "en" : "es";
+            String currentLanguage = prefs.getString("app_language", "es");
+
+            if (!newLanguage.equals(currentLanguage)) {
+                // Save new language preference
+                prefs.edit().putString("app_language", newLanguage).apply();
+
+                // Change locale and recreate activity
+                setLocale(newLanguage);
+                requireActivity().recreate();
+            }
+
+            updateLanguageUI(isChecked);
+        });
+
+        // Listeners para etiquetas del switch de idioma
+        tvEspanol.setOnClickListener(v -> swLanguage.setChecked(false));
+        tvEnglish.setOnClickListener(v -> swLanguage.setChecked(true));
 
         // Setup Spinner Listeners
         setupSpinnerListeners();
 
         // Initial Load
         updateCategoryTypeUI(swCatType.isChecked());
+        updateLanguageUI(swLanguage.isChecked());
         loadCategories();
         loadWallets();
+    }
+
+    private void updateLanguageUI(boolean isEnglish) {
+        if (isEnglish) {
+            // English selected (Switch ON, Right)
+            tvEspanol.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_unselected));
+            tvEnglish.setTextColor(ContextCompat.getColor(requireContext(), R.color.accent_main));
+        } else {
+            // Español selected (Switch OFF, Left)
+            tvEspanol.setTextColor(ContextCompat.getColor(requireContext(), R.color.accent_main));
+            tvEnglish.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_unselected));
+        }
+    }
+
+    private void setLocale(String languageCode) {
+        java.util.Locale locale = new java.util.Locale(languageCode);
+        java.util.Locale.setDefault(locale);
+
+        android.content.res.Resources resources = requireContext().getResources();
+        android.content.res.Configuration config = new android.content.res.Configuration(resources.getConfiguration());
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            config.setLocale(locale);
+            requireContext().createConfigurationContext(config);
+        } else {
+            config.locale = locale;
+        }
+
+        resources.updateConfiguration(config, resources.getDisplayMetrics());
     }
 
     private void setupSpinnerListeners() {
@@ -228,7 +289,6 @@ public class PerfilFragment extends Fragment {
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_category, null);
         builder.setView(dialogView);
         AlertDialog dialog = builder.create();
-
 
         EditText etName = dialogView.findViewById(R.id.etCategoryName);
         LinearLayout containerColors = dialogView.findViewById(R.id.containerColors);

@@ -48,6 +48,9 @@
     <!-- Fragment Perfil -->
     <string name="configuracion">Configuración</string>
     <string name="modo_oscuro">Modo Oscuro</string>
+    <string name="idioma">Idioma</string>
+    <string name="espanol">Español</string>
+    <string name="english">Ingles</string>
     <string name="categorias">Categorías</string>
     <string name="agregar">+ Agregar</string>
     <string name="billeteras_bancos">Billeteras / Bancos</string>

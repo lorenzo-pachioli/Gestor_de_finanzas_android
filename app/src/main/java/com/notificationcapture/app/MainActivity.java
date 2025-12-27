@@ -36,6 +36,10 @@ public class MainActivity extends AppCompatActivity {
         int nightMode = prefs.getInt("night_mode", androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(nightMode);
 
+        // Cargar preferencia de idioma
+        String savedLanguage = prefs.getString("app_language", "es"); // Default to Spanish
+        setLocale(savedLanguage);
+
         setContentView(R.layout.activity_main);
 
         bottomNavigation = findViewById(R.id.bottomNavigationView);
@@ -124,5 +128,22 @@ public class MainActivity extends AppCompatActivity {
             });
             fabAdd.startAnimation(fadeOut);
         }
+    }
+
+    private void setLocale(String languageCode) {
+        java.util.Locale locale = new java.util.Locale(languageCode);
+        java.util.Locale.setDefault(locale);
+
+        android.content.res.Resources resources = getResources();
+        android.content.res.Configuration config = new android.content.res.Configuration(resources.getConfiguration());
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            config.setLocale(locale);
+            createConfigurationContext(config);
+        } else {
+            config.locale = locale;
+        }
+
+        resources.updateConfiguration(config, resources.getDisplayMetrics());
     }
 }
