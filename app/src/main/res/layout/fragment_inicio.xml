@@ -8,7 +8,7 @@
         android:id="@+id/btnEnableAccess"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Habilitar Acceso a Notificaciones"
+        android:text="@string/habilitar_acceso_notificaciones"
         android:textSize="16sp"
         android:textColor="@color/text_primary"
         android:padding="16dp"
@@ -37,9 +37,10 @@
             android:padding="8dp">
 
             <TextView
+                android:id="@+id/tvMonthTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Resumen del Mes"
+                android:text="@string/resumen_de"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
@@ -63,7 +64,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Ingresos"
+                        android:text="@string/ingresos"
                         android:textSize="12sp"
                         android:textColor="@color/text_secondary"
                         android:layout_marginBottom="4dp"/>
@@ -72,7 +73,7 @@
                         android:id="@+id/tvIngresos"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="$0,00"
+                        android:text="@string/default_amount"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="@color/green"/>
@@ -90,7 +91,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Egresos"
+                        android:text="@string/egresos"
                         android:textSize="12sp"
                         android:textColor="@color/text_secondary"
                         android:layout_marginBottom="4dp"/>
@@ -99,7 +100,7 @@
                         android:id="@+id/tvEgresos"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="$0,00"
+                        android:text="@string/default_amount"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="@color/red"/>
@@ -117,7 +118,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Balance"
+                        android:text="@string/balance"
                         android:textSize="12sp"
                         android:textColor="@color/text_secondary"
                         android:layout_marginBottom="4dp"/>
@@ -126,7 +127,7 @@
                         android:id="@+id/tvBalance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="$0,00"
+                        android:text="@string/default_amount"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="@color/green"/>
@@ -144,7 +145,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="No hay notificaciones capturadas"
+        android:text="@string/no_notificaciones"
         android:textSize="18sp"
         android:textColor="#666666"
         android:visibility="visible"/>

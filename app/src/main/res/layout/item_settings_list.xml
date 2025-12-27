@@ -30,7 +30,7 @@
         android:layout_weight="1"
         android:textSize="16sp"
         android:textColor="@color/text_primary"
-        android:text="Item Name"/>
+        android:text="@string/item_name"/>
 
     <ImageButton
         android:id="@+id/btnDelete"

@@ -16,7 +16,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="No hay notificaciones capturadas"
+        android:text="@string/no_notificaciones"
         android:textSize="18sp"
         android:textColor="@color/text_secondary"
         android:visibility="visible"/>

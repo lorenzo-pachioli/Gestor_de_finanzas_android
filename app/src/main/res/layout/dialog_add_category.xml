@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Nombre de la Categoría"
+        android:text="@string/nombre_categoria"
         android:textSize="16sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
@@ -19,7 +19,7 @@
         android:id="@+id/etCategoryName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Ej. Supermercado"
+        android:hint="@string/hint_categoria"
         android:inputType="textCapWords"
         android:textColor="@color/text_primary"
         android:layout_marginBottom="16dp"/>
@@ -27,7 +27,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Seleccionar Color"
+        android:text="@string/seleccionar_color"
         android:textSize="16sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
@@ -59,7 +59,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:text="Eliminar"
+            android:text="@string/eliminar"
             android:layout_marginEnd="5dp"/>
 
         <Button
@@ -67,7 +67,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:text="Cancelar"
+            android:text="@string/cancelar"
             android:layout_marginEnd="5dp"/>
 
         <Button
@@ -75,7 +75,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:text="Crear"/>
+            android:text="@string/crear"/>
     </LinearLayout>
 
 

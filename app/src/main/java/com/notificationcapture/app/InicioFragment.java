@@ -33,6 +33,7 @@ public class InicioFragment extends Fragment {
     private TextView tvIngresos;
     private TextView tvEgresos;
     private TextView tvBalance;
+    private TextView tvMonthTitle;
     private NotificationRepository repository;
     private BroadcastReceiver notificationReceiver;
 
@@ -55,6 +56,7 @@ public class InicioFragment extends Fragment {
         tvIngresos = view.findViewById(R.id.tvIngresos);
         tvEgresos = view.findViewById(R.id.tvEgresos);
         tvBalance = view.findViewById(R.id.tvBalance);
+        tvMonthTitle = view.findViewById(R.id.tvMonthTitle);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
@@ -143,10 +145,13 @@ public class InicioFragment extends Fragment {
     }
 
     private void loadNotifications() {
-        List<NotificationItem> notifications = repository.getAllNotifications();
-        adapter.updateData(notifications);
+        List<NotificationItem> allNotifications = repository.getAllNotifications();
 
-        if (notifications.isEmpty()) {
+        // Filtrar solo las notificaciones del mes actual
+        List<NotificationItem> currentMonthNotifications = getCurrentMonthNotifications(allNotifications);
+        adapter.updateData(currentMonthNotifications);
+
+        if (currentMonthNotifications.isEmpty()) {
             emptyView.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
         } else {
@@ -154,18 +159,20 @@ public class InicioFragment extends Fragment {
             recyclerView.setVisibility(View.VISIBLE);
         }
 
+        // Actualizar el título del mes
+        String monthName = getMonthName();
+        tvMonthTitle.setText(getString(R.string.resumen_de, monthName));
+
         // Actualizar el resumen financiero
-        updateFinancialSummary(notifications);
+        updateFinancialSummary(currentMonthNotifications);
     }
 
-    private void updateFinancialSummary(List<NotificationItem> allNotifications) {
-        // Filtrar solo las notificaciones del mes actual
+    private List<NotificationItem> getCurrentMonthNotifications(List<NotificationItem> allNotifications) {
         Calendar now = Calendar.getInstance();
         int currentMonth = now.get(Calendar.MONTH);
         int currentYear = now.get(Calendar.YEAR);
 
-        double totalIngresos = 0;
-        double totalEgresos = 0;
+        List<NotificationItem> currentMonthNotifications = new ArrayList<>();
 
         for (NotificationItem item : allNotifications) {
             Calendar itemDate = Calendar.getInstance();
@@ -174,13 +181,37 @@ public class InicioFragment extends Fragment {
             // Verificar si es del mes y año actual
             if (itemDate.get(Calendar.MONTH) == currentMonth &&
                     itemDate.get(Calendar.YEAR) == currentYear) {
+                currentMonthNotifications.add(item);
+            }
+        }
 
-                if (item.hasAmount()) {
-                    if (item.getType() == NotificationItem.TransactionType.INGRESO) {
-                        totalIngresos += item.getAmount();
-                    } else {
-                        totalEgresos += item.getAmount();
-                    }
+        return currentMonthNotifications;
+    }
+
+    private String getMonthName() {
+        Calendar now = Calendar.getInstance();
+        int currentMonth = now.get(Calendar.MONTH);
+
+        int[] monthResIds = {
+                R.string.enero, R.string.febrero, R.string.marzo,
+                R.string.abril, R.string.mayo, R.string.junio,
+                R.string.julio, R.string.agosto, R.string.septiembre,
+                R.string.octubre, R.string.noviembre, R.string.diciembre
+        };
+
+        return getString(monthResIds[currentMonth]);
+    }
+
+    private void updateFinancialSummary(List<NotificationItem> currentMonthNotifications) {
+        double totalIngresos = 0;
+        double totalEgresos = 0;
+
+        for (NotificationItem item : currentMonthNotifications) {
+            if (item.hasAmount()) {
+                if (item.getType() == NotificationItem.TransactionType.INGRESO) {
+                    totalIngresos += item.getAmount();
+                } else {
+                    totalEgresos += item.getAmount();
                 }
             }
         }

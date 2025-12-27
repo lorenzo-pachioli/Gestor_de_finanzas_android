@@ -8,7 +8,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="Próximamente..."
+        android:text="@string/proximamente"
         android:textSize="24sp"
         android:textColor="@color/text_secondary"
         android:textStyle="italic"/>

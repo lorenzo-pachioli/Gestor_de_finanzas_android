@@ -29,12 +29,12 @@
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Gastos" />
+            android:text="@string/gastos" />
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ingresos" />
+            android:text="@string/ingresos" />
             
     </com.google.android.material.tabs.TabLayout>
 
@@ -47,7 +47,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Periodo"
+        android:text="@string/periodo"
         android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
@@ -81,7 +81,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Resumen por Categoría"
+        android:text="@string/resumen_categoria"
         android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
@@ -99,7 +99,7 @@
         android:id="@+id/tvDetailsHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Detalle de Movimientos"
+        android:text="@string/detalle_movimientos"
         android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="@color/text_secondary"
@@ -110,7 +110,7 @@
         android:id="@+id/tvSelectedCategory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="(Seleccione una categoría)"
+        android:text="@string/seleccione_categoria"
         android:textSize="14sp"
         android:textColor="@color/text_secondary"
         android:layout_marginBottom="8dp"

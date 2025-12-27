@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Nombre de la Billetera/Banco"
+        android:text="@string/nombre_billetera"
         android:textSize="16sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
@@ -35,7 +35,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:text="Eliminar"
+            android:text="@string/eliminar"
             android:layout_marginEnd="5dp"/>
 
         <Button
@@ -43,7 +43,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:text="Cancelar"
+            android:text="@string/cancelar"
             android:layout_marginEnd="5dp"/>
 
         <Button
@@ -51,7 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:text="Crear"/>
+            android:text="@string/crear"/>
 
     </LinearLayout>
 

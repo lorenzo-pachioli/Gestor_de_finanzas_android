@@ -48,7 +48,7 @@
                         android:id="@+id/tvAppName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="App Name"
+                        android:text="@string/app_name_placeholder"
                         android:textStyle="bold"
                         android:textSize="12sp"
                         android:textColor="@color/accent_main"
@@ -58,7 +58,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="/"
+                        android:text="@string/slash"
                         android:textStyle="bold"
                         android:textSize="12sp"
                         android:textColor="@color/accent_main"
@@ -69,7 +69,7 @@
                         android:id="@+id/tvCategory"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Categoria"
+                        android:text="@string/categoria_placeholder"
                         android:textStyle="bold"
                         android:textSize="12sp"
                         android:textColor="@color/accent_main"
@@ -81,7 +81,7 @@
                     android:id="@+id/tvTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Notification Title"
+                    android:text="@string/notification_title_placeholder"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -91,7 +91,7 @@
                     android:id="@+id/tvText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Notification text content"
+                    android:text="@string/notification_text_placeholder"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginBottom="4dp"/>
@@ -100,7 +100,7 @@
                     android:id="@+id/tvAmount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="$1.000,00"
+                    android:text="@string/amount_placeholder"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="@color/green"
@@ -112,7 +112,7 @@
                     android:id="@+id/tvTimestamp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="01/01/2024 12:00:00"
+                    android:text="@string/date_placeholder"
                     android:textSize="12sp"
                     android:textColor="@color/text_secondary"/>
 
@@ -144,7 +144,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Editar Notificación"
+                android:text="@string/editar_notificacion"
                 android:textStyle="bold"
                 android:textSize="14sp"
                 android:textColor="@color/accent_main"
@@ -153,7 +153,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Título"
+                android:text="@string/titulo"
                 android:textSize="12sp"/>
             <EditText
                 android:id="@+id/etTitle"
@@ -166,7 +166,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Contenido"
+                android:text="@string/contenido"
                 android:textSize="12sp"/>
             <EditText
                 android:id="@+id/etText"
@@ -188,8 +188,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     
-                    android:textOn="Ingreso"
-                    android:textOff="Egreso"
+                    android:textOn="@string/ingreso"
+                    android:textOff="@string/egreso"
                     android:showText="true"
                     android:thumbTint="#FFFFFF"
                     android:trackTint="#CCCCCC"/>
@@ -198,7 +198,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Monto"
+                android:text="@string/monto"
                 android:textSize="12sp"/>
             <EditText
                 android:id="@+id/etAmount"
@@ -212,7 +212,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Categoría"
+                android:text="@string/categoria"
                 android:textSize="12sp"/>
             <Spinner
                 android:id="@+id/spinnerCategory"
@@ -231,7 +231,7 @@
                     android:id="@+id/btnCancel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Cancelar"
+                    android:text="@string/cancelar"
                     android:backgroundTint="#CCCCCC"
                     android:textColor="@color/black"
                     android:layout_marginEnd="8dp"/>
@@ -240,7 +240,7 @@
                     android:id="@+id/btnSave"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Guardar"
+                    android:text="@string/guardar"
                     android:backgroundTint="@color/accent_main"
                     android:textColor="#FFFFFF"/>
             </LinearLayout>

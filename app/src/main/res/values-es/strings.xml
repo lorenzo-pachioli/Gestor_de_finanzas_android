@@ -1,22 +1,9 @@
 <resources>
     <string name="app_name">Notification Capture</string>
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="hello_blank_fragment">Hola fragmento en blanco</string>
     
-    <!-- Months in Spanish (variable names) and English (values) -->
-    <!-- <string name="enero">January</string>
-    <string name="febrero">February</string>
-    <string name="marzo">March</string>
-    <string name="abril">April</string>
-    <string name="mayo">May</string>
-    <string name="junio">June</string>
-    <string name="julio">July</string>
-    <string name="agosto">August</string>
-    <string name="septiembre">September</string>
-    <string name="octubre">October</string>
-    <string name="noviembre">November</string>
-    <string name="diciembre">December</string> -->
-
+    <!-- Months in Spanish -->
     <string name="enero">Enero</string>
     <string name="febrero">Febrero</string>
     <string name="marzo">Marzo</string>
