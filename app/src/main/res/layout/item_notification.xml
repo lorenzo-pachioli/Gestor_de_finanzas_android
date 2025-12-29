@@ -178,21 +178,53 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
+                android:layout_height="40dp"
+                android:layout_marginBottom="8dp"
+                android:gravity="center"
+                android:orientation="horizontal">
 
-                <Switch
-                    android:id="@+id/switchType"
+                <TextView
+                    android:id="@+id/tvIngreso"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    
-                    android:textOn="@string/ingreso"
-                    android:textOff="@string/egreso"
-                    android:showText="true"
-                    android:thumbTint="#FFFFFF"
-                    android:trackTint="#CCCCCC"/>
+                    android:paddingEnd="12dp"
+                    android:text="@string/ingreso"
+                    android:textColor="@color/green"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switchType"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:thumb="@drawable/selector_switch_thumb"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.0"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintVertical_bias="0.466"
+                        app:thumbTint="@null"
+                        app:track="@drawable/track"
+                        app:trackTint="@null" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <TextView
+                    android:id="@+id/tvEgreso"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="12dp"
+                    android:text="@string/egreso"
+                    android:textColor="@color/grey_unselected"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
             </LinearLayout>
 
             <TextView
@@ -214,11 +246,35 @@
                 android:layout_height="wrap_content"
                 android:text="@string/categoria"
                 android:textSize="12sp"/>
-            <Spinner
-                android:id="@+id/spinnerCategory"
+            <TextView
+                android:id="@+id/tvCategorySelector"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@drawable/bg_card_rounded"
+                android:gravity="center_vertical"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:textColor="@color/text_secondary"
+                android:text="@string/categoria_placeholder"
+                android:drawableEnd="@android:drawable/arrow_down_float"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/aplicacion_origen"
+                android:textSize="12sp"/>
+            <TextView
+                android:id="@+id/tvWalletSelector"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_card_rounded"
+                android:gravity="center_vertical"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:textColor="@color/text_secondary"
+                android:text="@string/app_name_placeholder"
+                android:drawableEnd="@android:drawable/arrow_down_float"
                 android:layout_marginBottom="16dp"/>
 
             <LinearLayout

@@ -95,35 +95,6 @@
         android:layout_marginBottom="16dp"
         tools:listitem="@layout/item_category_summary" />
 
-    <!--<TextView
-        android:id="@+id/tvDetailsHeader"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/detalle_movimientos"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_secondary"
-        android:layout_marginBottom="8dp"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/tvSelectedCategory"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/seleccione_categoria"
-        android:textSize="14sp"
-        android:textColor="@color/text_secondary"
-        android:layout_marginBottom="8dp"
-        android:visibility="gone" />-->
-
-    <!--<androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerDetails"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1.5"
-        android:visibility="gone"
-        tools:listitem="@layout/item_notification" />-->
-
     </LinearLayout>
 
 </LinearLayout>

@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="12dp">
 
         <TextView
             android:layout_width="match_parent"
@@ -36,12 +36,12 @@
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="4dp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="91dp"
-            android:layout_marginBottom="20dp"
+            android:layout_height="58dp"
+            android:layout_marginBottom="5dp"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -57,7 +57,7 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 tools:context=".MainActivity">
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -67,15 +67,15 @@
                     android:thumb="@drawable/selector_switch_thumb"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:thumbTint="@null"
-                    app:trackTint="@null"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintVertical_bias="0.466"
-                    app:track="@drawable/track" />
+                    app:thumbTint="@null"
+                    app:track="@drawable/track"
+                    app:trackTint="@null" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <TextView
@@ -165,17 +165,17 @@
         <EditText
             android:id="@+id/etText"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="45dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/bg_card_rounded"
+            android:gravity="top|start"
             android:hint="@string/hint_descripcion"
-            android:textColorHint="@color/text_secondary"
+            android:inputType="textMultiLine"
+            android:maxLines="5"
             android:minHeight="100dp"
             android:padding="12dp"
-            android:background="@drawable/bg_card_rounded"
             android:textColor="@color/text_secondary"
-            android:inputType="textMultiLine"
-            android:gravity="top|start"
-            android:maxLines="5"
-            android:layout_marginBottom="20dp"/>
+            android:textColorHint="@color/text_secondary" />
 
         <!-- Selector de Fecha -->
         <TextView
@@ -219,8 +219,8 @@
             android:text="@string/crear_transaccion"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:padding="16dp"
-            android:minHeight="56dp"
+            android:padding="5dp"
+            android:minHeight="50dp"
             android:background="@drawable/bg_button_rounded"
             android:backgroundTint="@color/accent_main"/>
 

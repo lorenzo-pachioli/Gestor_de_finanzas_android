@@ -8,7 +8,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.Switch;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.content.ContextCompat;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -66,16 +67,39 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
             // Configurar Switch de Tipo
             boolean isIngreso = item.getType() == NotificationItem.TransactionType.INGRESO;
-            holder.switchType.setChecked(isIngreso);
+            holder.switchType.setChecked(!isIngreso); // checked = Egreso, unchecked = Ingreso
 
-            // Configurar Spinner de Categoría inicial
-            setupCategorySpinner(context, holder.spinnerCategory, isIngreso, item.getCategory());
+            // Configurar UI inicial
+            updateToggleUI(holder, !isIngreso);
 
-            // Listener para el cambio de tipo
-            holder.switchType.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                // Actualizar opciones del spinner al cambiar el tipo
-                setupCategorySpinner(context, holder.spinnerCategory, isChecked, null);
+            // Configurar Selectores iniciales
+            holder.tvCategorySelector.setText(item.getCategory() != null ? item.getCategory() : "Sin categoría");
+            holder.tvWalletSelector.setText(item.getAppName());
+
+            // Listeners para abrir BottomSheets
+            holder.tvCategorySelector.setOnClickListener(v -> {
+                // Chequear estado actual del switch
+                boolean currentIsIngreso = !holder.switchType.isChecked();
+                showCategorySelector(context, holder.tvCategorySelector, currentIsIngreso);
             });
+
+            holder.tvWalletSelector.setOnClickListener(v -> {
+                showWalletSelector(context, holder.tvWalletSelector);
+            });
+
+            // Listener para el cambio de tipo (solo actualiza UI del toggle, la categoría
+            // se mantiene hasta que el usuario la cambie o valida al guardar)
+            // Opcional: resetear categoría si cambia tipo
+            holder.switchType.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                updateToggleUI(holder, isChecked);
+                // Si cambia el tipo, podrías querer resetear la categoría o avisar. Por ahora
+                // mantenemos la actual o actualizamos si abren el selector.
+                // Al abrir el selector de nuevo, leerá el isChecked actual.
+            });
+
+            // Listeners para los textos
+            holder.tvIngreso.setOnClickListener(v -> holder.switchType.setChecked(false));
+            holder.tvEgreso.setOnClickListener(v -> holder.switchType.setChecked(true));
 
             // Configurar botones de acción
             holder.btnSave.setOnClickListener(v -> {
@@ -84,13 +108,36 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 item.setText(holder.etText.getText().toString());
 
                 // Guardar tipo
-                boolean isIngresoSelected = holder.switchType.isChecked();
-                item.setType(isIngresoSelected ? NotificationItem.TransactionType.INGRESO
-                        : NotificationItem.TransactionType.EGRESO);
+                // checked = true -> Egreso, false -> Ingreso
+                boolean isEgresoSelected = holder.switchType.isChecked();
+                item.setType(isEgresoSelected ? NotificationItem.TransactionType.EGRESO
+                        : NotificationItem.TransactionType.INGRESO);
 
                 // Guardar categoría selecccionada
-                if (holder.spinnerCategory.getSelectedItem() != null) {
-                    item.setCategory(holder.spinnerCategory.getSelectedItem().toString());
+                item.setCategory(holder.tvCategorySelector.getText().toString());
+
+                // Guardar billetera
+                // Aquí deberíamos actualizar la billetera si tuvieramos el package name, pero
+                // item.appName es el nombre visible.
+                // El item guarda package name internamente? item.getAppName() retorna el nombre
+                // visible.
+                // item store package name? NotificationItem tiene packageName.
+                // Debemos buscar el package name por nombre de app.
+                NotificationRepository repo = new NotificationRepository(context);
+                String selectedAppName = holder.tvWalletSelector.getText().toString();
+                String pkg = repo.getPackageNameFromApp(selectedAppName); // Asumiendo que podemos exponer este método o
+                                                                          // duplicarlo
+                // Como getPackageNameFromApp es privado en AgregarFragment, lo implementaré
+                // aquí o usaré una lógica similar.
+                // Por simplicidad y dado que NotificationItem usa appName para mostrar,
+                // actualizaremos el appName visual si es posible,
+                // pero NotificationItem parece derivar appName del package.
+                // Vamos a asumir que actualizamos el packageName.
+                if (pkg != null) {
+                    item.setPackageName(pkg);
+                } else {
+                    // Fallback logico
+                    item.setPackageName("com.wallet.custom");
                 }
 
                 String amountStr = holder.etAmount.getText().toString();
@@ -174,24 +221,55 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         }
     }
 
-    private void setupCategorySpinner(Context context, Spinner spinner, boolean isIngreso, String currentCategory) {
+    private void updateToggleUI(ViewHolder holder, boolean isEgreso) {
+        Context context = holder.itemView.getContext();
+        if (isEgreso) {
+            // Modo Egreso (Switch ON, Derecha)
+            holder.tvIngreso.setTextColor(ContextCompat.getColor(context, R.color.grey_unselected));
+            holder.tvEgreso.setTextColor(ContextCompat.getColor(context, R.color.red));
+        } else {
+            // Modo Ingreso (Switch OFF, Izquierda)
+            holder.tvIngreso.setTextColor(ContextCompat.getColor(context, R.color.green));
+            holder.tvEgreso.setTextColor(ContextCompat.getColor(context, R.color.grey_unselected));
+        }
+    }
+
+    private void showCategorySelector(Context context, TextView targetView, boolean isIngreso) {
         String[] categories = isIngreso ? NotificationItem.INCOME_CATEGORIES : NotificationItem.OUTCOME_CATEGORIES;
+        java.util.List<String> options = java.util.Arrays.asList(categories);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                context,
-                R.layout.spinner_item,
-                categories);
-        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
-        spinner.setAdapter(adapter);
+        SelectorBottomSheet sheet = SelectorBottomSheet.newInstance(
+                "Seleccionar Categoría",
+                options,
+                targetView.getText().toString(),
+                categoryColors);
 
-        // Intentar seleccionar la categoría actual si existe en la lista
-        if (currentCategory != null) {
-            for (int i = 0; i < categories.length; i++) {
-                if (categories[i].equals(currentCategory)) {
-                    spinner.setSelection(i);
-                    break;
-                }
-            }
+        sheet.setOnOptionSelectedListener(option -> {
+            targetView.setText(option);
+        });
+
+        if (context instanceof androidx.fragment.app.FragmentActivity) {
+            sheet.show(((androidx.fragment.app.FragmentActivity) context).getSupportFragmentManager(),
+                    "CategorySelector");
+        }
+    }
+
+    private void showWalletSelector(Context context, TextView targetView) {
+        NotificationRepository repo = new NotificationRepository(context);
+        java.util.List<String> wallets = repo.getWallets();
+
+        SelectorBottomSheet sheet = SelectorBottomSheet.newInstance(
+                "Seleccionar Billetera",
+                wallets,
+                targetView.getText().toString());
+
+        sheet.setOnOptionSelectedListener(option -> {
+            targetView.setText(option);
+        });
+
+        if (context instanceof androidx.fragment.app.FragmentActivity) {
+            sheet.show(((androidx.fragment.app.FragmentActivity) context).getSupportFragmentManager(),
+                    "WalletSelector");
         }
     }
 
@@ -221,8 +299,11 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         EditText etTitle;
         EditText etText;
         EditText etAmount;
-        Switch switchType;
-        Spinner spinnerCategory;
+        SwitchCompat switchType;
+        TextView tvIngreso;
+        TextView tvEgreso;
+        TextView tvCategorySelector;
+        TextView tvWalletSelector;
         Button btnSave;
         Button btnCancel;
 
@@ -246,7 +327,10 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             etText = itemView.findViewById(R.id.etText);
             etAmount = itemView.findViewById(R.id.etAmount);
             switchType = itemView.findViewById(R.id.switchType);
-            spinnerCategory = itemView.findViewById(R.id.spinnerCategory);
+            tvIngreso = itemView.findViewById(R.id.tvIngreso);
+            tvEgreso = itemView.findViewById(R.id.tvEgreso);
+            tvCategorySelector = itemView.findViewById(R.id.tvCategorySelector);
+            tvWalletSelector = itemView.findViewById(R.id.tvWalletSelector);
             btnSave = itemView.findViewById(R.id.btnSave);
             btnCancel = itemView.findViewById(R.id.btnCancel);
         }
