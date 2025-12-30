@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.notificationcapture.app.interfaces.SpinnerDisplayable;
 import java.util.List;
 
 public class UniversalSpinnerAdapter<T> extends ArrayAdapter<T> {

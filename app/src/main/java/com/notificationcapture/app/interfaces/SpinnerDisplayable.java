@@ -1,4 +1,4 @@
-package com.notificationcapture.app;
+package com.notificationcapture.app.interfaces;
 
 public interface SpinnerDisplayable {
     String getDisplayName();

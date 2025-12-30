@@ -1,6 +1,6 @@
 package com.notificationcapture.app.models;
 
-import com.notificationcapture.app.SpinnerDisplayable;
+import com.notificationcapture.app.interfaces.SpinnerDisplayable;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -49,12 +49,10 @@ public class CreditCard implements Serializable, SpinnerDisplayable {
         this.color = color;
     }
 
-    @Override
     public String getDisplayName() {
         return name;
     }
 
-    @Override
     public Integer getDisplayColor() {
         return color;
     }

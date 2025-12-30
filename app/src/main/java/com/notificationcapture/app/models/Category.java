@@ -1,7 +1,7 @@
 package com.notificationcapture.app.models;
 
 import com.notificationcapture.app.NotificationItem;
-import com.notificationcapture.app.SpinnerDisplayable;
+import com.notificationcapture.app.interfaces.SpinnerDisplayable;
 import com.notificationcapture.app.enums.TransactionType;
 
 import java.io.Serializable;

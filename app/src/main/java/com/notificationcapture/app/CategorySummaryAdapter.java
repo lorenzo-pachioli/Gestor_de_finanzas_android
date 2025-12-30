@@ -11,16 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.notificationcapture.app.interfaces.OnCategoryClickListener;
+
 public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummaryAdapter.ViewHolder> {
 
     private List<Map.Entry<String, Double>> categoryList;
     private Map<String, Integer> categoryColors;
     private OnCategoryClickListener listener;
-    private double totalPeriodAmount;
 
-    public interface OnCategoryClickListener {
-        void onCategoryClick(String category, Double totalAmount);
-    }
+    private  int totalPeriodAmount;
 
     public CategorySummaryAdapter(Map<String, Double> categoryData, Map<String, Integer> categoryColors,
             OnCategoryClickListener listener) {

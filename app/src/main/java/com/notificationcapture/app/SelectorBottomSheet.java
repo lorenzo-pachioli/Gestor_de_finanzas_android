@@ -11,6 +11,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import java.util.List;
+import java.util.Map;
+
+import com.notificationcapture.app.interfaces.OnOptionSelectedListener;
 
 public class SelectorBottomSheet extends BottomSheetDialogFragment {
 
@@ -20,13 +23,6 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
     private static final String ARG_COLORS = "colors"; // NEW
 
     private OnOptionSelectedListener listener;
-    private List<String> options;
-    private String selectedOption;
-    private java.util.Map<String, Integer> colorMap; // NEW
-
-    public interface OnOptionSelectedListener {
-        void onOptionSelected(String option);
-    }
 
     public static SelectorBottomSheet newInstance(String title, List<String> options, String selectedOption,
             java.util.Map<String, Integer> colorMap) {
@@ -69,8 +65,9 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
         if (getArguments() != null) {
             String title = getArguments().getString(ARG_TITLE);
             String[] optionsArray = getArguments().getStringArray(ARG_OPTIONS);
-            selectedOption = getArguments().getString(ARG_SELECTED);
+            String selectedOption = getArguments().getString(ARG_SELECTED);
             // Safe cast if possible, or just check type
+            Map<String, Integer> colorMap;
             try {
                 colorMap = (java.util.Map<String, Integer>) getArguments().getSerializable(ARG_COLORS);
             } catch (Exception e) {
@@ -82,7 +79,7 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
             }
 
             if (optionsArray != null) {
-                options = java.util.Arrays.asList(optionsArray);
+                List<String> options = java.util.Arrays.asList(optionsArray);
                 OptionAdapter adapter = new OptionAdapter(options, selectedOption, colorMap, option -> {
                     if (listener != null) {
                         listener.onOptionSelected(option);

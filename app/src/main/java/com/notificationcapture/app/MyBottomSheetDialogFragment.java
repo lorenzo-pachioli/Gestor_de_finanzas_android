@@ -19,16 +19,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.notificationcapture.app.interfaces.OnDismissListener;
+
 public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
     private TextView tvTitle;
     private RecyclerView recyclerDetails;
     private NotificationAdapter adapter;
     private boolean dataChanged = false;
-
-    public interface OnDismissListener {
-        void onDismissed(boolean changed);
-    }
 
     private OnDismissListener dismissListener;
 

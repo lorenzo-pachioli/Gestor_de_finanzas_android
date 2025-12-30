@@ -17,8 +17,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import com.notificationcapture.app.enums.TransactionType;
+
 import com.notificationcapture.app.enums.PaymentMethod;
+import com.notificationcapture.app.enums.TransactionType;
+import com.notificationcapture.app.interfaces.OnDeleteClickListener;
 
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
 
@@ -26,10 +28,6 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     private final java.util.Map<String, Integer> categoryColors;
     private SimpleDateFormat dateFormat;
     private OnDeleteClickListener deleteListener;
-
-    public interface OnDeleteClickListener {
-        void onDeleteClick(NotificationItem item);
-    }
 
     public NotificationAdapter(List<NotificationItem> notifications, java.util.Map<String, Integer> categoryColors,
             OnDeleteClickListener deleteListener) {

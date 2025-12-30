@@ -24,13 +24,12 @@ import com.notificationcapture.app.models.CreditCard;
 
 import java.util.List;
 
+import com.notificationcapture.app.interfaces.PaymentMethodListener;
+
 public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
 
-    public interface PaymentMethodListener {
-        void onPaymentMethodSelected(PaymentMethod method, String detail, int installments);
-    }
-
     private PaymentMethodListener listener;
+
     private NotificationRepository repository;
 
     public void setListener(PaymentMethodListener listener) {
