@@ -14,6 +14,11 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.notificationcapture.app.fragments.AgregarFragment;
+import com.notificationcapture.app.fragments.CategoriasFragment;
+import com.notificationcapture.app.fragments.HistorialFragment;
+import com.notificationcapture.app.fragments.InicioFragment;
+import com.notificationcapture.app.fragments.PerfilFragment;
 
 public class MainActivity extends AppCompatActivity {
 

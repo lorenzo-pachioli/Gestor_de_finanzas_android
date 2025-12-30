@@ -1,10 +1,13 @@
-package com.notificationcapture.app;
+package com.notificationcapture.app.listeners;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.app.Notification;
+
+import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.NotificationRepository;
 
 public class NotificationListener extends NotificationListenerService {
 

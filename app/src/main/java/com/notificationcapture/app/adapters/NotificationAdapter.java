@@ -1,13 +1,12 @@
-package com.notificationcapture.app;
+package com.notificationcapture.app.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
+
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import android.widget.TextView;
@@ -18,6 +17,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.fragments.PaymentMethodBottomSheet;
+import com.notificationcapture.app.R;
+import com.notificationcapture.app.fragments.SelectorBottomSheet;
 import com.notificationcapture.app.enums.PaymentMethod;
 import com.notificationcapture.app.enums.TransactionType;
 import com.notificationcapture.app.interfaces.OnDeleteClickListener;

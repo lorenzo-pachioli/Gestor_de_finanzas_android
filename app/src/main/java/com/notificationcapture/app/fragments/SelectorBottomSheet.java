@@ -1,4 +1,4 @@
-package com.notificationcapture.app;
+package com.notificationcapture.app.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,6 +13,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import java.util.List;
 import java.util.Map;
 
+import com.notificationcapture.app.R;
 import com.notificationcapture.app.interfaces.OnOptionSelectedListener;
 
 public class SelectorBottomSheet extends BottomSheetDialogFragment {

@@ -1,4 +1,4 @@
-package com.notificationcapture.app;
+package com.notificationcapture.app.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.notificationcapture.app.R;
 import com.notificationcapture.app.interfaces.OnCategoryClickListener;
 
 public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummaryAdapter.ViewHolder> {

@@ -1,4 +1,4 @@
-package com.notificationcapture.app;
+package com.notificationcapture.app.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -19,6 +19,9 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.R;
+import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.enums.PaymentMethod;
 import com.notificationcapture.app.models.CreditCard;
 

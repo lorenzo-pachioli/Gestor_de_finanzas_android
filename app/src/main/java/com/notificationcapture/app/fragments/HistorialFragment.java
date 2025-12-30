@@ -1,4 +1,4 @@
-package com.notificationcapture.app;
+package com.notificationcapture.app.fragments;
 
 import android.os.Bundle;
 
@@ -17,6 +17,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+
+import com.notificationcapture.app.adapters.NotificationAdapter;
+import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.R;
 import com.notificationcapture.app.models.Category;
 
 public class HistorialFragment extends Fragment {

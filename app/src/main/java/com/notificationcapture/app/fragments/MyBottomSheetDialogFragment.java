@@ -1,6 +1,5 @@
-package com.notificationcapture.app;
+package com.notificationcapture.app.fragments;
 
-import android.app.Dialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,14 +10,16 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.notificationcapture.app.adapters.NotificationAdapter;
+import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.R;
 import com.notificationcapture.app.interfaces.OnDismissListener;
 
 public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {

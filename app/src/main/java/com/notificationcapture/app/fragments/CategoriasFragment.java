@@ -1,13 +1,11 @@
-package com.notificationcapture.app;
+package com.notificationcapture.app.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,6 +14,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.tabs.TabLayout;
 
+import com.notificationcapture.app.adapters.CategorySummaryAdapter;
+import com.notificationcapture.app.adapters.NotificationAdapter;
+import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.R;
+import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.models.Category;
 import com.notificationcapture.app.enums.TransactionType;
 

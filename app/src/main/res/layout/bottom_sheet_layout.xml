@@ -7,7 +7,7 @@
     android:background="@drawable/bottom_sheet_background"
     android:padding="16dp"
     android:minHeight="200dp"
-    tools:context=".MyBottomSheetDialogFragment">
+    tools:context=".fragments.MyBottomSheetDialogFragment">
 
     <TextView
         android:id="@+id/tvTitle"

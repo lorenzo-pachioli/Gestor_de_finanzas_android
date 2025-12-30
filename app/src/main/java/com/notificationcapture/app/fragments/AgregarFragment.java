@@ -1,10 +1,9 @@
-package com.notificationcapture.app;
+package com.notificationcapture.app.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -21,8 +20,14 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.R;
+import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.enums.TransactionType;
 import com.notificationcapture.app.enums.PaymentMethod;
+import com.notificationcapture.app.models.Category;
 
 public class AgregarFragment extends Fragment {
 
@@ -125,7 +130,7 @@ public class AgregarFragment extends Fragment {
                 : TransactionType.INGRESO;
 
         java.util.List<com.notificationcapture.app.models.Category> categories = repository.getCategories(type);
-        UniversalSpinnerAdapter<com.notificationcapture.app.models.Category> adapterCategories = new UniversalSpinnerAdapter<>(
+        UniversalSpinnerAdapter<Category> adapterCategories = new UniversalSpinnerAdapter<>(
                 requireContext(), categories);
         spinnerCategory.setAdapter(adapterCategories);
     }

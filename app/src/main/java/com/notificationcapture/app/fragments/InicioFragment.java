@@ -1,4 +1,4 @@
-package com.notificationcapture.app;
+package com.notificationcapture.app.fragments;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -22,6 +22,11 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+
+import com.notificationcapture.app.adapters.NotificationAdapter;
+import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.R;
 import com.notificationcapture.app.models.Category;
 import com.notificationcapture.app.enums.TransactionType;
 

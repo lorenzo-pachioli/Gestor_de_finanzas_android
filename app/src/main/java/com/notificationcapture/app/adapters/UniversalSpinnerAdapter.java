@@ -1,4 +1,4 @@
-package com.notificationcapture.app;
+package com.notificationcapture.app.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -8,6 +8,8 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.notificationcapture.app.R;
 import com.notificationcapture.app.interfaces.SpinnerDisplayable;
 import java.util.List;
 
