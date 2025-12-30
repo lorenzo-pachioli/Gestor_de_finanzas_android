@@ -25,12 +25,15 @@ import androidx.fragment.app.Fragment;
 import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.VISIBLE;
 
-import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.repositories.CategoryRepository;
+import com.notificationcapture.app.repositories.CreditCardRepository;
+import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.models.Category;
 import com.notificationcapture.app.models.CreditCard;
 import com.notificationcapture.app.enums.TransactionType;
+import com.notificationcapture.app.repositories.WalletRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,7 +41,10 @@ import java.util.List;
 
 public class PerfilFragment extends Fragment {
 
-    private NotificationRepository repository;
+    private TransactionRepository repository;
+    private WalletRepository walletRepository;
+    private CreditCardRepository creditCardRepository;
+    private CategoryRepository categoryRepository;
     private Spinner spinnerCategories;
     private Spinner spinnerWallets;
     private Spinner spinnerCreditCards;
@@ -103,7 +109,10 @@ public class PerfilFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        repository = new NotificationRepository(requireContext());
+        repository = new TransactionRepository(requireContext());
+        walletRepository = new WalletRepository(requireContext());
+        categoryRepository = new CategoryRepository(requireContext());
+        creditCardRepository = new CreditCardRepository(requireContext());
 
         // Initialize UI Views
         spinnerCategories = view.findViewById(R.id.spinnerCategories);
@@ -288,7 +297,7 @@ public class PerfilFragment extends Fragment {
         TransactionType type = swCatType.isChecked()
                 ? TransactionType.EGRESO
                 : TransactionType.INGRESO;
-        currentCategories = repository.getCategories(type);
+        currentCategories = categoryRepository.getCategories(type);
 
         List<Category> displayList = new ArrayList<>();
         // Placeholder
@@ -300,7 +309,7 @@ public class PerfilFragment extends Fragment {
     }
 
     private void loadWallets() {
-        currentWallets = repository.getWallets();
+        currentWallets = walletRepository.getWallets();
 
         List<String> displayList = new ArrayList<>();
         displayList.add("Seleccionar para editar/borrar..."); // Placeholder
@@ -311,7 +320,7 @@ public class PerfilFragment extends Fragment {
     }
 
     private void loadCreditCards() {
-        currentCreditCards = repository.getCreditCards();
+        currentCreditCards = creditCardRepository.getCreditCards();
 
         List<CreditCard> displayList = new ArrayList<>();
         displayList.add(new CreditCard("Seleccionar para editar/borrar...", 0, 0)); // Placeholder or dummy
@@ -355,7 +364,7 @@ public class PerfilFragment extends Fragment {
                         ? TransactionType.EGRESO
                         : TransactionType.INGRESO;
                 Category newCat = new Category(name, selectedColor, transactionTypeype);
-                repository.addCategory(newCat);
+                categoryRepository.addCategory(newCat);
                 loadCategories();
                 Toast.makeText(requireContext(), "Categoría agregada", Toast.LENGTH_SHORT).show();
             }
@@ -389,7 +398,7 @@ public class PerfilFragment extends Fragment {
         btnCreate.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             if (!name.isEmpty()) {
-                repository.addWallet(name);
+                walletRepository.addWallet(name);
                 loadWallets();
                 Toast.makeText(requireContext(), "Billetera agregada", Toast.LENGTH_SHORT).show();
             }
@@ -441,7 +450,7 @@ public class PerfilFragment extends Fragment {
 
             if (!name.isEmpty()) {
                 CreditCard newCard = new CreditCard(name, closingDate, selectedColor);
-                repository.addCreditCard(newCard);
+                creditCardRepository.addCreditCard(newCard);
                 loadCreditCards();
                 Toast.makeText(requireContext(), "Tarjeta agregada", Toast.LENGTH_SHORT).show();
             }
@@ -495,7 +504,7 @@ public class PerfilFragment extends Fragment {
             String name = etName.getText().toString().trim();
             if (!name.isEmpty()) {
                 Category newCat = new Category(name, selectedColor, category.getType());
-                repository.updateCategory(category, newCat);
+                categoryRepository.updateCategory(category, newCat);
                 loadCategories();
                 Toast.makeText(requireContext(), "Categoría actualizada", Toast.LENGTH_SHORT).show();
             }
@@ -507,7 +516,7 @@ public class PerfilFragment extends Fragment {
                     .setTitle("Eliminar Categoría")
                     .setMessage("¿Estás seguro de eliminar '" + category.getName() + "'?")
                     .setPositiveButton("Eliminar", (d, w) -> {
-                        repository.deleteCategory(category.getName(), category.getType());
+                        categoryRepository.deleteCategory(category.getName(), category.getType());
                         loadCategories();
                         Toast.makeText(requireContext(), "Categoría eliminada", Toast.LENGTH_SHORT).show();
                     })
@@ -545,7 +554,7 @@ public class PerfilFragment extends Fragment {
         btnCreate.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             if (!name.isEmpty()) {
-                repository.updateWallet(currentName, name);
+                walletRepository.updateWallet(currentName, name);
                 loadWallets();
                 Toast.makeText(requireContext(), "Billetera actualizada", Toast.LENGTH_SHORT).show();
             }
@@ -558,7 +567,7 @@ public class PerfilFragment extends Fragment {
                     .setTitle("Eliminar Billetera")
                     .setMessage("¿Estás seguro de eliminar '" + currentName + "'?")
                     .setPositiveButton("Eliminar", (d, w) -> {
-                        repository.deleteWallet(currentName);
+                        walletRepository.deleteWallet(currentName);
                         loadWallets();
                         Toast.makeText(requireContext(), "Billetera eliminada", Toast.LENGTH_SHORT).show();
                     })
@@ -618,7 +627,7 @@ public class PerfilFragment extends Fragment {
                 card.setName(name);
                 card.setClosingDate(closingDate);
                 card.setColor(selectedColor);
-                repository.updateCreditCard(card);
+                creditCardRepository.updateCreditCard(card);
                 loadCreditCards();
                 Toast.makeText(requireContext(), "Tarjeta actualizada", Toast.LENGTH_SHORT).show();
             }
@@ -630,7 +639,7 @@ public class PerfilFragment extends Fragment {
                     .setTitle("Eliminar Tarjeta")
                     .setMessage("¿Estás seguro de eliminar '" + card.getName() + "'?")
                     .setPositiveButton("Eliminar", (d, w) -> {
-                        repository.deleteCreditCard(card.getId());
+                        creditCardRepository.deleteCreditCard(card.getId());
                         loadCreditCards();
                         Toast.makeText(requireContext(), "Tarjeta eliminada", Toast.LENGTH_SHORT).show();
                     })

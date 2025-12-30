@@ -7,11 +7,11 @@ import android.service.notification.StatusBarNotification;
 import android.app.Notification;
 
 import com.notificationcapture.app.NotificationItem;
-import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.repositories.TransactionRepository;
 
 public class NotificationListener extends NotificationListenerService {
 
-    private NotificationRepository repository;
+    private TransactionRepository repository;
 
     // Lista de apps de wallet/bancos conocidas (añade las que uses)
     private String[] walletApps = {
@@ -74,7 +74,7 @@ public class NotificationListener extends NotificationListenerService {
     @Override
     public void onCreate() {
         super.onCreate();
-        repository = new NotificationRepository(this);
+        repository = new TransactionRepository(this);
     }
 
     @Override
@@ -108,7 +108,7 @@ public class NotificationListener extends NotificationListenerService {
                 //extraerMonto(text)
         );
 
-        repository.saveNotificationNotFiltered(item);
+        repository.saveTransactionNotFiltered(item);
 
         // Filtrar solo notificaciones de wallets/pagos
         if (!isPaymentRelatedNotification(packageName, title, text)) {
@@ -116,7 +116,7 @@ public class NotificationListener extends NotificationListenerService {
         }
 
         // Guardar la notificación
-        repository.saveNotification(item);
+        repository.saveTransaction(item);
 
         // Notificar a la actividad para actualizar la UI
         Intent intent = new Intent("com.notificationcapture.NEW_NOTIFICATION");

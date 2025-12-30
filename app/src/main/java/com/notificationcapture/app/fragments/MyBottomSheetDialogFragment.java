@@ -18,7 +18,7 @@ import java.util.Map;
 
 import com.notificationcapture.app.adapters.NotificationAdapter;
 import com.notificationcapture.app.NotificationItem;
-import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.interfaces.OnDismissListener;
 
@@ -83,8 +83,8 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                     colorMap = new HashMap<>();
 
                 adapter = new NotificationAdapter(notifications, colorMap, item -> {
-                    NotificationRepository repository = new NotificationRepository(requireContext());
-                    repository.deleteNotification(item.getId());
+                    TransactionRepository repository = new TransactionRepository(requireContext());
+                    repository.deleteTransaction(item.getId());
                     notifications.remove(item);
                     adapter.notifyDataSetChanged();
                     dataChanged = true;

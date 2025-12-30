@@ -22,7 +22,8 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import com.notificationcapture.app.NotificationItem;
-import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.repositories.CategoryRepository;
+import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.enums.TransactionType;
@@ -40,7 +41,8 @@ public class AgregarFragment extends Fragment {
     private Button btnCreate;
     private TextInputEditText etDate;
     private TextView tvPaymentMethod;
-    private NotificationRepository repository;
+    private TransactionRepository repository;
+    private CategoryRepository categoryRepository;
     private long selectedDateTimestamp;
 
     private PaymentMethod selectedMethod = PaymentMethod.EFECTIVO;
@@ -60,7 +62,8 @@ public class AgregarFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        repository = new NotificationRepository(requireContext());
+        repository = new TransactionRepository(requireContext());
+        categoryRepository = new CategoryRepository(requireContext());
 
         tvPaymentMethod = view.findViewById(R.id.tvPaymentMethod);
         etTitle = view.findViewById(R.id.etTitle);
@@ -129,7 +132,7 @@ public class AgregarFragment extends Fragment {
                 ? TransactionType.EGRESO
                 : TransactionType.INGRESO;
 
-        java.util.List<com.notificationcapture.app.models.Category> categories = repository.getCategories(type);
+        java.util.List<com.notificationcapture.app.models.Category> categories = categoryRepository.getCategories(type);
         UniversalSpinnerAdapter<Category> adapterCategories = new UniversalSpinnerAdapter<>(
                 requireContext(), categories);
         spinnerCategory.setAdapter(adapterCategories);
@@ -193,7 +196,7 @@ public class AgregarFragment extends Fragment {
             notification.setCurrentInstallment(i);
             notification.setInstallmentGroupId(installmentGroupId);
 
-            repository.saveNotification(notification);
+            repository.saveTransaction(notification);
 
             // Add 1 month for next installment
             calendar.add(java.util.Calendar.MONTH, 1);

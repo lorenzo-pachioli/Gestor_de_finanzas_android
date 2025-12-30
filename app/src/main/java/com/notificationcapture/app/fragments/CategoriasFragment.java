@@ -17,7 +17,8 @@ import com.google.android.material.tabs.TabLayout;
 import com.notificationcapture.app.adapters.CategorySummaryAdapter;
 import com.notificationcapture.app.adapters.NotificationAdapter;
 import com.notificationcapture.app.NotificationItem;
-import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.repositories.CategoryRepository;
+import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.models.Category;
@@ -44,7 +45,8 @@ public class CategoriasFragment extends Fragment {
 
     private CategorySummaryAdapter summaryAdapter;
     private NotificationAdapter detailsAdapter;
-    private NotificationRepository repository;
+    private TransactionRepository repository;
+    private CategoryRepository categoryRepository;
 
     // Period handling
     private List<Calendar> periodList;
@@ -57,7 +59,8 @@ public class CategoriasFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        repository = new NotificationRepository(requireContext());
+        repository = new TransactionRepository(requireContext());
+        categoryRepository = new CategoryRepository(requireContext());
     }
 
     @Override
@@ -112,7 +115,7 @@ public class CategoriasFragment extends Fragment {
 
     private void setupAdapters() {
         // Fetch categories to get colors
-        List<Category> categories = repository.getCategories(currentType);
+        List<Category> categories = categoryRepository.getCategories(currentType);
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : categories) {
             colorMap.put(c.getName(), c.getColor());
@@ -125,7 +128,7 @@ public class CategoriasFragment extends Fragment {
         // viewing here
         detailsAdapter = new NotificationAdapter(new ArrayList<>(), colorMap, item -> {
             // Optional: Implement deletion from details view if needed
-            repository.deleteNotification(item.getId());
+            repository.deleteTransaction(item.getId());
             refreshData();
         });
         // recyclerDetails.setAdapter(detailsAdapter);
@@ -149,7 +152,7 @@ public class CategoriasFragment extends Fragment {
 
         // --- Setup Year Spinner ---
         List<String> years = new ArrayList<>();
-        List<NotificationItem> allNotifications = repository.getAllNotifications();
+        List<NotificationItem> allNotifications = repository.getAllTransactions();
         Calendar cal = Calendar.getInstance();
 
         for (NotificationItem item : allNotifications) {
@@ -197,8 +200,8 @@ public class CategoriasFragment extends Fragment {
 
     private void loadDataForPeriod(int month, int year) {
         if (repository == null)
-            repository = new NotificationRepository(requireContext());
-        List<NotificationItem> allNotifications = repository.getAllNotifications();
+            repository = new TransactionRepository(requireContext());
+        List<NotificationItem> allNotifications = repository.getAllTransactions();
 
         Map<String, Double> categoryTotals = new HashMap<>();
 
@@ -222,7 +225,7 @@ public class CategoriasFragment extends Fragment {
         }
 
         // Update colors as well
-        List<Category> categories = repository.getCategories(currentType);
+        List<Category> categories = categoryRepository.getCategories(currentType);
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : categories) {
             colorMap.put(c.getName(), c.getColor());
@@ -240,7 +243,7 @@ public class CategoriasFragment extends Fragment {
 
         int year = Integer.parseInt(selectedYearStr);
 
-        List<NotificationItem> allNotifications = repository.getAllNotifications();
+        List<NotificationItem> allNotifications = repository.getAllTransactions();
         List<NotificationItem> filteredList = new ArrayList<>();
 
         for (NotificationItem item : allNotifications) {
@@ -261,7 +264,7 @@ public class CategoriasFragment extends Fragment {
         }
 
         // Fetch categories to get colors
-        List<Category> categories = repository.getCategories(currentType);
+        List<Category> categories = categoryRepository.getCategories(currentType);
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : categories) {
             colorMap.put(c.getName(), c.getColor());

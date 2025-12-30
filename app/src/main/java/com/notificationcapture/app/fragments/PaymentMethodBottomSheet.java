@@ -19,7 +19,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
-import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.repositories.CreditCardRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.enums.PaymentMethod;
@@ -28,12 +28,13 @@ import com.notificationcapture.app.models.CreditCard;
 import java.util.List;
 
 import com.notificationcapture.app.interfaces.PaymentMethodListener;
+import com.notificationcapture.app.repositories.WalletRepository;
 
 public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
 
     private PaymentMethodListener listener;
-
-    private NotificationRepository repository;
+    private WalletRepository walletRepository;
+    private CreditCardRepository creditCardRepository;
 
     public void setListener(PaymentMethodListener listener) {
         this.listener = listener;
@@ -62,7 +63,8 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        repository = new NotificationRepository(requireContext());
+        walletRepository = new WalletRepository(requireContext());
+        creditCardRepository = new CreditCardRepository(requireContext());
 
         TabLayout tabLayout = view.findViewById(R.id.tabLayout);
         ViewPager2 viewPager = view.findViewById(R.id.viewPager);
@@ -180,7 +182,7 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
         }
 
         void bind() {
-            List<String> wallets = repository.getWallets();
+            List<String> wallets = walletRepository.getWallets();
             // Using a simple adapter for wallets directly here
             SimpleTextAdapter adapter = new SimpleTextAdapter(wallets, walletName -> {
                 if (listener != null) {
@@ -205,7 +207,7 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
         }
 
         void bind() {
-            List<CreditCard> cards = repository.getCreditCards();
+            List<CreditCard> cards = creditCardRepository.getCreditCards();
 
             // Need a displayable list for UniversalSpinnerAdapter or just manual
             // To keep it simple, let's use UniversalSpinnerAdapter logic or create a list

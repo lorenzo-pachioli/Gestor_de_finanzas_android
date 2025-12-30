@@ -20,7 +20,8 @@ import java.util.HashMap;
 
 import com.notificationcapture.app.adapters.NotificationAdapter;
 import com.notificationcapture.app.NotificationItem;
-import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.repositories.CategoryRepository;
+import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.models.Category;
 
@@ -28,7 +29,8 @@ public class HistorialFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private TextView emptyView;
-    private NotificationRepository repository;
+    private TransactionRepository repository;
+    private CategoryRepository categoryRepository;
     private NotificationAdapter adapter;
 
     public HistorialFragment() {
@@ -52,14 +54,15 @@ public class HistorialFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        repository = new NotificationRepository(requireContext());
+        repository = new TransactionRepository(requireContext());
+        categoryRepository = new CategoryRepository(requireContext());
         emptyView = view.findViewById(R.id.emptyViewHistorial);
         recyclerView = view.findViewById(R.id.recyclerViewHistorial);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         // Prepare colors
-        List<Category> allCategories = repository.getAllCategories();
+        List<Category> allCategories = categoryRepository.getAllCategories();
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : allCategories) {
             colorMap.put(c.getName(), c.getColor());
@@ -67,7 +70,7 @@ public class HistorialFragment extends Fragment {
 
         adapter = new NotificationAdapter(new ArrayList<>(), colorMap, (item) -> {
             // Callback para eliminar notificación
-            repository.deleteNotificationNotFiltered(item.getId());
+            repository.deleteTransactionNotFiltered(item.getId());
             loadNotifications();
         });
 
@@ -82,7 +85,7 @@ public class HistorialFragment extends Fragment {
     }
 
     private void loadNotifications() {
-        List<NotificationItem> notifications = repository.getAllNotificationsNotFiltered();
+        List<NotificationItem> notifications = repository.getAllTransactionNotFiltered();
         adapter.updateData(notifications);
 
         if (notifications.isEmpty()) {

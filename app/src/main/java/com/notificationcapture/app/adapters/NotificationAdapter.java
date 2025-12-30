@@ -1,5 +1,7 @@
 package com.notificationcapture.app.adapters;
 
+import static com.notificationcapture.app.repositories.WalletRepository.getPackageNameFromApp;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,7 +20,7 @@ import java.util.List;
 import java.util.Locale;
 
 import com.notificationcapture.app.NotificationItem;
-import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.fragments.PaymentMethodBottomSheet;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.fragments.SelectorBottomSheet;
@@ -128,8 +130,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
                 // Ensure packageName is set if we have detail from payment method
                 if (item.getPaymentMethod() == PaymentMethod.DEBITO) {
-                    NotificationRepository repo = new NotificationRepository(context);
-                    String pkg = repo.getPackageNameFromApp(item.getPaymentMethodDetail());
+                    String pkg = getPackageNameFromApp(item.getPaymentMethodDetail());
                     if (pkg != null)
                         item.setPackageName(pkg);
                 } else if (item.getPaymentMethod() == PaymentMethod.EFECTIVO) {
@@ -152,8 +153,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 item.setExpanded(false);
 
                 // Persistir cambios
-                NotificationRepository repository = new NotificationRepository(context);
-                repository.updateNotification(item);
+                TransactionRepository repository = new TransactionRepository(context);
+                repository.updateTransaction(item);
 
                 notifyItemChanged(holder.getAdapterPosition());
             });

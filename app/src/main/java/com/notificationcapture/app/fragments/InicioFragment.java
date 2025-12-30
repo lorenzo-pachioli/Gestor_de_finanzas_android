@@ -25,7 +25,8 @@ import java.util.HashMap;
 
 import com.notificationcapture.app.adapters.NotificationAdapter;
 import com.notificationcapture.app.NotificationItem;
-import com.notificationcapture.app.NotificationRepository;
+import com.notificationcapture.app.repositories.CategoryRepository;
+import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.models.Category;
 import com.notificationcapture.app.enums.TransactionType;
@@ -40,7 +41,8 @@ public class InicioFragment extends Fragment {
     private TextView tvEgresos;
     private TextView tvBalance;
     private TextView tvMonthTitle;
-    private NotificationRepository repository;
+    private TransactionRepository repository;
+    private CategoryRepository categoryRepository;
     private BroadcastReceiver notificationReceiver;
 
     @Nullable
@@ -54,7 +56,8 @@ public class InicioFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        repository = new NotificationRepository(requireContext());
+        repository = new TransactionRepository(requireContext());
+        categoryRepository = new CategoryRepository(requireContext());
 
         recyclerView = view.findViewById(R.id.recyclerView);
         emptyView = view.findViewById(R.id.emptyView);
@@ -67,14 +70,14 @@ public class InicioFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         // Prepare colors
-        List<Category> allCategories = repository.getAllCategories();
+        List<Category> allCategories = categoryRepository.getAllCategories();
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : allCategories) {
             colorMap.put(c.getName(), c.getColor());
         }
 
         adapter = new NotificationAdapter(new ArrayList<>(), colorMap, item -> {
-            repository.deleteNotification(item.getId());
+            repository.deleteTransaction(item.getId());
             loadNotifications();
         });
         recyclerView.setAdapter(adapter);
@@ -151,7 +154,7 @@ public class InicioFragment extends Fragment {
     }
 
     private void loadNotifications() {
-        List<NotificationItem> allNotifications = repository.getAllNotifications();
+        List<NotificationItem> allNotifications = repository.getAllTransactions();
 
         // Filtrar solo las notificaciones del mes actual
         List<NotificationItem> currentMonthNotifications = getCurrentMonthNotifications(allNotifications);
