@@ -7,7 +7,9 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Collections;
 import java.util.List;
+import com.notificationcapture.app.enums.TransactionType;
 
 public class NotificationRepository {
 
@@ -35,12 +37,12 @@ public class NotificationRepository {
             // Income Defaults
             for (String name : NotificationItem.INCOME_CATEGORIES) {
                 defaultCategories.add(new com.notificationcapture.app.models.Category(name,
-                        android.graphics.Color.parseColor("#4CAF50"), NotificationItem.TransactionType.INGRESO));
+                        android.graphics.Color.parseColor("#4CAF50"), TransactionType.INGRESO));
             }
             // Outcome Defaults
             for (String name : NotificationItem.OUTCOME_CATEGORIES) {
                 defaultCategories.add(new com.notificationcapture.app.models.Category(name,
-                        android.graphics.Color.parseColor("#eb1005"), NotificationItem.TransactionType.EGRESO));
+                        android.graphics.Color.parseColor("#eb1005"), TransactionType.EGRESO));
             }
             saveCategories(defaultCategories);
         }
@@ -217,7 +219,7 @@ public class NotificationRepository {
 
     // --- Category Management ---
 
-    public List<com.notificationcapture.app.models.Category> getCategories(NotificationItem.TransactionType type) {
+    public List<com.notificationcapture.app.models.Category> getCategories(TransactionType type) {
         List<com.notificationcapture.app.models.Category> all = getAllCategories();
         List<com.notificationcapture.app.models.Category> filtered = new ArrayList<>();
         for (com.notificationcapture.app.models.Category c : all) {
@@ -228,7 +230,7 @@ public class NotificationRepository {
         return filtered;
     }
 
-    public List<String> getCategoryNames(NotificationItem.TransactionType type) {
+    public List<String> getCategoryNames(TransactionType type) {
         List<com.notificationcapture.app.models.Category> cats = getCategories(type);
         List<String> names = new ArrayList<>();
         for (com.notificationcapture.app.models.Category c : cats) {
@@ -243,7 +245,7 @@ public class NotificationRepository {
         saveCategories(all);
     }
 
-    public void deleteCategory(String name, NotificationItem.TransactionType type) {
+    public void deleteCategory(String name, TransactionType type) {
         List<com.notificationcapture.app.models.Category> all = getAllCategories();
         List<com.notificationcapture.app.models.Category> toKeep = new ArrayList<>();
         for (com.notificationcapture.app.models.Category c : all) {

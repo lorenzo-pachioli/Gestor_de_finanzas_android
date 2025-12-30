@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import com.notificationcapture.app.models.Category;
+import com.notificationcapture.app.enums.TransactionType;
 
 public class InicioFragment extends Fragment {
 
@@ -208,7 +209,7 @@ public class InicioFragment extends Fragment {
 
         for (NotificationItem item : currentMonthNotifications) {
             if (item.hasAmount()) {
-                if (item.getType() == NotificationItem.TransactionType.INGRESO) {
+                if (item.getType() == TransactionType.INGRESO) {
                     totalIngresos += item.getAmount();
                 } else {
                     totalEgresos += item.getAmount();

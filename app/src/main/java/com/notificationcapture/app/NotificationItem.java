@@ -5,6 +5,9 @@ import java.util.regex.Pattern;
 
 import java.io.Serializable;
 
+import com.notificationcapture.app.enums.TransactionType;
+import com.notificationcapture.app.enums.PaymentMethod;
+
 public class NotificationItem implements Serializable {
     private String id;
     private String packageName;
@@ -15,16 +18,7 @@ public class NotificationItem implements Serializable {
     private TransactionType type;
     private String category;
 
-    public enum TransactionType {
-        INGRESO,
-        EGRESO
-    }
-
-    public enum PaymentMethod {
-        EFECTIVO,
-        DEBITO,
-        CREDITO
-    }
+    // Enums moved to package com.notificationcapture.app.enums
 
     private PaymentMethod paymentMethod;
     private String paymentMethodDetail; // Wallet name or Credit Card name

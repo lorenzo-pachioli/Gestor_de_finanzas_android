@@ -19,6 +19,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.notificationcapture.app.enums.PaymentMethod;
 import com.notificationcapture.app.models.CreditCard;
 
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.List;
 public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
 
     public interface PaymentMethodListener {
-        void onPaymentMethodSelected(NotificationItem.PaymentMethod method, String detail, int installments);
+        void onPaymentMethodSelected(PaymentMethod method, String detail, int installments);
     }
 
     private PaymentMethodListener listener;
@@ -160,7 +161,7 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
         void bind() {
             btnConfirm.setOnClickListener(v -> {
                 if (listener != null) {
-                    listener.onPaymentMethodSelected(NotificationItem.PaymentMethod.EFECTIVO, null, 1);
+                    listener.onPaymentMethodSelected(PaymentMethod.EFECTIVO, null, 1);
                 }
                 dismiss();
             });
@@ -181,7 +182,7 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
             // Using a simple adapter for wallets directly here
             SimpleTextAdapter adapter = new SimpleTextAdapter(wallets, walletName -> {
                 if (listener != null) {
-                    listener.onPaymentMethodSelected(NotificationItem.PaymentMethod.DEBITO, walletName, 1);
+                    listener.onPaymentMethodSelected(PaymentMethod.DEBITO, walletName, 1);
                 }
                 dismiss();
             });
@@ -260,7 +261,7 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
                 // original value here yet.
 
                 if (listener != null) {
-                    listener.onPaymentMethodSelected(NotificationItem.PaymentMethod.CREDITO, selectedCard.getName(),
+                    listener.onPaymentMethodSelected(PaymentMethod.CREDITO, selectedCard.getName(),
                             cuotas);
                 }
                 dismiss();

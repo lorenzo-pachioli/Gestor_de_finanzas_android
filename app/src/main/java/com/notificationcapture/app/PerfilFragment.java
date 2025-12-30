@@ -27,6 +27,7 @@ import static android.view.View.VISIBLE;
 
 import com.notificationcapture.app.models.Category;
 import com.notificationcapture.app.models.CreditCard;
+import com.notificationcapture.app.enums.TransactionType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -281,9 +282,9 @@ public class PerfilFragment extends Fragment {
     }
 
     private void loadCategories() {
-        NotificationItem.TransactionType type = swCatType.isChecked()
-                ? NotificationItem.TransactionType.EGRESO
-                : NotificationItem.TransactionType.INGRESO;
+        TransactionType type = swCatType.isChecked()
+                ? TransactionType.EGRESO
+                : TransactionType.INGRESO;
         currentCategories = repository.getCategories(type);
 
         List<Category> displayList = new ArrayList<>();
@@ -329,11 +330,11 @@ public class PerfilFragment extends Fragment {
         LinearLayout containerColors = dialogView.findViewById(R.id.containerColors);
 
         // Populate Colors
-        NotificationItem.TransactionType type = swCatType.isChecked()
-                ? NotificationItem.TransactionType.EGRESO
-                : NotificationItem.TransactionType.INGRESO;
+        TransactionType type = swCatType.isChecked()
+                ? TransactionType.EGRESO
+                : TransactionType.INGRESO;
 
-        int[] colors = (type == NotificationItem.TransactionType.INGRESO) ? INGRESOS_COLORS : EGRESOS_COLORS;
+        int[] colors = (type == TransactionType.INGRESO) ? INGRESOS_COLORS : EGRESOS_COLORS;
         selectedColor = colors[0]; // Default to first
 
         populateColorPicker(containerColors, colors);
@@ -347,9 +348,9 @@ public class PerfilFragment extends Fragment {
         btnCreate.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             if (!name.isEmpty()) {
-                NotificationItem.TransactionType transactionTypeype = swCatType.isChecked()
-                        ? NotificationItem.TransactionType.EGRESO
-                        : NotificationItem.TransactionType.INGRESO;
+                TransactionType transactionTypeype = swCatType.isChecked()
+                        ? TransactionType.EGRESO
+                        : TransactionType.INGRESO;
                 Category newCat = new Category(name, selectedColor, transactionTypeype);
                 repository.addCategory(newCat);
                 loadCategories();
@@ -475,7 +476,7 @@ public class PerfilFragment extends Fragment {
         selectedColor = category.getColor();
 
         // Populate Colors
-        int[] colors = (category.getType() == NotificationItem.TransactionType.INGRESO) ? INGRESOS_COLORS
+        int[] colors = (category.getType() == TransactionType.INGRESO) ? INGRESOS_COLORS
                 : EGRESOS_COLORS;
         populateColorPicker(containerColors, colors);
 

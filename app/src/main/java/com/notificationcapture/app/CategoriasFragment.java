@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.tabs.TabLayout;
 
 import com.notificationcapture.app.models.Category;
+import com.notificationcapture.app.enums.TransactionType;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class CategoriasFragment extends Fragment {
     private Spinner spinnerYear;
     private TabLayout tabLayout;
 
-    private NotificationItem.TransactionType currentType = NotificationItem.TransactionType.EGRESO;
+    private TransactionType currentType = TransactionType.EGRESO;
 
     private CategorySummaryAdapter summaryAdapter;
     private NotificationAdapter detailsAdapter;
@@ -88,9 +89,9 @@ public class CategoriasFragment extends Fragment {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 if (tab.getPosition() == 0) {
-                    currentType = NotificationItem.TransactionType.EGRESO;
+                    currentType = TransactionType.EGRESO;
                 } else {
-                    currentType = NotificationItem.TransactionType.INGRESO;
+                    currentType = TransactionType.INGRESO;
                 }
                 refreshData();
             }

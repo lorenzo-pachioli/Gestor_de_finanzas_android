@@ -21,6 +21,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import com.notificationcapture.app.enums.TransactionType;
+import com.notificationcapture.app.enums.PaymentMethod;
 
 public class AgregarFragment extends Fragment {
 
@@ -36,7 +38,7 @@ public class AgregarFragment extends Fragment {
     private NotificationRepository repository;
     private long selectedDateTimestamp;
 
-    private NotificationItem.PaymentMethod selectedMethod = NotificationItem.PaymentMethod.EFECTIVO;
+    private PaymentMethod selectedMethod = PaymentMethod.EFECTIVO;
     private String selectedMethodDetail = "";
     private int selectedInstallments = 1;
 
@@ -118,9 +120,9 @@ public class AgregarFragment extends Fragment {
         // isChecked = false -> Ingreso
         boolean isEgreso = swType.isChecked();
 
-        NotificationItem.TransactionType type = isEgreso
-                ? NotificationItem.TransactionType.EGRESO
-                : NotificationItem.TransactionType.INGRESO;
+        TransactionType type = isEgreso
+                ? TransactionType.EGRESO
+                : TransactionType.INGRESO;
 
         java.util.List<com.notificationcapture.app.models.Category> categories = repository.getCategories(type);
         UniversalSpinnerAdapter<com.notificationcapture.app.models.Category> adapterCategories = new UniversalSpinnerAdapter<>(
@@ -149,14 +151,14 @@ public class AgregarFragment extends Fragment {
         }
 
         // Determinar tipo de transacción
-        NotificationItem.TransactionType type = swType.isChecked()
-                ? NotificationItem.TransactionType.EGRESO
-                : NotificationItem.TransactionType.INGRESO;
+        TransactionType type = swType.isChecked()
+                ? TransactionType.EGRESO
+                : TransactionType.INGRESO;
 
         // Crear package name (intentar deducir del detalle si es posible, o usar
         // default)
         String packageName = getPackageNameFromApp(selectedMethodDetail);
-        if (packageName.equals("com.wallet.custom") && selectedMethod == NotificationItem.PaymentMethod.EFECTIVO) {
+        if (packageName.equals("com.wallet.custom") && selectedMethod == PaymentMethod.EFECTIVO) {
             packageName = "com.cash.payment"; // Opcional: un paquete dummy para efectivo
         }
 
@@ -201,7 +203,7 @@ public class AgregarFragment extends Fragment {
         etText.setText("");
 
         // Reset Payment Method
-        selectedMethod = NotificationItem.PaymentMethod.EFECTIVO;
+        selectedMethod = PaymentMethod.EFECTIVO;
         selectedMethodDetail = "";
         selectedInstallments = 1;
         tvPaymentMethod.setText("Efectivo");
@@ -214,7 +216,7 @@ public class AgregarFragment extends Fragment {
         updateDateField(selectedDateTimestamp);
 
         // Confirmación
-        String typeText = type == NotificationItem.TransactionType.INGRESO ? "Ingreso" : "Egreso";
+        String typeText = type == TransactionType.INGRESO ? "Ingreso" : "Egreso";
         Toast.makeText(requireContext(),
                 "✅ " + typeText + " creado exitosamente",
                 Toast.LENGTH_SHORT).show();
@@ -228,9 +230,9 @@ public class AgregarFragment extends Fragment {
             this.selectedInstallments = installments;
 
             String displayText;
-            if (method == NotificationItem.PaymentMethod.EFECTIVO) {
+            if (method == PaymentMethod.EFECTIVO) {
                 displayText = "Efectivo";
-            } else if (method == NotificationItem.PaymentMethod.DEBITO) {
+            } else if (method == PaymentMethod.DEBITO) {
                 displayText = "Débito - " + selectedMethodDetail;
             } else {
                 displayText = "Crédito - " + selectedMethodDetail

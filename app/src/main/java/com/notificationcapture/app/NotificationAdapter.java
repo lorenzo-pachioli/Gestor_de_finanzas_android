@@ -17,6 +17,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import com.notificationcapture.app.enums.TransactionType;
+import com.notificationcapture.app.enums.PaymentMethod;
 
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
 
@@ -66,7 +68,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             }
 
             // Configurar Switch de Tipo
-            boolean isIngreso = item.getType() == NotificationItem.TransactionType.INGRESO;
+            boolean isIngreso = item.getType() == TransactionType.INGRESO;
             holder.switchType.setChecked(!isIngreso); // checked = Egreso, unchecked = Ingreso
 
             // Configurar UI inicial
@@ -112,8 +114,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 // Guardar tipo
                 // checked = true -> Egreso, false -> Ingreso
                 boolean isEgresoSelected = holder.switchType.isChecked();
-                item.setType(isEgresoSelected ? NotificationItem.TransactionType.EGRESO
-                        : NotificationItem.TransactionType.INGRESO);
+                item.setType(isEgresoSelected ? TransactionType.EGRESO
+                        : TransactionType.INGRESO);
 
                 // Guardar categoría selecccionada
                 item.setCategory(holder.tvCategorySelector.getText().toString());
@@ -123,12 +125,12 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 // solo debemos persistir el iitem
 
                 // Ensure packageName is set if we have detail from payment method
-                if (item.getPaymentMethod() == NotificationItem.PaymentMethod.DEBITO) {
+                if (item.getPaymentMethod() == PaymentMethod.DEBITO) {
                     NotificationRepository repo = new NotificationRepository(context);
                     String pkg = repo.getPackageNameFromApp(item.getPaymentMethodDetail());
                     if (pkg != null)
                         item.setPackageName(pkg);
-                } else if (item.getPaymentMethod() == NotificationItem.PaymentMethod.EFECTIVO) {
+                } else if (item.getPaymentMethod() == PaymentMethod.EFECTIVO) {
                     item.setPackageName("com.cash.payment");
                 }
                 // For Credit, strictly speaking it doesn't map to an app package usually,
@@ -177,13 +179,13 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 holder.tvAmount.setVisibility(View.VISIBLE);
 
                 // Agregar indicador de tipo
-                String typeIndicator = item.getType() == NotificationItem.TransactionType.INGRESO
+                String typeIndicator = item.getType() == TransactionType.INGRESO
                         ? "+"
                         : "-";
                 holder.tvAmount.setText(typeIndicator + " " + item.getFormattedAmount());
 
                 // Color según tipo
-                int color = item.getType() == NotificationItem.TransactionType.INGRESO
+                int color = item.getType() == TransactionType.INGRESO
                         ? 0xFF4CAF50 // Verde para ingresos
                         : 0xFFF44336; // Rojo para egresos
                 holder.tvAmount.setTextColor(color);
@@ -253,7 +255,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             PaymentMethodBottomSheet bottomSheet = new PaymentMethodBottomSheet();
 
             // Configure restrictions based on current payment method
-            if (item.getPaymentMethod() == NotificationItem.PaymentMethod.CREDITO) {
+            if (item.getPaymentMethod() == PaymentMethod.CREDITO) {
                 bottomSheet.setRestrictedMode(true); // Restrict to CREDIT
                 bottomSheet.setInitialInstallments(item.getInstallments());
             } else {
@@ -269,7 +271,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 // this)
                 // If it was Credit and we are in restricted mode, the installments returned
                 // might be the same (since input disabled)
-                if (method == NotificationItem.PaymentMethod.CREDITO) {
+                if (method == PaymentMethod.CREDITO) {
                     item.setInstallments(installments);
                 } else {
                     item.setInstallments(1);
@@ -277,9 +279,9 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
                 // Update UI text immediately
                 String displayText;
-                if (method == NotificationItem.PaymentMethod.EFECTIVO) {
+                if (method == PaymentMethod.EFECTIVO) {
                     displayText = "Efectivo";
-                } else if (method == NotificationItem.PaymentMethod.DEBITO) {
+                } else if (method == PaymentMethod.DEBITO) {
                     displayText = "Débito - " + (detail != null ? detail : "");
                 } else {
                     displayText = "Crédito - " + (detail != null ? detail : "")
@@ -301,9 +303,9 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         String detail = item.getPaymentMethodDetail();
         int installments = item.getInstallments();
 
-        if (item.getPaymentMethod() == NotificationItem.PaymentMethod.EFECTIVO) {
+        if (item.getPaymentMethod() == PaymentMethod.EFECTIVO) {
             return "Efectivo";
-        } else if (item.getPaymentMethod() == NotificationItem.PaymentMethod.DEBITO) {
+        } else if (item.getPaymentMethod() == PaymentMethod.DEBITO) {
             return "Débito - " + (detail != null ? detail : "");
         } else {
             return "Crédito - " + (detail != null ? detail : "")

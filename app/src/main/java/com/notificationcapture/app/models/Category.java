@@ -2,13 +2,14 @@ package com.notificationcapture.app.models;
 
 import com.notificationcapture.app.NotificationItem;
 import com.notificationcapture.app.SpinnerDisplayable;
+import com.notificationcapture.app.enums.TransactionType;
 
 import java.io.Serializable;
 
 public class Category implements Serializable, SpinnerDisplayable {
     private String name;
     private int color; // Color int value
-    private NotificationItem.TransactionType type;
+    private TransactionType type;
 
     @Override
     public String getDisplayName() {
@@ -20,7 +21,7 @@ public class Category implements Serializable, SpinnerDisplayable {
         return color;
     }
 
-    public Category(String name, int color, NotificationItem.TransactionType type) {
+    public Category(String name, int color, TransactionType type) {
         this.name = name;
         this.color = color;
         this.type = type;
@@ -42,11 +43,11 @@ public class Category implements Serializable, SpinnerDisplayable {
         this.color = color;
     }
 
-    public NotificationItem.TransactionType getType() {
+    public TransactionType getType() {
         return type;
     }
 
-    public void setType(NotificationItem.TransactionType type) {
+    public void setType(TransactionType type) {
         this.type = type;
     }
 }
