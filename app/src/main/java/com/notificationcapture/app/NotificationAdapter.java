@@ -74,7 +74,9 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
             // Configurar Selectores iniciales
             holder.tvCategorySelector.setText(item.getCategory() != null ? item.getCategory() : "Sin categoría");
-            holder.tvWalletSelector.setText(item.getAppName());
+
+            String paymentText = getPaymentMethodText(item);
+            holder.tvPaymentMethod.setText(paymentText);
 
             // Listeners para abrir BottomSheets
             holder.tvCategorySelector.setOnClickListener(v -> {
@@ -83,8 +85,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 showCategorySelector(context, holder.tvCategorySelector, currentIsIngreso);
             });
 
-            holder.tvWalletSelector.setOnClickListener(v -> {
-                showWalletSelector(context, holder.tvWalletSelector);
+            holder.tvPaymentMethod.setOnClickListener(v -> {
+                showPaymentMethodSelector(context, holder.tvPaymentMethod, item);
             });
 
             // Listener para el cambio de tipo (solo actualiza UI del toggle, la categoría
@@ -116,29 +118,21 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 // Guardar categoría selecccionada
                 item.setCategory(holder.tvCategorySelector.getText().toString());
 
-                // Guardar billetera
-                // Aquí deberíamos actualizar la billetera si tuvieramos el package name, pero
-                // item.appName es el nombre visible.
-                // El item guarda package name internamente? item.getAppName() retorna el nombre
-                // visible.
-                // item store package name? NotificationItem tiene packageName.
-                // Debemos buscar el package name por nombre de app.
-                NotificationRepository repo = new NotificationRepository(context);
-                String selectedAppName = holder.tvWalletSelector.getText().toString();
-                String pkg = repo.getPackageNameFromApp(selectedAppName); // Asumiendo que podemos exponer este método o
-                                                                          // duplicarlo
-                // Como getPackageNameFromApp es privado en AgregarFragment, lo implementaré
-                // aquí o usaré una lógica similar.
-                // Por simplicidad y dado que NotificationItem usa appName para mostrar,
-                // actualizaremos el appName visual si es posible,
-                // pero NotificationItem parece derivar appName del package.
-                // Vamos a asumir que actualizamos el packageName.
-                if (pkg != null) {
-                    item.setPackageName(pkg);
-                } else {
-                    // Fallback logico
-                    item.setPackageName("com.wallet.custom");
+                // Guardar billetera / Metodo de Pago
+                // Changes are already saved via the BottomSheet callback to 'item' object
+                // We just need to persist the item.
+
+                // Ensure packageName is set if we have detail from payment method
+                if (item.getPaymentMethod() == NotificationItem.PaymentMethod.DEBITO) {
+                    NotificationRepository repo = new NotificationRepository(context);
+                    String pkg = repo.getPackageNameFromApp(item.getPaymentMethodDetail());
+                    if (pkg != null)
+                        item.setPackageName(pkg);
+                } else if (item.getPaymentMethod() == NotificationItem.PaymentMethod.EFECTIVO) {
+                    item.setPackageName("com.cash.payment");
                 }
+                // For Credit, strictly speaking it doesn't map to an app package usually,
+                // but we might want to store something or leave current.
 
                 String amountStr = holder.etAmount.getText().toString();
                 if (!amountStr.isEmpty()) {
@@ -254,22 +248,52 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         }
     }
 
-    private void showWalletSelector(Context context, TextView targetView) {
-        NotificationRepository repo = new NotificationRepository(context);
-        java.util.List<String> wallets = repo.getWallets();
-
-        SelectorBottomSheet sheet = SelectorBottomSheet.newInstance(
-                "Seleccionar Billetera",
-                wallets,
-                targetView.getText().toString());
-
-        sheet.setOnOptionSelectedListener(option -> {
-            targetView.setText(option);
-        });
-
+    private void showPaymentMethodSelector(Context context, TextView targetView, NotificationItem item) {
         if (context instanceof androidx.fragment.app.FragmentActivity) {
-            sheet.show(((androidx.fragment.app.FragmentActivity) context).getSupportFragmentManager(),
-                    "WalletSelector");
+            PaymentMethodBottomSheet bottomSheet = new PaymentMethodBottomSheet();
+            bottomSheet.setListener((method, detail, installments) -> {
+                // Update Item
+                item.setPaymentMethod(method);
+                item.setPaymentMethodDetail(detail);
+                item.setInstallments(installments);
+                // currentInstallment usually 1 for new, but here we are editing.
+                // We might not want to reset currentInstallment if editing?
+                // For now, let's assume editing payment method might reset installment plan or
+                // just update properties.
+
+                // Update UI text immediately
+                String displayText;
+                if (method == NotificationItem.PaymentMethod.EFECTIVO) {
+                    displayText = "Efectivo";
+                } else if (method == NotificationItem.PaymentMethod.DEBITO) {
+                    displayText = "Débito - " + (detail != null ? detail : "");
+                } else {
+                    displayText = "Crédito - " + (detail != null ? detail : "")
+                            + (installments > 1 ? " (" + installments + " cuotas)" : "");
+                }
+                targetView.setText(displayText);
+            });
+            bottomSheet.show(((androidx.fragment.app.FragmentActivity) context).getSupportFragmentManager(),
+                    "PaymentMethodSelector");
+        }
+    }
+
+    private String getPaymentMethodText(NotificationItem item) {
+        if (item.getPaymentMethod() == null) {
+            // Backward compatibility or default
+            return item.getAppName(); // Fallback to app name if no method set
+        }
+
+        String detail = item.getPaymentMethodDetail();
+        int installments = item.getInstallments();
+
+        if (item.getPaymentMethod() == NotificationItem.PaymentMethod.EFECTIVO) {
+            return "Efectivo";
+        } else if (item.getPaymentMethod() == NotificationItem.PaymentMethod.DEBITO) {
+            return "Débito - " + (detail != null ? detail : "");
+        } else {
+            return "Crédito - " + (detail != null ? detail : "")
+                    + (installments > 1 ? " (" + installments + " cuotas)" : "");
         }
     }
 
@@ -303,7 +327,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         TextView tvIngreso;
         TextView tvEgreso;
         TextView tvCategorySelector;
-        TextView tvWalletSelector;
+        TextView tvPaymentMethod;
         Button btnSave;
         Button btnCancel;
 
@@ -330,7 +354,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             tvIngreso = itemView.findViewById(R.id.tvIngreso);
             tvEgreso = itemView.findViewById(R.id.tvEgreso);
             tvCategorySelector = itemView.findViewById(R.id.tvCategorySelector);
-            tvWalletSelector = itemView.findViewById(R.id.tvWalletSelector);
+            tvPaymentMethod = itemView.findViewById(R.id.tvPaymentMethod);
             btnSave = itemView.findViewById(R.id.btnSave);
             btnCancel = itemView.findViewById(R.id.btnCancel);
         }

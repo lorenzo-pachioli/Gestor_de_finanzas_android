@@ -20,6 +20,17 @@ public class NotificationItem implements Serializable {
         EGRESO
     }
 
+    public enum PaymentMethod {
+        EFECTIVO,
+        DEBITO,
+        CREDITO
+    }
+
+    private PaymentMethod paymentMethod;
+    private String paymentMethodDetail; // Wallet name or Credit Card name
+    private int installments = 1; // Default 1
+    private int currentInstallment = 1; // Default 1
+
     public static final String[] OUTCOME_CATEGORIES = {
             "Otros", "Comida", "Combustible", "Transporte", "Servicios",
             "Entretenimiento", "Salud", "Educación", "Compras", "Vivienda"
@@ -304,5 +315,37 @@ public class NotificationItem implements Serializable {
 
     public void setExpanded(boolean expanded) {
         this.expanded = expanded;
+    }
+
+    public PaymentMethod getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getPaymentMethodDetail() {
+        return paymentMethodDetail;
+    }
+
+    public void setPaymentMethodDetail(String paymentMethodDetail) {
+        this.paymentMethodDetail = paymentMethodDetail;
+    }
+
+    public int getInstallments() {
+        return installments;
+    }
+
+    public void setInstallments(int installments) {
+        this.installments = installments;
+    }
+
+    public int getCurrentInstallment() {
+        return currentInstallment;
+    }
+
+    public void setCurrentInstallment(int currentInstallment) {
+        this.currentInstallment = currentInstallment;
     }
 }

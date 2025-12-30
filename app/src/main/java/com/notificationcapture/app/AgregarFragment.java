@@ -24,7 +24,6 @@ import java.util.TimeZone;
 
 public class AgregarFragment extends Fragment {
 
-    private Spinner spinnerApp;
     private EditText etTitle;
     private EditText etText;
     private SwitchCompat swType;
@@ -33,8 +32,13 @@ public class AgregarFragment extends Fragment {
     private Spinner spinnerCategory;
     private Button btnCreate;
     private TextInputEditText etDate;
+    private TextView tvPaymentMethod;
     private NotificationRepository repository;
     private long selectedDateTimestamp;
+
+    private NotificationItem.PaymentMethod selectedMethod = NotificationItem.PaymentMethod.EFECTIVO;
+    private String selectedMethodDetail = "";
+    private int selectedInstallments = 1;
 
     // Removed hardcoded walletApps
 
@@ -51,7 +55,7 @@ public class AgregarFragment extends Fragment {
 
         repository = new NotificationRepository(requireContext());
 
-        spinnerApp = view.findViewById(R.id.spinnerApp);
+        tvPaymentMethod = view.findViewById(R.id.tvPaymentMethod);
         etTitle = view.findViewById(R.id.etTitle);
         etText = view.findViewById(R.id.etText);
         swType = view.findViewById(R.id.swType);
@@ -65,11 +69,8 @@ public class AgregarFragment extends Fragment {
         selectedDateTimestamp = System.currentTimeMillis();
         updateDateField(selectedDateTimestamp);
 
-        // Configurar spinner de apps
-        UniversalSpinnerAdapter<String> adapterApps = new UniversalSpinnerAdapter<>(
-                requireContext(),
-                repository.getWallets());
-        spinnerApp.setAdapter(adapterApps);
+        // Configurar selector de método de pago
+        tvPaymentMethod.setOnClickListener(v -> showPaymentMethodBottomSheet());
 
         // Configurar listener del switch
         swType.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -128,7 +129,6 @@ public class AgregarFragment extends Fragment {
     }
 
     private void createNotification() {
-        String selectedApp = spinnerApp.getSelectedItem().toString();
         String title = etTitle.getText().toString().trim();
         String text = etText.getText().toString().trim();
         com.notificationcapture.app.models.Category selectedCategoryObj = (com.notificationcapture.app.models.Category) spinnerCategory
@@ -149,25 +149,44 @@ public class AgregarFragment extends Fragment {
         }
 
         // Determinar tipo de transacción
-        // Checked (True) = Egreso, Unchecked (False) = Ingreso
         NotificationItem.TransactionType type = swType.isChecked()
                 ? NotificationItem.TransactionType.EGRESO
                 : NotificationItem.TransactionType.INGRESO;
 
-        // Crear package name
-        String packageName = getPackageNameFromApp(selectedApp);
+        // Crear package name (intentar deducir del detalle si es posible, o usar
+        // default)
+        String packageName = getPackageNameFromApp(selectedMethodDetail);
+        if (packageName.equals("com.wallet.custom") && selectedMethod == NotificationItem.PaymentMethod.EFECTIVO) {
+            packageName = "com.cash.payment"; // Opcional: un paquete dummy para efectivo
+        }
 
-        // Crear la notificación con tipo y categoría
-        NotificationItem notification = new NotificationItem(
-                packageName,
-                title,
-                text,
-                selectedDateTimestamp,
-                type,
-                category);
+        // Loop for installments
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        calendar.setTimeInMillis(selectedDateTimestamp);
 
-        // Guardar
-        repository.saveNotification(notification);
+        int totalInstallments = selectedInstallments > 0 ? selectedInstallments : 1;
+
+        for (int i = 1; i <= totalInstallments; i++) {
+            long itemTimestamp = calendar.getTimeInMillis();
+
+            NotificationItem notification = new NotificationItem(
+                    packageName,
+                    title + (totalInstallments > 1 ? " (" + i + "/" + totalInstallments + ")" : ""),
+                    text,
+                    itemTimestamp,
+                    type,
+                    category);
+
+            notification.setPaymentMethod(selectedMethod);
+            notification.setPaymentMethodDetail(selectedMethodDetail);
+            notification.setInstallments(totalInstallments);
+            notification.setCurrentInstallment(i);
+
+            repository.saveNotification(notification);
+
+            // Add 1 month for next installment
+            calendar.add(java.util.Calendar.MONTH, 1);
+        }
 
         // Notificar actualización
         android.content.Intent intent = new android.content.Intent("com.notificationcapture.NEW_NOTIFICATION");
@@ -176,7 +195,13 @@ public class AgregarFragment extends Fragment {
         // Limpiar formulario
         etTitle.setText("");
         etText.setText("");
-        spinnerApp.setSelection(0);
+
+        // Reset Payment Method
+        selectedMethod = NotificationItem.PaymentMethod.EFECTIVO;
+        selectedMethodDetail = "";
+        selectedInstallments = 1;
+        tvPaymentMethod.setText("Efectivo");
+
         spinnerCategory.setSelection(0);
         swType.setChecked(true); // Reset to Egreso
         updateToggleUI(true);
@@ -189,6 +214,27 @@ public class AgregarFragment extends Fragment {
         Toast.makeText(requireContext(),
                 "✅ " + typeText + " creado exitosamente",
                 Toast.LENGTH_SHORT).show();
+    }
+
+    private void showPaymentMethodBottomSheet() {
+        PaymentMethodBottomSheet bottomSheet = new PaymentMethodBottomSheet();
+        bottomSheet.setListener((method, detail, installments) -> {
+            this.selectedMethod = method;
+            this.selectedMethodDetail = detail != null ? detail : "";
+            this.selectedInstallments = installments;
+
+            String displayText;
+            if (method == NotificationItem.PaymentMethod.EFECTIVO) {
+                displayText = "Efectivo";
+            } else if (method == NotificationItem.PaymentMethod.DEBITO) {
+                displayText = "Débito - " + selectedMethodDetail;
+            } else {
+                displayText = "Crédito - " + selectedMethodDetail
+                        + (installments > 1 ? " (" + installments + " cuotas)" : "");
+            }
+            tvPaymentMethod.setText(displayText);
+        });
+        bottomSheet.show(getParentFragmentManager(), "PaymentMethodBottomSheet");
     }
 
     private String getPackageNameFromApp(String appName) {

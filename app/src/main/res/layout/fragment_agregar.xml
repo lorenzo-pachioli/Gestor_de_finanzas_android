@@ -109,24 +109,29 @@
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="20dp"/>
 
-        <!-- Selector de App -->
+        <!-- Selector de Método de Pago -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/aplicacion_origen"
+            android:text="Método de Pago"
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
             android:layout_marginBottom="8dp"/>
 
-        <Spinner
-            android:id="@+id/spinnerApp"
+        <TextView
+            android:id="@+id/tvPaymentMethod"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:padding="5dp"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:padding="12dp"
             android:background="@drawable/bg_spinner_field"
             android:textColor="@color/text_secondary"
-            android:layout_marginBottom="20dp"/>
+            android:text="Efectivo"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp"
+            android:clickable="true"
+            android:focusable="true"/>
 
         <!-- Campo Título -->
         <TextView

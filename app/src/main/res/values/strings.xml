@@ -94,7 +94,23 @@
     
     <!-- Item Category Summary -->
     <string name="categoria">Category</string>
-    
+
     <!-- Item Settings List -->
     <string name="item_name">Item Name</string>
+
+    <!-- Credit Cards -->
+    <string name="nombre_tarjeta">Credit Card Name</string>
+    <string name="hint_tarjeta_nombre">E.g., Visa Gold</string>
+    <string name="dia_cierre">Closing Date (Day)</string>
+    <string name="tarjetas_credito">Credit Cards</string>
+
+    <!-- Payment Methods -->
+    <string name="metodo_pago">Payment Method</string>
+    <string name="efectivo">Cash</string>
+    <string name="debito">Debit</string>
+    <string name="credito">Credit</string>
+    <string name="cuotas">Installments</string>
+    <string name="confirmar">Confirm</string>
+    <string name="seleccionar_billetera">Select Wallet</string>
+    <string name="seleccionar_tarjeta">Select Card</string>
 </resources>

@@ -278,6 +278,49 @@
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="20dp"/>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/text_secondary"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- SECCION TARJETAS DE CREDITO -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/tarjetas_credito"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"/>
+
+            <Button
+                android:id="@+id/btnAddCreditCard"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card_rounded"
+                android:text="@string/agregar"
+                android:textColor="@color/accent_main" />
+        </LinearLayout>
+
+        <Spinner
+            android:id="@+id/spinnerCreditCards"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:padding="5dp"
+            android:background="@drawable/bg_spinner_field"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="20dp"/>
+
         <Button
             android:id="@+id/btnShowBottomSheet"
             android:layout_width="match_parent"

@@ -26,6 +26,7 @@ import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.VISIBLE;
 
 import com.notificationcapture.app.models.Category;
+import com.notificationcapture.app.models.CreditCard;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ public class PerfilFragment extends Fragment {
     private NotificationRepository repository;
     private Spinner spinnerCategories;
     private Spinner spinnerWallets;
+    private Spinner spinnerCreditCards;
     private ArrayAdapter<String> categoryAdapter;
     private ArrayAdapter<String> walletAdapter;
     private SwitchCompat swCatType;
@@ -49,6 +51,7 @@ public class PerfilFragment extends Fragment {
     // Listas para mantener referencia a los objetos actuales
     private List<Category> currentCategories;
     private List<String> currentWallets;
+    private List<CreditCard> currentCreditCards;
 
     private Button btnShowBottomSheet;
 
@@ -110,13 +113,17 @@ public class PerfilFragment extends Fragment {
         tvEnglish = view.findViewById(R.id.tvEnglish);
         Button btnAddCategory = view.findViewById(R.id.btnAddCategory);
         Button btnAddWallet = view.findViewById(R.id.btnAddWallet);
+        Button btnAddCreditCard = view.findViewById(R.id.btnAddCreditCard);
         Button btnShowBottomSheet = view.findViewById(R.id.btnShowBottomSheet);
+
+        spinnerCreditCards = view.findViewById(R.id.spinnerCreditCards);
 
         btnShowBottomSheet.setOnClickListener(v -> showTestDialog());
 
         // Setup Listeners
         btnAddCategory.setOnClickListener(v -> showAddCategoryDialog());
         btnAddWallet.setOnClickListener(v -> showAddWalletDialog());
+        btnAddCreditCard.setOnClickListener(v -> showAddCreditCardDialog());
 
         // Setup Dark Mode Switch
         android.content.SharedPreferences prefs = requireContext().getSharedPreferences("app_settings", MODE_PRIVATE);
@@ -176,6 +183,7 @@ public class PerfilFragment extends Fragment {
         updateLanguageUI(swLanguage.isChecked());
         loadCategories();
         loadWallets();
+        loadCreditCards();
     }
 
     private void updateLanguageUI(boolean isEnglish) {
@@ -239,6 +247,22 @@ public class PerfilFragment extends Fragment {
             public void onNothingSelected(android.widget.AdapterView<?> parent) {
             }
         });
+
+        spinnerCreditCards.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                if (position > 0) { // 0 is placeholder
+                    CreditCard selectedCard = currentCreditCards.get(position - 1);
+                    showEditCreditCardDialog(selectedCard);
+                    // Reset selection
+                    spinnerCreditCards.setSelection(0);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+            }
+        });
     }
 
     private void updateCategoryTypeUI(boolean isEgreso) {
@@ -280,6 +304,17 @@ public class PerfilFragment extends Fragment {
 
         UniversalSpinnerAdapter<String> adapter = new UniversalSpinnerAdapter<>(requireContext(), displayList);
         spinnerWallets.setAdapter(adapter);
+    }
+
+    private void loadCreditCards() {
+        currentCreditCards = repository.getCreditCards();
+
+        List<CreditCard> displayList = new ArrayList<>();
+        displayList.add(new CreditCard("Seleccionar para editar/borrar...", 0, 0)); // Placeholder or dummy
+        displayList.addAll(currentCreditCards);
+
+        UniversalSpinnerAdapter<CreditCard> adapter = new UniversalSpinnerAdapter<>(requireContext(), displayList);
+        spinnerCreditCards.setAdapter(adapter);
     }
 
     // --- Dialogs ---
@@ -364,6 +399,56 @@ public class PerfilFragment extends Fragment {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
 
+        dialog.show();
+    }
+
+    private void showAddCreditCardDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_credit_card, null);
+        builder.setView(dialogView);
+        AlertDialog dialog = builder.create();
+
+        EditText etName = dialogView.findViewById(R.id.etCardName);
+        EditText etClosingDate = dialogView.findViewById(R.id.etClosingDate);
+        LinearLayout containerColors = dialogView.findViewById(R.id.containerCardColors);
+
+        // Populate Colors (use same logic as categories or a separate palette?)
+        int[] colors = EGRESOS_COLORS; // Use outcome colors for cards
+        selectedColor = colors[0];
+        populateColorPicker(containerColors, colors);
+
+        Button btnCreate = dialogView.findViewById(R.id.btnCreateCard);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelCard);
+
+        btnCreate.setVisibility(VISIBLE);
+        btnCancel.setVisibility(VISIBLE);
+
+        btnCreate.setOnClickListener(v -> {
+            String name = etName.getText().toString().trim();
+            String closingDateStr = etClosingDate.getText().toString().trim();
+            int closingDate = 1;
+            try {
+                closingDate = Integer.parseInt(closingDateStr);
+                if (closingDate < 1 || closingDate > 31)
+                    closingDate = 1;
+            } catch (NumberFormatException e) {
+                // Ignore
+            }
+
+            if (!name.isEmpty()) {
+                CreditCard newCard = new CreditCard(name, closingDate, selectedColor);
+                repository.addCreditCard(newCard);
+                loadCreditCards();
+                Toast.makeText(requireContext(), "Tarjeta agregada", Toast.LENGTH_SHORT).show();
+            }
+            dialog.dismiss();
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
         dialog.show();
     }
 
@@ -484,6 +569,76 @@ public class PerfilFragment extends Fragment {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
 
+        dialog.show();
+    }
+
+    private void showEditCreditCardDialog(CreditCard card) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_credit_card, null);
+        builder.setView(dialogView);
+        AlertDialog dialog = builder.create();
+
+        EditText etName = dialogView.findViewById(R.id.etCardName);
+        EditText etClosingDate = dialogView.findViewById(R.id.etClosingDate);
+        LinearLayout containerColors = dialogView.findViewById(R.id.containerCardColors);
+
+        etName.setText(card.getName());
+        etClosingDate.setText(String.valueOf(card.getClosingDate()));
+        selectedColor = card.getColor();
+
+        int[] colors = EGRESOS_COLORS;
+        populateColorPicker(containerColors, colors);
+
+        Button btnCreate = dialogView.findViewById(R.id.btnCreateCard);
+        Button btnDelete = dialogView.findViewById(R.id.btnDeleteCard);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelCard);
+
+        btnCreate.setText("Actualizar"); // Reuse Create button (or change text/logic)
+
+        btnCreate.setVisibility(VISIBLE);
+        btnDelete.setVisibility(VISIBLE);
+        btnCancel.setVisibility(VISIBLE);
+
+        btnCreate.setOnClickListener(v -> {
+            String name = etName.getText().toString().trim();
+            String closingDateStr = etClosingDate.getText().toString().trim();
+            int closingDate = 1;
+            try {
+                closingDate = Integer.parseInt(closingDateStr);
+                if (closingDate < 1 || closingDate > 31)
+                    closingDate = 1;
+            } catch (NumberFormatException e) {
+            }
+
+            if (!name.isEmpty()) {
+                card.setName(name);
+                card.setClosingDate(closingDate);
+                card.setColor(selectedColor);
+                repository.updateCreditCard(card);
+                loadCreditCards();
+                Toast.makeText(requireContext(), "Tarjeta actualizada", Toast.LENGTH_SHORT).show();
+            }
+            dialog.dismiss();
+        });
+
+        btnDelete.setOnClickListener(v -> {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Eliminar Tarjeta")
+                    .setMessage("¿Estás seguro de eliminar '" + card.getName() + "'?")
+                    .setPositiveButton("Eliminar", (d, w) -> {
+                        repository.deleteCreditCard(card.getId());
+                        loadCreditCards();
+                        Toast.makeText(requireContext(), "Tarjeta eliminada", Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("Cancelar", null)
+                    .show();
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
         dialog.show();
     }
 

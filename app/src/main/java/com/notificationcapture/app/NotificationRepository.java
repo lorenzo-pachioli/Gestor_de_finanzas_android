@@ -16,6 +16,7 @@ public class NotificationRepository {
     private static final String KEY_NOTIFICATIONS_NOT_FILTERED = "notificationsNotFiltered";
     private static final String KEY_CATEGORIES = "categories";
     private static final String KEY_WALLETS = "wallets";
+    private static final String KEY_CREDIT_CARDS = "credit_cards";
     private static final int MAX_NOTIFICATIONS = 100;
 
     private SharedPreferences prefs;
@@ -275,6 +276,49 @@ public class NotificationRepository {
 
     private void saveWallets(List<String> wallets) {
         prefs.edit().putString(KEY_WALLETS, gson.toJson(wallets)).apply();
+    }
+
+    // --- Credit Card Management ---
+
+    public List<com.notificationcapture.app.models.CreditCard> getCreditCards() {
+        String json = prefs.getString(KEY_CREDIT_CARDS, null);
+        if (json == null)
+            return new ArrayList<>();
+        Type type = new TypeToken<List<com.notificationcapture.app.models.CreditCard>>() {
+        }.getType();
+        return gson.fromJson(json, type);
+    }
+
+    public void addCreditCard(com.notificationcapture.app.models.CreditCard card) {
+        List<com.notificationcapture.app.models.CreditCard> cards = getCreditCards();
+        cards.add(card);
+        saveCreditCards(cards);
+    }
+
+    public void deleteCreditCard(String id) {
+        List<com.notificationcapture.app.models.CreditCard> cards = getCreditCards();
+        for (int i = 0; i < cards.size(); i++) {
+            if (cards.get(i).getId().equals(id)) {
+                cards.remove(i);
+                break;
+            }
+        }
+        saveCreditCards(cards);
+    }
+
+    public void updateCreditCard(com.notificationcapture.app.models.CreditCard updatedCard) {
+        List<com.notificationcapture.app.models.CreditCard> cards = getCreditCards();
+        for (int i = 0; i < cards.size(); i++) {
+            if (cards.get(i).getId().equals(updatedCard.getId())) {
+                cards.set(i, updatedCard);
+                break;
+            }
+        }
+        saveCreditCards(cards);
+    }
+
+    private void saveCreditCards(List<com.notificationcapture.app.models.CreditCard> cards) {
+        prefs.edit().putString(KEY_CREDIT_CARDS, gson.toJson(cards)).apply();
     }
 
     public String getPackageNameFromApp(String appName) {
