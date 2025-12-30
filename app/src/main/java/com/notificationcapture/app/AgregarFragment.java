@@ -166,6 +166,9 @@ public class AgregarFragment extends Fragment {
 
         int totalInstallments = selectedInstallments > 0 ? selectedInstallments : 1;
 
+        // Generate Installment Group ID if installments > 1
+        String installmentGroupId = totalInstallments > 1 ? java.util.UUID.randomUUID().toString() : null;
+
         for (int i = 1; i <= totalInstallments; i++) {
             long itemTimestamp = calendar.getTimeInMillis();
 
@@ -181,6 +184,7 @@ public class AgregarFragment extends Fragment {
             notification.setPaymentMethodDetail(selectedMethodDetail);
             notification.setInstallments(totalInstallments);
             notification.setCurrentInstallment(i);
+            notification.setInstallmentGroupId(installmentGroupId);
 
             repository.saveNotification(notification);
 

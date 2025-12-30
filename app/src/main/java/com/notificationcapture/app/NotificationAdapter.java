@@ -119,8 +119,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 item.setCategory(holder.tvCategorySelector.getText().toString());
 
                 // Guardar billetera / Metodo de Pago
-                // Changes are already saved via the BottomSheet callback to 'item' object
-                // We just need to persist the item.
+                // Los cambios ya se guardaron en el Bottom<Sheet en el objeto ¨ítem¨
+                // solo debemos persistir el iitem
 
                 // Ensure packageName is set if we have detail from payment method
                 if (item.getPaymentMethod() == NotificationItem.PaymentMethod.DEBITO) {
@@ -251,15 +251,29 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     private void showPaymentMethodSelector(Context context, TextView targetView, NotificationItem item) {
         if (context instanceof androidx.fragment.app.FragmentActivity) {
             PaymentMethodBottomSheet bottomSheet = new PaymentMethodBottomSheet();
+
+            // Configure restrictions based on current payment method
+            if (item.getPaymentMethod() == NotificationItem.PaymentMethod.CREDITO) {
+                bottomSheet.setRestrictedMode(true); // Restrict to CREDIT
+                bottomSheet.setInitialInstallments(item.getInstallments());
+            } else {
+                bottomSheet.setRestrictedMode(false); // Restrict to CASH/DEBIT
+                // Initial installments irrelevant for Cash/Debit or default to 1
+            }
+
             bottomSheet.setListener((method, detail, installments) -> {
                 // Update Item
                 item.setPaymentMethod(method);
                 item.setPaymentMethodDetail(detail);
-                item.setInstallments(installments);
-                // currentInstallment usually 1 for new, but here we are editing.
-                // We might not want to reset currentInstallment if editing?
-                // For now, let's assume editing payment method might reset installment plan or
-                // just update properties.
+                // Only update installments if method is CREDIT (though restricted mode ensures
+                // this)
+                // If it was Credit and we are in restricted mode, the installments returned
+                // might be the same (since input disabled)
+                if (method == NotificationItem.PaymentMethod.CREDITO) {
+                    item.setInstallments(installments);
+                } else {
+                    item.setInstallments(1);
+                }
 
                 // Update UI text immediately
                 String displayText;

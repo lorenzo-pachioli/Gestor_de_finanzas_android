@@ -30,6 +30,7 @@ public class NotificationItem implements Serializable {
     private String paymentMethodDetail; // Wallet name or Credit Card name
     private int installments = 1; // Default 1
     private int currentInstallment = 1; // Default 1
+    private String installmentGroupId; // ID to group related installments
 
     public static final String[] OUTCOME_CATEGORIES = {
             "Otros", "Comida", "Combustible", "Transporte", "Servicios",
@@ -347,5 +348,13 @@ public class NotificationItem implements Serializable {
 
     public void setCurrentInstallment(int currentInstallment) {
         this.currentInstallment = currentInstallment;
+    }
+
+    public String getInstallmentGroupId() {
+        return installmentGroupId;
+    }
+
+    public void setInstallmentGroupId(String installmentGroupId) {
+        this.installmentGroupId = installmentGroupId;
     }
 }

@@ -109,6 +109,7 @@
     <string name="efectivo">Cash</string>
     <string name="debito">Debit</string>
     <string name="credito">Credit</string>
+    <string name="cantidad_de_cuotas">Number of installments (e.g. 1, 3, 6)</string>
     <string name="cuotas">Installments</string>
     <string name="confirmar">Confirm</string>
     <string name="seleccionar_billetera">Select Wallet</string>

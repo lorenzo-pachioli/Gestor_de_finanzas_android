@@ -122,10 +122,32 @@ public class NotificationRepository {
     public void deleteNotification(String id) {
         List<NotificationItem> notifications = getAllNotifications();
 
-        // Filtrar removiendo la notificación con el ID especificado
+        // Find the notification to be deleted first to check for group ID
+        String groupId = null;
+        for (NotificationItem item : notifications) {
+            if (item.getId().equals(id)) {
+                groupId = item.getInstallmentGroupId();
+                break;
+            }
+        }
+
+        // Filtrar removiendo la notificación con el ID especificado o todas las del
+        // grupo
         List<NotificationItem> updatedList = new ArrayList<>();
         for (NotificationItem item : notifications) {
-            if (!item.getId().equals(id)) {
+            boolean shouldDelete = false;
+
+            if (groupId != null && item.getInstallmentGroupId() != null) {
+                // If part of the same group, delete it
+                if (groupId.equals(item.getInstallmentGroupId())) {
+                    shouldDelete = true;
+                }
+            } else if (item.getId().equals(id)) {
+                // Standard single deletion
+                shouldDelete = true;
+            }
+
+            if (!shouldDelete) {
                 updatedList.add(item);
             }
         }
@@ -138,10 +160,30 @@ public class NotificationRepository {
     public void deleteNotificationNotFiltered(String id) {
         List<NotificationItem> notifications = getAllNotifications();
 
-        // Filtrar removiendo la notificación con el ID especificado
+        // Find the notification to be deleted first to check for group ID
+        String groupId = null;
+        for (NotificationItem item : notifications) {
+            if (item.getId().equals(id)) {
+                groupId = item.getInstallmentGroupId();
+                break;
+            }
+        }
+
+        // Filtrar removiendo la notificación con el ID especificado o todas las del
+        // grupo
         List<NotificationItem> updatedList = new ArrayList<>();
         for (NotificationItem item : notifications) {
-            if (!item.getId().equals(id)) {
+            boolean shouldDelete = false;
+
+            if (groupId != null && item.getInstallmentGroupId() != null) {
+                if (groupId.equals(item.getInstallmentGroupId())) {
+                    shouldDelete = true;
+                }
+            } else if (item.getId().equals(id)) {
+                shouldDelete = true;
+            }
+
+            if (!shouldDelete) {
                 updatedList.add(item);
             }
         }

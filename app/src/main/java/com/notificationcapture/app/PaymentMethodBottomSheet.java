@@ -36,6 +36,19 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
         this.listener = listener;
     }
 
+    private boolean restrictedToCredit = false;
+    private boolean restrictedToDebitCash = false;
+    private int initialInstallments = 1;
+
+    public void setRestrictedMode(boolean restrictedToCredit) {
+        this.restrictedToCredit = restrictedToCredit;
+        this.restrictedToDebitCash = !restrictedToCredit;
+    }
+
+    public void setInitialInstallments(int installments) {
+        this.initialInstallments = installments;
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -55,16 +68,30 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
         viewPager.setAdapter(adapter);
 
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
-            switch (position) {
-                case 0:
-                    tab.setText("Efectivo");
-                    break;
-                case 1:
-                    tab.setText("Débito");
-                    break;
-                case 2:
-                    tab.setText("Crédito");
-                    break;
+            // Need to adjust position logic based on restrictions
+            if (restrictedToCredit) {
+                tab.setText("Crédito");
+            } else if (restrictedToDebitCash) {
+                switch (position) {
+                    case 0:
+                        tab.setText("Efectivo");
+                        break;
+                    case 1:
+                        tab.setText("Débito");
+                        break;
+                }
+            } else {
+                switch (position) {
+                    case 0:
+                        tab.setText("Efectivo");
+                        break;
+                    case 1:
+                        tab.setText("Débito");
+                        break;
+                    case 2:
+                        tab.setText("Crédito");
+                        break;
+                }
             }
         }).attach();
     }
@@ -75,12 +102,22 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            if (viewType == 0) {
-                return new CashViewHolder(inflater.inflate(R.layout.layout_payment_cash, parent, false));
-            } else if (viewType == 1) {
-                return new DebitViewHolder(inflater.inflate(R.layout.layout_payment_debit, parent, false));
-            } else {
+
+            if (restrictedToCredit) {
                 return new CreditViewHolder(inflater.inflate(R.layout.layout_payment_credit, parent, false));
+            } else if (restrictedToDebitCash) {
+                if (viewType == 0)
+                    return new CashViewHolder(inflater.inflate(R.layout.layout_payment_cash, parent, false));
+                else
+                    return new DebitViewHolder(inflater.inflate(R.layout.layout_payment_debit, parent, false));
+            } else {
+                if (viewType == 0) {
+                    return new CashViewHolder(inflater.inflate(R.layout.layout_payment_cash, parent, false));
+                } else if (viewType == 1) {
+                    return new DebitViewHolder(inflater.inflate(R.layout.layout_payment_debit, parent, false));
+                } else {
+                    return new CreditViewHolder(inflater.inflate(R.layout.layout_payment_credit, parent, false));
+                }
             }
         }
 
@@ -102,6 +139,10 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
 
         @Override
         public int getItemCount() {
+            if (restrictedToCredit)
+                return 1;
+            if (restrictedToDebitCash)
+                return 2;
             return 3;
         }
     }
@@ -173,6 +214,18 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
             UniversalSpinnerAdapter<CreditCard> adapter = new UniversalSpinnerAdapter<>(requireContext(), cards);
             spinnerCards.setAdapter(adapter);
 
+            // Pre-fill installments
+            etInstallments.setText(String.valueOf(initialInstallments));
+
+            // Disable installments if restricted (Edit Mode for Credit)
+            // Wait, logic says: "si es credito, que solo se pueda cambiar la tarjeta de
+            // credito (las cantidad de cuotas no)"
+            if (restrictedToCredit) {
+                etInstallments.setEnabled(false);
+                etInstallments.setAlpha(0.5f);
+                // Maybe set a hint explaining why
+            }
+
             btnConfirm.setOnClickListener(v -> {
                 CreditCard selectedCard = (CreditCard) spinnerCards.getSelectedItem();
                 if (selectedCard == null) {
@@ -188,6 +241,23 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
                         cuotas = 1;
                 } catch (NumberFormatException e) {
                 }
+
+                // If restricted, we might want to preserve original installments,
+                // but the bottom sheet doesn't know original.
+                // The caller (NotificationAdapter) handles updating the item.
+                // The BottomSheet returns the value from EditText.
+                // If disabled, user can't change it, so it returns default (1) or whatever is
+                // there.
+                // We should probably pass existing installments to the sheet if possible to
+                // pre-fill?
+                // The user request is specifically that they CANNOT change it.
+                // So returning 0 or -1 to indicate "no change" might be better, or just return
+                // existing if we had it.
+                // For now, if disabled, returning what's in box (default 1 or user needs to see
+                // original).
+                // Let's settle for returning the value, trusting it wasn't changed if disabled.
+                // Ideally we should pre-fill it. For now, let's assume the user doesn't see the
+                // original value here yet.
 
                 if (listener != null) {
                     listener.onPaymentMethodSelected(NotificationItem.PaymentMethod.CREDITO, selectedCard.getName(),
