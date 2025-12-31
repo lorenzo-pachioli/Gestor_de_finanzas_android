@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigation;
     private FloatingActionButton fabAdd;
     private FragmentManager fragmentManager;
+    private boolean isNavigatingProgrammatically = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,17 +33,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Cargar preferencia de tema
         android.content.SharedPreferences prefs = getSharedPreferences("app_settings", MODE_PRIVATE);
-        boolean isDarkMode = prefs.getBoolean("dark_mode", false);
-        // Note: A simple boolean doesn't capture "Follow System".
-        // But for this simple implementation:
-        // Logic: Check if "dark_mode_set" exists. If not, follow system.
-
-        // Better approach:
         int nightMode = prefs.getInt("night_mode", androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(nightMode);
 
         // Cargar preferencia de idioma
-        String savedLanguage = prefs.getString("app_language", "es"); // Default to Spanish
+        String savedLanguage = prefs.getString("app_language", "es");
         setLocale(savedLanguage);
 
         setContentView(R.layout.activity_main);
@@ -50,6 +45,14 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigation = findViewById(R.id.bottomNavigationView);
         fabAdd = findViewById(R.id.fabAdd);
         fragmentManager = getSupportFragmentManager();
+
+        // Agregar listener para detectar cambios en el back stack
+        fragmentManager.addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+            @Override
+            public void onBackStackChanged() {
+                syncBottomNavigationWithCurrentFragment();
+            }
+        });
 
         // Configurar el listener de la navegación
         bottomNavigation.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
@@ -75,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 if (selectedFragment != null) {
+                    isNavigatingProgrammatically = true;
                     loadFragment(selectedFragment);
                     return true;
                 }
@@ -86,25 +90,79 @@ public class MainActivity extends AppCompatActivity {
         fabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isNavigatingProgrammatically = true;
                 loadFragment(new AgregarFragment());
-                bottomNavigation.setSelectedItemId(R.id.fabAdd); // Deseleccionar items del menú
-                // fabAdd.setVisibility(View.INVISIBLE);
+                bottomNavigation.setSelectedItemId(R.id.fabAdd);
                 changeFabAddView(View.INVISIBLE, getApplicationContext());
             }
         });
 
         // Cargar el fragmento inicial (Home)
         if (savedInstanceState == null) {
-            loadFragment(new InicioFragment());
+            fragmentManager.beginTransaction()
+                    .replace(R.id.frameLayout, new InicioFragment())
+                    .commit();
             bottomNavigation.setSelectedItemId(R.id.nav_home);
         }
     }
 
     private void loadFragment(Fragment fragment) {
+        // Obtener el fragmento actual
+        Fragment currentFragment = fragmentManager.findFragmentById(R.id.frameLayout);
+
+        // Si es el mismo tipo de fragmento, no hacer nada
+        if (currentFragment != null && currentFragment.getClass().equals(fragment.getClass())) {
+            return;
+        }
+
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.replace(R.id.frameLayout, fragment);
-        transaction.addToBackStack(null);
+
+        // Solo agregar al back stack si no es el fragmento inicial (Inicio)
+        if (!(fragment instanceof InicioFragment)) {
+            transaction.addToBackStack(fragment.getClass().getSimpleName());
+        }
+
         transaction.commit();
+    }
+
+    private void syncBottomNavigationWithCurrentFragment() {
+
+        Fragment currentFragment = fragmentManager.findFragmentById(R.id.frameLayout);
+        if (currentFragment == null) return;
+
+        int selectedItemId = R.id.nav_home; // Default
+
+        if (currentFragment instanceof InicioFragment) {
+            selectedItemId = R.id.nav_home;
+            changeFabAddView(View.VISIBLE, getApplicationContext());
+        } else if (currentFragment instanceof HistorialFragment) {
+            selectedItemId = R.id.nav_history;
+            changeFabAddView(View.VISIBLE, getApplicationContext());
+        } else if (currentFragment instanceof AgregarFragment) {
+            selectedItemId = R.id.fabAdd;
+            changeFabAddView(View.INVISIBLE, getApplicationContext());
+        } else if (currentFragment instanceof CategoriasFragment) {
+            selectedItemId = R.id.nav_categories;
+            changeFabAddView(View.VISIBLE, getApplicationContext());
+        } else if (currentFragment instanceof PerfilFragment) {
+            selectedItemId = R.id.nav_profile;
+            changeFabAddView(View.VISIBLE, getApplicationContext());
+        }
+
+        // Actualizar el item seleccionado sin disparar el listener
+        bottomNavigation.setSelectedItemId(selectedItemId);
+    }
+
+    @Override
+    public void onBackPressed() {
+        // Si hay fragmentos en el back stack, dejar que el sistema maneje el back
+        if (fragmentManager.getBackStackEntryCount() > 0) {
+            fragmentManager.popBackStack();
+        } else {
+            // Si no hay más en el stack, cerrar la app
+            super.onBackPressed();
+        }
     }
 
     private void changeFabAddView(int visibility, Context context) {
