@@ -103,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
     private void loadFragment(Fragment fragment) {
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.replace(R.id.frameLayout, fragment);
+        transaction.addToBackStack(null);
         transaction.commit();
     }
 
