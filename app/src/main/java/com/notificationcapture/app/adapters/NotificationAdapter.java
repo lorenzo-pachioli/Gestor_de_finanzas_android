@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Locale;
 
 import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.enums.CatColors;
+import com.notificationcapture.app.models.Category;
+import com.notificationcapture.app.repositories.CategoryRepository;
+import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.fragments.PaymentMethodBottomSheet;
 import com.notificationcapture.app.R;
@@ -32,6 +36,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     private List<NotificationItem> notifications;
     private final java.util.Map<String, Integer> categoryColors;
+    private CategoryRepository categoryRepo;
+    private TransactionRepository repository;
     private SimpleDateFormat dateFormat;
     private OnDeleteClickListener deleteListener;
 
@@ -41,6 +47,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         this.categoryColors = categoryColors;
         this.deleteListener = deleteListener;
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
+        categoryRepo = RepositoryProvider.getInstance().getCategoryRepository();
+        repository = RepositoryProvider.getInstance().getTransactionRepository();
     }
 
     @NonNull
@@ -79,7 +87,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             updateToggleUI(holder, !isIngreso);
 
             // Configurar Selectores iniciales
-            holder.tvCategorySelector.setText(item.getCategory() != null ? item.getCategory() : "Sin categoría");
+            String name = item.getCategory().getName();
+            holder.tvCategorySelector.setText( name != null ? name : "Sin categoría");
 
             String paymentText = getPaymentMethodText(item);
             holder.tvPaymentMethod.setText(paymentText);
@@ -122,7 +131,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                         : TransactionType.INGRESO);
 
                 // Guardar categoría selecccionada
-                item.setCategory(holder.tvCategorySelector.getText().toString());
+                item.setCategory(new Category(holder.tvCategorySelector.getText().toString(), TransactionType.getTransactionType(holder.switchType.isChecked())));
 
                 // Guardar billetera / Metodo de Pago
                 // Los cambios ya se guardaron en el Bottom<Sheet en el objeto ¨ítem¨
@@ -153,7 +162,6 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 item.setExpanded(false);
 
                 // Persistir cambios
-                TransactionRepository repository = new TransactionRepository(context);
                 repository.updateTransaction(item);
 
                 notifyItemChanged(holder.getAdapterPosition());
@@ -170,7 +178,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
             // Cargar datos en el resumen
             holder.tvAppName.setText(item.getAppName());
-            holder.tvCategory.setText(item.getCategory());
+            holder.tvCategory.setText(item.getCategory().getName());
             holder.tvTitle.setText(item.getTitle());
             holder.tvText.setText(item.getText());
 
@@ -180,18 +188,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             // Mostrar el monto si existe
             if (item.hasAmount()) {
                 holder.tvAmount.setVisibility(View.VISIBLE);
-
-                // Agregar indicador de tipo
-                String typeIndicator = item.getType() == TransactionType.INGRESO
-                        ? "+"
-                        : "-";
-                holder.tvAmount.setText(typeIndicator + " " + item.getFormattedAmount());
-
-                // Color según tipo
-                int color = item.getType() == TransactionType.INGRESO
-                        ? 0xFF4CAF50 // Verde para ingresos
-                        : 0xFFF44336; // Rojo para egresos
-                holder.tvAmount.setTextColor(color);
+                holder.tvAmount.setText(TransactionType.getTypeIndicator(item.getType()) + " " + item.getFormattedAmount());
+                holder.tvAmount.setTextColor(CatColors.getOneIntColorByType(item.getType(), 0));
             } else {
                 holder.tvAmount.setVisibility(View.GONE);
             }
@@ -234,8 +232,9 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     }
 
     private void showCategorySelector(Context context, TextView targetView, boolean isIngreso) {
-        String[] categories = isIngreso ? NotificationItem.INCOME_CATEGORIES : NotificationItem.OUTCOME_CATEGORIES;
-        java.util.List<String> options = java.util.Arrays.asList(categories);
+        //String[] categories = isIngreso ? NotificationItem.INCOME_CATEGORIES : NotificationItem.OUTCOME_CATEGORIES;
+        List<String> options =  categoryRepo.getCategoryNames(isIngreso ? TransactionType.INGRESO : TransactionType.EGRESO);
+        //java.util.List<String> options = java.util.Arrays.asList(categories);
 
         SelectorBottomSheet sheet = SelectorBottomSheet.newInstance(
                 "Seleccionar Categoría",

@@ -26,6 +26,7 @@ import java.util.HashMap;
 import com.notificationcapture.app.adapters.NotificationAdapter;
 import com.notificationcapture.app.NotificationItem;
 import com.notificationcapture.app.repositories.CategoryRepository;
+import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.models.Category;
@@ -56,8 +57,8 @@ public class InicioFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        repository = new TransactionRepository(requireContext());
-        categoryRepository = new CategoryRepository(requireContext());
+        repository = RepositoryProvider.getInstance().getTransactionRepository();
+        categoryRepository = RepositoryProvider.getInstance().getCategoryRepository();
 
         recyclerView = view.findViewById(R.id.recyclerView);
         emptyView = view.findViewById(R.id.emptyView);
@@ -73,7 +74,7 @@ public class InicioFragment extends Fragment {
         List<Category> allCategories = categoryRepository.getAllCategories();
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : allCategories) {
-            colorMap.put(c.getName(), c.getColor());
+            colorMap.put(c.getName(), c.getDisplayColor());
         }
 
         adapter = new NotificationAdapter(new ArrayList<>(), colorMap, item -> {

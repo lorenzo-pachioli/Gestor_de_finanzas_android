@@ -23,6 +23,7 @@ import java.util.TimeZone;
 
 import com.notificationcapture.app.NotificationItem;
 import com.notificationcapture.app.repositories.CategoryRepository;
+import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
@@ -62,8 +63,8 @@ public class AgregarFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        repository = new TransactionRepository(requireContext());
-        categoryRepository = new CategoryRepository(requireContext());
+        repository = RepositoryProvider.getInstance().getTransactionRepository();
+        categoryRepository = RepositoryProvider.getInstance().getCategoryRepository();
 
         tvPaymentMethod = view.findViewById(R.id.tvPaymentMethod);
         etTitle = view.findViewById(R.id.etTitle);
@@ -188,7 +189,7 @@ public class AgregarFragment extends Fragment {
                     text,
                     itemTimestamp,
                     type,
-                    category);
+                    new Category(category, type));
 
             notification.setPaymentMethod(selectedMethod);
             notification.setPaymentMethodDetail(selectedMethodDetail);

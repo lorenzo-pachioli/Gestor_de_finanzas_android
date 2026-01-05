@@ -19,6 +19,7 @@ import com.notificationcapture.app.fragments.CategoriasFragment;
 import com.notificationcapture.app.fragments.HistorialFragment;
 import com.notificationcapture.app.fragments.InicioFragment;
 import com.notificationcapture.app.fragments.PerfilFragment;
+import com.notificationcapture.app.repositories.RepositoryProvider;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -104,6 +105,9 @@ public class MainActivity extends AppCompatActivity {
                     .commit();
             bottomNavigation.setSelectedItemId(R.id.nav_home);
         }
+
+        // Inicializar el RepositoryProvider (SOLO UNA VEZ)
+        RepositoryProvider.initialize(this);
     }
 
     private void loadFragment(Fragment fragment) {

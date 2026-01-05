@@ -18,6 +18,7 @@ import com.notificationcapture.app.adapters.CategorySummaryAdapter;
 import com.notificationcapture.app.adapters.NotificationAdapter;
 import com.notificationcapture.app.NotificationItem;
 import com.notificationcapture.app.repositories.CategoryRepository;
+import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
@@ -59,8 +60,8 @@ public class CategoriasFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        repository = new TransactionRepository(requireContext());
-        categoryRepository = new CategoryRepository(requireContext());
+        repository = RepositoryProvider.getInstance().getTransactionRepository();
+        categoryRepository = RepositoryProvider.getInstance().getCategoryRepository();
     }
 
     @Override
@@ -118,7 +119,7 @@ public class CategoriasFragment extends Fragment {
         List<Category> categories = categoryRepository.getCategories(currentType);
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : categories) {
-            colorMap.put(c.getName(), c.getColor());
+            colorMap.put(c.getName(), c.getDisplayColor());
         }
 
         summaryAdapter = new CategorySummaryAdapter(new HashMap<>(), colorMap, this::onCategoryClick);
@@ -200,7 +201,7 @@ public class CategoriasFragment extends Fragment {
 
     private void loadDataForPeriod(int month, int year) {
         if (repository == null)
-            repository = new TransactionRepository(requireContext());
+            repository = RepositoryProvider.getInstance().getTransactionRepository();
         List<NotificationItem> allNotifications = repository.getAllTransactions();
 
         Map<String, Double> categoryTotals = new HashMap<>();
@@ -213,7 +214,7 @@ public class CategoriasFragment extends Fragment {
             if (itemCal.get(Calendar.MONTH) == month && itemCal.get(Calendar.YEAR) == year) {
                 // Filter by type
                 if (item.getType() == currentType && item.hasAmount()) {
-                    String category = item.getCategory();
+                    String category = item.getCategory().getDisplayName();
                     if (category == null || category.isEmpty()) {
                         category = "Sin Categoría";
                     }
@@ -228,7 +229,7 @@ public class CategoriasFragment extends Fragment {
         List<Category> categories = categoryRepository.getCategories(currentType);
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : categories) {
-            colorMap.put(c.getName(), c.getColor());
+            colorMap.put(c.getName(), c.getDisplayColor());
         }
 
         summaryAdapter.updateData(categoryTotals, colorMap);
@@ -252,7 +253,7 @@ public class CategoriasFragment extends Fragment {
 
             if (itemCal.get(Calendar.MONTH) == month && itemCal.get(Calendar.YEAR) == year) {
                 if (item.getType() == currentType) {
-                    String itemCategory = item.getCategory();
+                    String itemCategory = item.getCategory().getDisplayName();
                     if (itemCategory == null || itemCategory.isEmpty())
                         itemCategory = "Sin Categoría";
 
@@ -267,7 +268,7 @@ public class CategoriasFragment extends Fragment {
         List<Category> categories = categoryRepository.getCategories(currentType);
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : categories) {
-            colorMap.put(c.getName(), c.getColor());
+            colorMap.put(c.getName(), c.getDisplayColor());
         }
 
         String formattedAmount = String.format("$%.2f", totalAmount)

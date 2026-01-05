@@ -4,7 +4,7 @@ import com.notificationcapture.app.interfaces.SpinnerDisplayable;
 import java.io.Serializable;
 import java.util.UUID;
 
-public class CreditCard implements Serializable, SpinnerDisplayable {
+public class CreditCard  implements Serializable, SpinnerDisplayable {
     private String id;
     private String name;
     private int closingDate; // Day of month (1-31)

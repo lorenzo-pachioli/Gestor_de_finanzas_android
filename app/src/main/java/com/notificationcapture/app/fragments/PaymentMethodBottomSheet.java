@@ -28,6 +28,7 @@ import com.notificationcapture.app.models.CreditCard;
 import java.util.List;
 
 import com.notificationcapture.app.interfaces.PaymentMethodListener;
+import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.WalletRepository;
 
 public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
@@ -63,8 +64,8 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        walletRepository = new WalletRepository(requireContext());
-        creditCardRepository = new CreditCardRepository(requireContext());
+        walletRepository = RepositoryProvider.getInstance().getWalletRepository();
+        creditCardRepository = RepositoryProvider.getInstance().getCreditCardRepository();
 
         TabLayout tabLayout = view.findViewById(R.id.tabLayout);
         ViewPager2 viewPager = view.findViewById(R.id.viewPager);

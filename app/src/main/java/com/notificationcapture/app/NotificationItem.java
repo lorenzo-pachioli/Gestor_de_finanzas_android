@@ -10,6 +10,7 @@ import java.io.Serializable;
 
 import com.notificationcapture.app.enums.TransactionType;
 import com.notificationcapture.app.enums.PaymentMethod;
+import com.notificationcapture.app.models.Category;
 
 public class NotificationItem implements Serializable {
     private String id;
@@ -19,7 +20,7 @@ public class NotificationItem implements Serializable {
     private long timestamp;
     private Double amount;
     private TransactionType type;
-    private String category;
+    private Category category;
 
     // Enums moved to package com.notificationcapture.app.enums
 
@@ -29,15 +30,6 @@ public class NotificationItem implements Serializable {
     private int currentInstallment = 1; // Default 1
     private String installmentGroupId; // ID to group related installments
 
-    public static final String[] OUTCOME_CATEGORIES = {
-            "Otros", "Comida", "Combustible", "Transporte", "Servicios",
-            "Entretenimiento", "Salud", "Educación", "Compras", "Vivienda"
-    };
-
-    public static final String[] INCOME_CATEGORIES = {
-            "Otros", "Salario", "Inversiones", "Reembolsos", "Familiares", "Venta"
-    };
-
     public NotificationItem(String packageName, String title, String text, long timestamp) {
         this.id = generateId();
         this.packageName = packageName;
@@ -46,12 +38,12 @@ public class NotificationItem implements Serializable {
         this.timestamp = timestamp;
         this.amount = extractAmount(title, text);
         this.type = detectTransactionType(title, text);
-        this.category = "Otros"; // Por defecto
+        this.category = new Category("Otros", this.type); // Por defecto
     }
 
     // Constructor con tipo y categoría explícitos (para formulario manual)
     public NotificationItem(String packageName, String title, String text, long timestamp,
-            TransactionType type, String category) {
+            TransactionType type, Category category) {
         this.id = generateId();
         this.packageName = packageName;
         this.title = title;
@@ -122,11 +114,11 @@ public class NotificationItem implements Serializable {
         this.type = type;
     }
 
-    public String getCategory() {
+    public Category getCategory() {
         return category;
     }
 
-    public void setCategory(String category) {
+    public void setCategory(Category category) {
         this.category = category;
     }
 

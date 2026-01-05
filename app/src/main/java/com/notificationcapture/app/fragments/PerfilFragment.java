@@ -25,8 +25,10 @@ import androidx.fragment.app.Fragment;
 import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.VISIBLE;
 
+import com.notificationcapture.app.enums.CatColors;
 import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.CreditCardRepository;
+import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
@@ -41,7 +43,6 @@ import java.util.List;
 
 public class PerfilFragment extends Fragment {
 
-    private TransactionRepository repository;
     private WalletRepository walletRepository;
     private CreditCardRepository creditCardRepository;
     private CategoryRepository categoryRepository;
@@ -65,34 +66,6 @@ public class PerfilFragment extends Fragment {
 
     private Button btnShowBottomSheet;
 
-    // Colores predefinidos para selección
-    // Colores Cálidos (Ingresos)
-    private final int[] INGRESOS_COLORS = {
-            Color.parseColor("#009688"), // Teal
-            Color.parseColor("#4CAF50"), // Green
-            Color.parseColor("#8BC34A"), // Light Green
-            Color.parseColor("#CDDC39"), // Lime
-            Color.parseColor("#FFEB3B"), // Yellow
-            Color.parseColor("#FF9800"), // Orange
-            Color.parseColor("#FFC107"), // Amber
-            Color.parseColor("#795548"), // Brown
-
-    };
-
-    // Colores Fríos (Egresos)
-    private final int[] EGRESOS_COLORS = {
-            Color.parseColor("#F44336"), // Red
-            Color.parseColor("#E91E63"), // Pink
-            Color.parseColor("#FF5722"), // Deep Orange
-            Color.parseColor("#2196F3"), // Blue
-            Color.parseColor("#03A9F4"), // Light Blue
-            Color.parseColor("#00BCD4"), // Cyan
-            Color.parseColor("#3F51B5"), // Indigo
-            Color.parseColor("#673AB7"), // Deep Purple
-            Color.parseColor("#9C27B0"), // Purple
-            Color.parseColor("#607D8B"), // Blue Grey
-            Color.parseColor("#9E9E9E") // Grey
-    };
     private int selectedColor; // Set dynamically
 
     public PerfilFragment() {
@@ -109,10 +82,9 @@ public class PerfilFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        repository = new TransactionRepository(requireContext());
-        walletRepository = new WalletRepository(requireContext());
-        categoryRepository = new CategoryRepository(requireContext());
-        creditCardRepository = new CreditCardRepository(requireContext());
+        walletRepository = RepositoryProvider.getInstance().getWalletRepository();
+        categoryRepository = RepositoryProvider.getInstance().getCategoryRepository();
+        creditCardRepository = RepositoryProvider.getInstance().getCreditCardRepository();
 
         // Initialize UI Views
         spinnerCategories = view.findViewById(R.id.spinnerCategories);
@@ -233,7 +205,7 @@ public class PerfilFragment extends Fragment {
             @Override
             public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
                 if (position > 0) { // 0 is placeholder
-                    Category selectedCat = currentCategories.get(position - 1);
+                    Category selectedCat = categoryRepository.getAllCategories().get(position - 1);
                     showEditCategoryDialog(selectedCat);
                     // Reset selection
                     spinnerCategories.setSelection(0);
@@ -301,7 +273,7 @@ public class PerfilFragment extends Fragment {
 
         List<Category> displayList = new ArrayList<>();
         // Placeholder
-        displayList.add(new Category("Seleccionar para editar/borrar...", 0, type));
+        displayList.add(new Category("Seleccionar para editar/borrar...", type));
         displayList.addAll(currentCategories);
 
         UniversalSpinnerAdapter<Category> adapter = new UniversalSpinnerAdapter<>(requireContext(), displayList);
@@ -346,7 +318,7 @@ public class PerfilFragment extends Fragment {
                 ? TransactionType.EGRESO
                 : TransactionType.INGRESO;
 
-        int[] colors = (type == TransactionType.INGRESO) ? INGRESOS_COLORS : EGRESOS_COLORS;
+        int[] colors = CatColors.getColorsByType(type); //(type == TransactionType.INGRESO) ? CatColors.INGRESOS_COLORS : CatColors.EGRESOS_COLORS;
         selectedColor = colors[0]; // Default to first
 
         populateColorPicker(containerColors, colors);
@@ -426,7 +398,7 @@ public class PerfilFragment extends Fragment {
         LinearLayout containerColors = dialogView.findViewById(R.id.containerCardColors);
 
         // Populate Colors (use same logic as categories or a separate palette?)
-        int[] colors = EGRESOS_COLORS; // Use outcome colors for cards
+        int[] colors = CatColors.getIntEgresosColors(); // Use outcome colors for cards
         selectedColor = colors[0];
         populateColorPicker(containerColors, colors);
 
@@ -482,15 +454,15 @@ public class PerfilFragment extends Fragment {
         LinearLayout containerColors = dialogView.findViewById(R.id.containerColors);
 
         etName.setText(category.getName());
-        selectedColor = category.getColor();
+        selectedColor = category.getDisplayColor();
 
         etName.setText(category.getName());
-        selectedColor = category.getColor();
+        selectedColor = category.getDisplayColor();
 
         // Populate Colors
-        int[] colors = (category.getType() == TransactionType.INGRESO) ? INGRESOS_COLORS
-                : EGRESOS_COLORS;
-        populateColorPicker(containerColors, colors);
+        //int[] colors = (category.getType() == TransactionType.INGRESO) ? CatColors.INGRESOS_COLORS
+        //   CatColors.EGRESOS_COLORS;
+        populateColorPicker(containerColors, CatColors.getColorsByType(category.getType()));
 
         Button btnCreate = dialogView.findViewById(R.id.btnCreate);
         Button btnDelete = dialogView.findViewById(R.id.btnDelete);
@@ -599,7 +571,7 @@ public class PerfilFragment extends Fragment {
         etClosingDate.setText(String.valueOf(card.getClosingDate()));
         selectedColor = card.getColor();
 
-        int[] colors = EGRESOS_COLORS;
+        int[] colors = CatColors.getIntEgresosColors();
         populateColorPicker(containerColors, colors);
 
         Button btnCreate = dialogView.findViewById(R.id.btnCreateCard);

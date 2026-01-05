@@ -18,6 +18,7 @@ import java.util.Map;
 
 import com.notificationcapture.app.adapters.NotificationAdapter;
 import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.interfaces.OnDismissListener;
@@ -58,8 +59,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         // Infla el layout que creaste
-        View view = inflater.inflate(R.layout.bottom_sheet_layout, container, false);
-        return view;
+        return inflater.inflate(R.layout.bottom_sheet_layout, container, false);
     }
 
     @Override
@@ -83,7 +83,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                     colorMap = new HashMap<>();
 
                 adapter = new NotificationAdapter(notifications, colorMap, item -> {
-                    TransactionRepository repository = new TransactionRepository(requireContext());
+                    TransactionRepository repository = RepositoryProvider.getInstance().getTransactionRepository();
                     repository.deleteTransaction(item.getId());
                     notifications.remove(item);
                     adapter.notifyDataSetChanged();

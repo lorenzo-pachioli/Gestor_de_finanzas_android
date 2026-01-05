@@ -7,6 +7,7 @@ import android.service.notification.StatusBarNotification;
 import android.app.Notification;
 
 import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 
 public class NotificationListener extends NotificationListenerService {
@@ -74,7 +75,7 @@ public class NotificationListener extends NotificationListenerService {
     @Override
     public void onCreate() {
         super.onCreate();
-        repository = new TransactionRepository(this);
+        repository = RepositoryProvider.getInstance().getTransactionRepository();
     }
 
     @Override
