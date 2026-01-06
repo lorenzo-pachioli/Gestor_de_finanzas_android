@@ -151,10 +151,11 @@ public class TransactionRepository implements GsonAccess {
             boolean shouldDelete = false;
 
             if (groupId != null) {
-                Credit c = (Credit) transaction;
-                if (c.getInstallmentGroupId() != null && groupId.equals(c.getInstallmentGroupId())) {
-                    // If part of the same group, delete it
-                    shouldDelete = true;
+                if (transaction instanceof Credit c) {
+                    if (c.getInstallmentGroupId() != null && groupId.equals(c.getInstallmentGroupId())) {
+                        // If part of the same group, delete it
+                        shouldDelete = true;
+                    }
                 }
             } else if (transaction.getId().equals(id)) {
                 // Standard single deletion
@@ -191,10 +192,11 @@ public class TransactionRepository implements GsonAccess {
             boolean shouldDelete = false;
 
             if (groupId != null) {
-                Credit c = (Credit) transaction;
-                if (c.getInstallmentGroupId() != null && groupId.equals(c.getInstallmentGroupId())) {
-                    // If part of the same group, delete it
-                    shouldDelete = true;
+                if (transaction instanceof Credit c) {
+                    if (c.getInstallmentGroupId() != null && groupId.equals(c.getInstallmentGroupId())) {
+                        // If part of the same group, delete it
+                        shouldDelete = true;
+                    }
                 }
             } else if (transaction.getId().equals(id)) {
                 shouldDelete = true;
@@ -212,14 +214,35 @@ public class TransactionRepository implements GsonAccess {
 
     public void updateTransaction(Transaction updatedTransaction) {
         List<Transaction> transactionList = getAllTransactions();
+        String groupId = updatedTransaction instanceof Credit c ? c.getInstallmentGroupId() : null;
 
         boolean found = false;
         for (int i = 0; i < transactionList.size(); i++) {
-            if (transactionList.get(i).getId().equals(updatedTransaction.getId())) {
+            Transaction current = transactionList.get(i);
+
+            if (groupId != null && current instanceof Credit c && groupId.equals(c.getInstallmentGroupId())) {
+                // It's part of the same group (or the transaction itself)
+                Credit updatedCredit = (Credit) updatedTransaction;
+
+                // Update shared fields
+                // c.setTitle(updatedCredit.getTitle());
+                c.setText(updatedCredit.getText());
+                c.setCategory(updatedCredit.getCategory());
+                c.setAmount(updatedCredit.getAmount());
+                c.setType(updatedCredit.getType());
+                c.setPaymentMethod(updatedCredit.getPaymentMethod());
+                c.setCreditCard(updatedCredit.getCreditCard());
+                c.setInstallments(updatedCredit.getInstallments());
+                // Preserved fields: Id, Timestamp, CurrentInstallment
+
+                found = true;
+            } else if (groupId == null && current.getId().equals(updatedTransaction.getId())) {
+                // Standard single update (not a credit group or no group ID)
                 transactionList.set(i, updatedTransaction);
                 found = true;
-                break;
+                break; // Unique ID match, we can stop if not updating a group
             }
+            // If it IS a group update, we don't break, we continue to find all siblings
         }
 
         if (found) {
