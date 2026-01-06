@@ -1,6 +1,6 @@
 package com.notificationcapture.app.utils;
 
-import com.notificationcapture.app.enums.TransactionType;
+import com.notificationcapture.app.enums.IngresoOEgreso;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,7 +10,7 @@ public class StringParser {
     /**
      * Detecta automáticamente si es un ingreso o egreso basado en palabras clave
      */
-    public static TransactionType detectTransactionType(String title, String text) {
+    public static IngresoOEgreso detectTransactionType(String title, String text) {
         String combinedText = (title + " " + text).toLowerCase();
 
         // Palabras clave de INGRESO
@@ -37,19 +37,19 @@ public class StringParser {
         // Verificar ingresos primero
         for (String keyword : ingresoKeywords) {
             if (combinedText.contains(keyword.toLowerCase())) {
-                return TransactionType.INGRESO;
+                return IngresoOEgreso.INGRESO;
             }
         }
 
         // Verificar egresos
         for (String keyword : egresoKeywords) {
             if (combinedText.contains(keyword.toLowerCase())) {
-                return TransactionType.EGRESO;
+                return IngresoOEgreso.EGRESO;
             }
         }
 
         // Por defecto, si no se detecta, asumimos EGRESO (más común en notificaciones)
-        return TransactionType.EGRESO;
+        return IngresoOEgreso.EGRESO;
     }
 
     /**

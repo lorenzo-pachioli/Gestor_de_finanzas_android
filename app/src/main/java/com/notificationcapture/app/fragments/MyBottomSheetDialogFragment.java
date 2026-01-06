@@ -16,8 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.notificationcapture.app.adapters.NotificationAdapter;
-import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.adapters.TransactionAdapter;
+import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
@@ -27,7 +27,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
     private TextView tvTitle;
     private RecyclerView recyclerDetails;
-    private NotificationAdapter adapter;
+    private TransactionAdapter adapter;
     private boolean dataChanged = false;
 
     private OnDismissListener dismissListener;
@@ -43,7 +43,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
     public MyBottomSheetDialogFragment() {
     }
 
-    public static MyBottomSheetDialogFragment newInstance(String title, List<NotificationItem> notifications,
+    public static MyBottomSheetDialogFragment newInstance(String title, List<Transaction> notifications,
             Map<String, Integer> colorMap) {
         MyBottomSheetDialogFragment fragment = new MyBottomSheetDialogFragment();
         Bundle args = new Bundle();
@@ -70,7 +70,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
         if (getArguments() != null) {
             String title = getArguments().getString(ARG_TITLE);
-            List<NotificationItem> notifications = (List<NotificationItem>) getArguments()
+            List<Transaction> notifications = (List<Transaction>) getArguments()
                     .getSerializable(ARG_NOTIFICATIONS);
             Map<String, Integer> colorMap = (Map<String, Integer>) getArguments().getSerializable(ARG_COLOR_MAP);
 
@@ -82,7 +82,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 if (colorMap == null)
                     colorMap = new HashMap<>();
 
-                adapter = new NotificationAdapter(notifications, colorMap, item -> {
+                adapter = new TransactionAdapter(notifications, colorMap, item -> {
                     TransactionRepository repository = RepositoryProvider.getInstance().getTransactionRepository();
                     repository.deleteTransaction(item.getId());
                     notifications.remove(item);

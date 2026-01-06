@@ -1,18 +1,19 @@
 package com.notificationcapture.app.models;
 
-import com.notificationcapture.app.enums.TransactionType;
+import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.enums.PaymentMethod;
 
 public class Debit extends Transaction {
 
     private Wallets wallet;
 
     public Debit(String title, String text, long timestamp, Wallets wallet) {
-        super(title, text, timestamp);
+        super(PaymentMethod.DEBITO, title, text, timestamp);
         this.wallet = wallet;
     }
 
-    public Debit(String title, String text, long timestamp, TransactionType type, Category category, Wallets wallet) {
-        super(title, text, timestamp, type, category);
+    public Debit(String title, String text, long timestamp, IngresoOEgreso type, Category category, Wallets wallet) {
+        super(PaymentMethod.DEBITO, title, text, timestamp, type, category);
         this.wallet = wallet;
     }
 
@@ -22,5 +23,10 @@ public class Debit extends Transaction {
 
     public void setWallet(Wallets wallet) {
         this.wallet = wallet;
+    }
+
+    @Override
+    public String getSourceName() {
+        return wallet != null ? wallet.getAppName() : "Desconocido";
     }
 }

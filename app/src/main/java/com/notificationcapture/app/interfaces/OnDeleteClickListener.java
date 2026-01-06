@@ -1,7 +1,7 @@
 package com.notificationcapture.app.interfaces;
 
-import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.models.Transaction;
 
 public interface OnDeleteClickListener {
-    void onDeleteClick(NotificationItem item);
+    void onDeleteClick(Transaction item);
 }

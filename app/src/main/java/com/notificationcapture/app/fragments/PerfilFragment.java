@@ -26,15 +26,14 @@ import static android.content.Context.MODE_PRIVATE;
 import static android.view.View.VISIBLE;
 
 import com.notificationcapture.app.enums.CatColors;
+import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.CreditCardRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
-import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.models.Category;
 import com.notificationcapture.app.models.CreditCard;
-import com.notificationcapture.app.enums.TransactionType;
 import com.notificationcapture.app.repositories.WalletRepository;
 
 import java.util.ArrayList;
@@ -266,9 +265,9 @@ public class PerfilFragment extends Fragment {
     }
 
     private void loadCategories() {
-        TransactionType type = swCatType.isChecked()
-                ? TransactionType.EGRESO
-                : TransactionType.INGRESO;
+        IngresoOEgreso type = swCatType.isChecked()
+                ? IngresoOEgreso.EGRESO
+                : IngresoOEgreso.INGRESO;
         currentCategories = categoryRepository.getCategories(type);
 
         List<Category> displayList = new ArrayList<>();
@@ -314,11 +313,11 @@ public class PerfilFragment extends Fragment {
         LinearLayout containerColors = dialogView.findViewById(R.id.containerColors);
 
         // Populate Colors
-        TransactionType type = swCatType.isChecked()
-                ? TransactionType.EGRESO
-                : TransactionType.INGRESO;
+        IngresoOEgreso type = swCatType.isChecked()
+                ? IngresoOEgreso.EGRESO
+                : IngresoOEgreso.INGRESO;
 
-        int[] colors = CatColors.getColorsByType(type); //(type == TransactionType.INGRESO) ? CatColors.INGRESOS_COLORS : CatColors.EGRESOS_COLORS;
+        int[] colors = CatColors.getColorsByType(type); //(type == IngresoOEgreso.INGRESO) ? CatColors.INGRESOS_COLORS : CatColors.EGRESOS_COLORS;
         selectedColor = colors[0]; // Default to first
 
         populateColorPicker(containerColors, colors);
@@ -332,9 +331,9 @@ public class PerfilFragment extends Fragment {
         btnCreate.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             if (!name.isEmpty()) {
-                TransactionType transactionTypeype = swCatType.isChecked()
-                        ? TransactionType.EGRESO
-                        : TransactionType.INGRESO;
+                IngresoOEgreso transactionTypeype = swCatType.isChecked()
+                        ? IngresoOEgreso.EGRESO
+                        : IngresoOEgreso.INGRESO;
                 Category newCat = new Category(name, selectedColor, transactionTypeype);
                 categoryRepository.addCategory(newCat);
                 loadCategories();
@@ -460,7 +459,7 @@ public class PerfilFragment extends Fragment {
         selectedColor = category.getDisplayColor();
 
         // Populate Colors
-        //int[] colors = (category.getType() == TransactionType.INGRESO) ? CatColors.INGRESOS_COLORS
+        //int[] colors = (category.getType() == IngresoOEgreso.INGRESO) ? CatColors.INGRESOS_COLORS
         //   CatColors.EGRESOS_COLORS;
         populateColorPicker(containerColors, CatColors.getColorsByType(category.getType()));
 

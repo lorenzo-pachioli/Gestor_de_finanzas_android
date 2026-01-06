@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-import com.notificationcapture.app.adapters.NotificationAdapter;
-import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.adapters.TransactionAdapter;
+import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
@@ -32,7 +32,7 @@ public class HistorialFragment extends Fragment {
     private TextView emptyView;
     private TransactionRepository repository;
     private CategoryRepository categoryRepository;
-    private NotificationAdapter adapter;
+    private TransactionAdapter adapter;
 
     public HistorialFragment() {
         // Required empty public constructor
@@ -70,9 +70,9 @@ public class HistorialFragment extends Fragment {
             colorMap.put(c.getName(), c.getDisplayColor());
         }
 
-        adapter = new NotificationAdapter(new ArrayList<>(), colorMap, (item) -> {
+        adapter = new TransactionAdapter(new ArrayList<>(), colorMap, (item) -> {
             // Callback para eliminar notificación
-            repository.deleteTransactionNotFiltered(item.getId());
+            repository.deleteTransaction(item.getId());
             loadNotifications();
         });
 
@@ -87,7 +87,7 @@ public class HistorialFragment extends Fragment {
     }
 
     private void loadNotifications() {
-        List<NotificationItem> notifications = repository.getAllTransactionNotFiltered();
+        List<Transaction> notifications = repository.getAllTransactionNotFiltered();
         adapter.updateData(notifications);
 
         if (notifications.isEmpty()) {

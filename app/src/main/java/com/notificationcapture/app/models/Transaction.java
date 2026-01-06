@@ -3,22 +3,25 @@ package com.notificationcapture.app.models;
 import static com.notificationcapture.app.utils.StringParser.detectTransactionType;
 import static com.notificationcapture.app.utils.StringParser.extractAmount;
 
-import com.notificationcapture.app.enums.TransactionType;
+import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.enums.PaymentMethod;
 
 import java.io.Serializable;
 
-abstract class Transaction implements Serializable {
+public abstract class Transaction implements Serializable {
     private String id;
+    private PaymentMethod paymentMethod;
     private String title;
     private String text;
     private long timestamp;
     private Double amount;
-    private TransactionType type;
+    private IngresoOEgreso type;
     private Category category;
     private boolean expanded = false;
 
-    public Transaction(String title, String text, long timestamp) {
+    public Transaction(PaymentMethod paymentMethod, String title, String text, long timestamp) {
         this.id = generateId();
+        this.paymentMethod = paymentMethod;
         this.title = title;
         this.text = text;
         this.timestamp = timestamp;
@@ -28,9 +31,10 @@ abstract class Transaction implements Serializable {
     }
 
     // Constructor con tipo y categoría explícitos (para formulario manual)
-    public Transaction(String title, String text, long timestamp,
-                            TransactionType type, Category category) {
+    public Transaction(PaymentMethod paymentMethod, String title, String text, long timestamp,
+                       IngresoOEgreso type, Category category) {
         this.id = generateId();
+        this.paymentMethod = paymentMethod;
         this.title = title;
         this.text = text;
         this.timestamp = timestamp;
@@ -49,6 +53,14 @@ abstract class Transaction implements Serializable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public PaymentMethod getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
 
     public String getTitle() {
@@ -83,15 +95,19 @@ abstract class Transaction implements Serializable {
         this.amount = amount;
     }
 
-    public TransactionType getType() {
+    public IngresoOEgreso getType() {
         return type;
     }
 
-    public void setType(TransactionType type) {
+    public void setType(IngresoOEgreso type) {
         this.type = type;
     }
 
     public Category getCategory() {
+        if (category == null) {
+            // Return a safe default to prevent NPEs
+            return new Category("Otros", type != null ? type : IngresoOEgreso.EGRESO);
+        }
         return category;
     }
 
@@ -122,5 +138,5 @@ abstract class Transaction implements Serializable {
         return amount != null && amount > 0;
     }
 
-
+    public abstract String getSourceName();
 }

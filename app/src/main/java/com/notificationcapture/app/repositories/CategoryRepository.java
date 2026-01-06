@@ -8,8 +8,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.notificationcapture.app.NotificationItem;
-import com.notificationcapture.app.enums.TransactionType;
+import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.interfaces.GsonAccess;
 import com.notificationcapture.app.models.Category;
 
@@ -43,17 +42,17 @@ public class CategoryRepository implements GsonAccess {
             List<Category> defaultCategories = new ArrayList<>();
             // Income Defaults
             for (String name : INCOME_CATEGORIES) {
-                defaultCategories.add(new Category(name, TransactionType.INGRESO));
+                defaultCategories.add(new Category(name, IngresoOEgreso.INGRESO));
             }
             // Outcome Defaults
             for (String name : OUTCOME_CATEGORIES) {
-                defaultCategories.add(new Category(name, TransactionType.EGRESO));
+                defaultCategories.add(new Category(name, IngresoOEgreso.EGRESO));
             }
             saveCategories(defaultCategories);
         }
     }
 
-    public List<Category> getCategories(TransactionType type) {
+    public List<Category> getCategories(IngresoOEgreso type) {
         List<Category> all = getAllCategories();
         List<Category> filtered = new ArrayList<>();
         for (Category c : all) {
@@ -64,7 +63,7 @@ public class CategoryRepository implements GsonAccess {
         return filtered;
     }
 
-    public List<String> getCategoryNames(TransactionType type) {
+    public List<String> getCategoryNames(IngresoOEgreso type) {
         List<Category> cats = getCategories(type);
         List<String> names = new ArrayList<>();
         for (Category c : cats) {
@@ -79,7 +78,7 @@ public class CategoryRepository implements GsonAccess {
         saveCategories(all);
     }
 
-    public void deleteCategory(String name, TransactionType type) {
+    public void deleteCategory(String name, IngresoOEgreso type) {
         List<Category> all = getAllCategories();
         List<Category> toKeep = new ArrayList<>();
         for (Category c : all) {
@@ -104,7 +103,7 @@ public class CategoryRepository implements GsonAccess {
     }
 
     public List<Category> getAllCategories() {
-        try{
+        try {
             String json = prefs.getString(KEY_CATEGORIES, null);
             if (json == null)
                 return new ArrayList<>();
@@ -118,7 +117,7 @@ public class CategoryRepository implements GsonAccess {
     }
 
     private void saveCategories(List<Category> categories) {
-        try{
+        try {
             prefs.edit().putString(KEY_CATEGORIES, gson.toJson(categories)).apply();
         } catch (Exception e) {
             Log.e(TAG, "Error adding category: " + e.getMessage(), e);

@@ -23,19 +23,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-import com.notificationcapture.app.adapters.NotificationAdapter;
-import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.adapters.TransactionAdapter;
+import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.models.Category;
-import com.notificationcapture.app.enums.TransactionType;
+import com.notificationcapture.app.enums.IngresoOEgreso;
 
 public class InicioFragment extends Fragment {
 
     private RecyclerView recyclerView;
-    private NotificationAdapter adapter;
+    private TransactionAdapter adapter;
     private TextView emptyView;
     private Button btnEnableAccess;
     private TextView tvIngresos;
@@ -77,7 +77,7 @@ public class InicioFragment extends Fragment {
             colorMap.put(c.getName(), c.getDisplayColor());
         }
 
-        adapter = new NotificationAdapter(new ArrayList<>(), colorMap, item -> {
+        adapter = new TransactionAdapter(new ArrayList<>(), colorMap, item -> {
             repository.deleteTransaction(item.getId());
             loadNotifications();
         });
@@ -155,10 +155,10 @@ public class InicioFragment extends Fragment {
     }
 
     private void loadNotifications() {
-        List<NotificationItem> allNotifications = repository.getAllTransactions();
+        List<Transaction> allNotifications = repository.getAllTransactions();
 
         // Filtrar solo las notificaciones del mes actual
-        List<NotificationItem> currentMonthNotifications = getCurrentMonthNotifications(allNotifications);
+        List<Transaction> currentMonthNotifications = getCurrentMonthNotifications(allNotifications);
         adapter.updateData(currentMonthNotifications);
 
         if (currentMonthNotifications.isEmpty()) {
@@ -177,14 +177,14 @@ public class InicioFragment extends Fragment {
         updateFinancialSummary(currentMonthNotifications);
     }
 
-    private List<NotificationItem> getCurrentMonthNotifications(List<NotificationItem> allNotifications) {
+    private List<Transaction> getCurrentMonthNotifications(List<Transaction> allNotifications) {
         Calendar now = Calendar.getInstance();
         int currentMonth = now.get(Calendar.MONTH);
         int currentYear = now.get(Calendar.YEAR);
 
-        List<NotificationItem> currentMonthNotifications = new ArrayList<>();
+        List<Transaction> currentMonthNotifications = new ArrayList<>();
 
-        for (NotificationItem item : allNotifications) {
+        for (Transaction item : allNotifications) {
             Calendar itemDate = Calendar.getInstance();
             itemDate.setTimeInMillis(item.getTimestamp());
 
@@ -212,13 +212,13 @@ public class InicioFragment extends Fragment {
         return getString(monthResIds[currentMonth]);
     }
 
-    private void updateFinancialSummary(List<NotificationItem> currentMonthNotifications) {
+    private void updateFinancialSummary(List<Transaction> currentMonthNotifications) {
         double totalIngresos = 0;
         double totalEgresos = 0;
 
-        for (NotificationItem item : currentMonthNotifications) {
+        for (Transaction item : currentMonthNotifications) {
             if (item.hasAmount()) {
-                if (item.getType() == TransactionType.INGRESO) {
+                if (item.getType() == IngresoOEgreso.INGRESO) {
                     totalIngresos += item.getAmount();
                 } else {
                     totalEgresos += item.getAmount();

@@ -36,7 +36,7 @@ public class RepositoryProvider {
 
     /**
      * Inicializa el RepositoryProvider con el contexto de la aplicación.
-     * Este método debe ser llamado UNA SOLA VEZ, típicamente en el Application.onCreate()
+     * Este metodo debe ser llamado UNA SOLA VEZ, típicamente en el Application.onCreate()
      * o en la primera Activity que se lance.
      *
      * @param context Contexto de la aplicación
@@ -152,7 +152,7 @@ public class RepositoryProvider {
      * - Cierre completo de sesión
      * - Reinicio total de la aplicación
      *
-     * Después de llamar a este método, se debe volver a inicializar con initialize().
+     * Después de llamar a este metodo, se debe volver a inicializar con initialize().
      */
     public static synchronized void destroy() {
         if (instance != null) {

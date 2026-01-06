@@ -1,31 +1,57 @@
 package com.notificationcapture.app.repositories;
 
+import static androidx.core.content.ContentProviderCompat.requireContext;
+
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.widget.Toast;
+
 import com.google.gson.Gson;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.fragments.AgregarFragment;
 import com.notificationcapture.app.interfaces.GsonAccess;
+import com.notificationcapture.app.models.Cash;
+import com.notificationcapture.app.models.Credit;
+import com.notificationcapture.app.models.Debit;
+import com.notificationcapture.app.models.Transaction;
+import com.notificationcapture.app.utils.ErrorDialog;
 
 public class TransactionRepository implements GsonAccess {
 
     private SharedPreferences prefs;
     private Gson gson;
+    private Gson plainGson; // Plain Gson to avoid recursion in adapter
+    private Context context;
 
     public TransactionRepository(Context context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        gson = new Gson();
+        this.context = context.getApplicationContext();
+
+        // Initialize plain Gson first
+        this.plainGson = new Gson();
+
+        // Initialize main Gson with the adapter
+        this.gson = new com.google.gson.GsonBuilder()
+                .registerTypeAdapter(Transaction.class, new TransactionAdapter())
+                .create();
     }
 
-    public void saveTransactionNotFiltered(NotificationItem item) {
-        List<NotificationItem> notifications = getAllTransactions();
+    public void saveTransactionNotFiltered(Transaction transaction) {
+        List<Transaction> notifications = getAllTransactionNotFiltered();
 
         // Agregar al inicio de la lista
-        notifications.add(0, item);
+        notifications.add(0, transaction);
 
         // Limitar el número de notificaciones guardadas
         if (notifications.size() > MAX_NOTIFICATIONS) {
@@ -37,80 +63,106 @@ public class TransactionRepository implements GsonAccess {
         prefs.edit().putString(KEY_NOTIFICATIONS_NOT_FILTERED, json).apply();
     }
 
-    public void saveTransaction(NotificationItem item) {
-        List<NotificationItem> notifications = getAllTransactions();
+    public void saveTransaction(Transaction transaction) {
+        try {
+            List<Transaction> transactionList = getAllTransactions();
 
-        // Agregar al inicio de la lista
-        notifications.add(0, item);
+            // Agregar al inicio de la lista
+            transactionList.add(0, transaction);
 
-        // Limitar el número de notificaciones guardadas
-        if (notifications.size() > MAX_NOTIFICATIONS) {
-            notifications = notifications.subList(0, MAX_NOTIFICATIONS);
+            // Limitar el número de notificaciones guardadas
+            if (transactionList.size() > MAX_NOTIFICATIONS) {
+                transactionList = transactionList.subList(0, MAX_NOTIFICATIONS);
+            }
+
+            // Guardar en SharedPreferences
+            String json = gson.toJson(transactionList);
+            prefs.edit().putString(KEY_NOTIFICATIONS, json).apply();
+        } catch (Exception e) {
+            // Toast.makeText(context, "Error: " + e.getMessage(), 5);
+            ErrorDialog.show("Error: " + e.getMessage());
         }
-
-        // Guardar en SharedPreferences
-        String json = gson.toJson(notifications);
-        prefs.edit().putString(KEY_NOTIFICATIONS, json).apply();
     }
 
-    public List<NotificationItem> getAllTransactionNotFiltered() {
+    public List<Transaction> getAllTransactionNotFiltered() {
         String json = prefs.getString(KEY_NOTIFICATIONS_NOT_FILTERED, null);
 
         if (json == null || json.isEmpty()) {
             return new ArrayList<>();
         }
 
-        Type type = new TypeToken<List<NotificationItem>>() {
+        Type type = new TypeToken<List<Transaction>>() {
         }.getType();
-        List<NotificationItem> notifications = gson.fromJson(json, type);
+        List<Transaction> transactionList = gson.fromJson(json, type);
 
-        return notifications != null ? notifications : new ArrayList<>();
+        if (transactionList != null) {
+            transactionList.removeIf(java.util.Objects::isNull);
+            return transactionList;
+        }
+        return new ArrayList<>();
     }
 
-    public List<NotificationItem> getAllTransactions() {
-        String json = prefs.getString(KEY_NOTIFICATIONS, null);
+    public List<Transaction> getAllTransactions() {
+        try {
+            String json = prefs.getString(KEY_NOTIFICATIONS, null);
 
-        if (json == null || json.isEmpty()) {
+            if (json == null || json.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            Type type = new TypeToken<List<Transaction>>() {
+            }.getType();
+            List<Transaction> transactionList = gson.fromJson(json, type);
+
+            if (transactionList != null) {
+                // Filter out nulls that might have occurred during deserialization
+                List<Transaction> cleanList = new ArrayList<>();
+                for (Transaction t : transactionList) {
+                    if (t != null) {
+                        cleanList.add(t);
+                    }
+                }
+                return cleanList;
+            }
+            return new ArrayList<>();
+        } catch (Exception e) {
+            Toast.makeText(context, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             return new ArrayList<>();
         }
-
-        Type type = new TypeToken<List<NotificationItem>>() {
-        }.getType();
-        List<NotificationItem> notifications = gson.fromJson(json, type);
-
-        return notifications != null ? notifications : new ArrayList<>();
     }
 
     public void deleteTransaction(String id) {
-        List<NotificationItem> notifications = getAllTransactions();
+        List<Transaction> transactionList = getAllTransactions();
 
-        // Find the notification to be deleted first to check for group ID
+        // Find the transaction to be deleted first to check for group ID
         String groupId = null;
-        for (NotificationItem item : notifications) {
-            if (item.getId().equals(id)) {
-                groupId = item.getInstallmentGroupId();
+        for (Transaction transaction : transactionList) {
+            if (transaction.getId().equals(id)) {
+                if (transaction instanceof Credit c)
+                    groupId = c.getInstallmentGroupId();
                 break;
             }
         }
 
-        // Filtrar removiendo la notificación con el ID especificado o todas las del
+        // Filtrar removiendo la transaction con el ID especificado o todas las del
         // grupo
-        List<NotificationItem> updatedList = new ArrayList<>();
-        for (NotificationItem item : notifications) {
+        List<Transaction> updatedList = new ArrayList<>();
+        for (Transaction transaction : transactionList) {
             boolean shouldDelete = false;
 
-            if (groupId != null && item.getInstallmentGroupId() != null) {
-                // If part of the same group, delete it
-                if (groupId.equals(item.getInstallmentGroupId())) {
+            if (groupId != null) {
+                Credit c = (Credit) transaction;
+                if (c.getInstallmentGroupId() != null && groupId.equals(c.getInstallmentGroupId())) {
+                    // If part of the same group, delete it
                     shouldDelete = true;
                 }
-            } else if (item.getId().equals(id)) {
+            } else if (transaction.getId().equals(id)) {
                 // Standard single deletion
                 shouldDelete = true;
             }
 
             if (!shouldDelete) {
-                updatedList.add(item);
+                updatedList.add(transaction);
             }
         }
 
@@ -120,33 +172,36 @@ public class TransactionRepository implements GsonAccess {
     }
 
     public void deleteTransactionNotFiltered(String id) {
-        List<NotificationItem> notifications = getAllTransactions();
+        List<Transaction> transactionList = getAllTransactionNotFiltered();
 
-        // Find the notification to be deleted first to check for group ID
+        // Find the transaction to be deleted first to check for group ID
         String groupId = null;
-        for (NotificationItem item : notifications) {
-            if (item.getId().equals(id)) {
-                groupId = item.getInstallmentGroupId();
+        for (Transaction transaction : transactionList) {
+            if (transaction.getId().equals(id)) {
+                if (transaction instanceof Credit c)
+                    groupId = c.getInstallmentGroupId();
                 break;
             }
         }
 
         // Filtrar removiendo la notificación con el ID especificado o todas las del
         // grupo
-        List<NotificationItem> updatedList = new ArrayList<>();
-        for (NotificationItem item : notifications) {
+        List<Transaction> updatedList = new ArrayList<>();
+        for (Transaction transaction : transactionList) {
             boolean shouldDelete = false;
 
-            if (groupId != null && item.getInstallmentGroupId() != null) {
-                if (groupId.equals(item.getInstallmentGroupId())) {
+            if (groupId != null) {
+                Credit c = (Credit) transaction;
+                if (c.getInstallmentGroupId() != null && groupId.equals(c.getInstallmentGroupId())) {
+                    // If part of the same group, delete it
                     shouldDelete = true;
                 }
-            } else if (item.getId().equals(id)) {
+            } else if (transaction.getId().equals(id)) {
                 shouldDelete = true;
             }
 
             if (!shouldDelete) {
-                updatedList.add(item);
+                updatedList.add(transaction);
             }
         }
 
@@ -155,20 +210,20 @@ public class TransactionRepository implements GsonAccess {
         prefs.edit().putString(KEY_NOTIFICATIONS_NOT_FILTERED, json).apply();
     }
 
-    public void updateTransaction(NotificationItem updatedItem) {
-        List<NotificationItem> notifications = getAllTransactions();
+    public void updateTransaction(Transaction updatedTransaction) {
+        List<Transaction> transactionList = getAllTransactions();
 
         boolean found = false;
-        for (int i = 0; i < notifications.size(); i++) {
-            if (notifications.get(i).getId().equals(updatedItem.getId())) {
-                notifications.set(i, updatedItem);
+        for (int i = 0; i < transactionList.size(); i++) {
+            if (transactionList.get(i).getId().equals(updatedTransaction.getId())) {
+                transactionList.set(i, updatedTransaction);
                 found = true;
                 break;
             }
         }
 
         if (found) {
-            String json = gson.toJson(notifications);
+            String json = gson.toJson(transactionList);
             prefs.edit().putString(KEY_NOTIFICATIONS, json).apply();
         }
     }
@@ -177,4 +232,49 @@ public class TransactionRepository implements GsonAccess {
         prefs.edit().remove(KEY_NOTIFICATIONS).apply();
     }
 
+    // Custom Adapter for Polymorphic Transaction
+    private class TransactionAdapter implements JsonDeserializer<Transaction>, JsonSerializer<Transaction> {
+
+        @Override
+        public JsonElement serialize(Transaction src, Type typeOfSrc, JsonSerializationContext context) {
+            JsonObject result = new JsonObject();
+            // Use plainGson to avoid recursion
+            result.add("properties", plainGson.toJsonTree(src));
+            result.addProperty("type", src.getPaymentMethod().toString());
+            return result;
+        }
+
+        @Override
+        public Transaction deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            JsonObject jsonObject = json.getAsJsonObject(); // The element we are looking at
+            JsonElement actualData = json; // The data we will actually deserialize (properties or the object itself)
+            String type = "DEBITO"; // Default fallback
+
+            // 1. Determine if it's a wrapper or flat
+            if (jsonObject.has("properties") && jsonObject.has("type")) {
+                actualData = jsonObject.get("properties");
+            }
+
+            // 2. Try to find paymentMethod in the actual data (Preferred source of truth)
+            if (actualData.isJsonObject() && actualData.getAsJsonObject().has("paymentMethod")) {
+                type = actualData.getAsJsonObject().get("paymentMethod").getAsString();
+            } else if (jsonObject.has("type")) {
+                // Fallback to wrapper type if paymentMethod is missing in the data but present
+                // in wrapper
+                type = jsonObject.get("type").getAsString();
+            }
+
+            // 3. Deserialize based on type
+            switch (type) {
+                case "CREDITO":
+                    return plainGson.fromJson(actualData, Credit.class);
+                case "EFECTIVO":
+                    return plainGson.fromJson(actualData, Cash.class);
+                case "DEBITO":
+                default:
+                    return plainGson.fromJson(actualData, Debit.class);
+            }
+        }
+    }
 }

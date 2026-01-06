@@ -6,7 +6,8 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.app.Notification;
 
-import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.models.Debit;
+import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 
@@ -83,7 +84,8 @@ public class NotificationListener extends NotificationListenerService {
         String packageName = sbn.getPackageName();
         Notification notification = sbn.getNotification();
 
-        if (notification == null) return;
+        if (notification == null)
+            return;
 
         // Evitar capturar notificaciones de la propia app
         if (packageName.equals(getPackageName())) {
@@ -91,23 +93,23 @@ public class NotificationListener extends NotificationListenerService {
         }
 
         Bundle extras = notification.extras;
-        if (extras == null) return;
+        if (extras == null)
+            return;
 
         String title = extras.getString(Notification.EXTRA_TITLE);
         String text = extras.getCharSequence(Notification.EXTRA_TEXT) != null
                 ? extras.getCharSequence(Notification.EXTRA_TEXT).toString()
                 : "";
 
-
         long timestamp = sbn.getPostTime();
-        // Crear el objeto NotificationItem con ID único
-        NotificationItem item = new NotificationItem(
-                packageName,
+        // Crear el objeto Transaction (Debit por defecto)
+        Wallets wallet = new Wallets(title, packageName); // Usamos packageName temporalmente como nombre si no hay
+                                                          // mapping
+        Debit item = new Debit(
                 title != null ? title : "Sin título",
                 text,
-                timestamp
-                //extraerMonto(text)
-        );
+                timestamp,
+                wallet);
 
         repository.saveTransactionNotFiltered(item);
 

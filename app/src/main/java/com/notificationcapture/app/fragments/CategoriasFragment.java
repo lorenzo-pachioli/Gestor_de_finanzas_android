@@ -15,15 +15,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.tabs.TabLayout;
 
 import com.notificationcapture.app.adapters.CategorySummaryAdapter;
-import com.notificationcapture.app.adapters.NotificationAdapter;
-import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.adapters.TransactionAdapter;
+import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.models.Category;
-import com.notificationcapture.app.enums.TransactionType;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,10 +42,10 @@ public class CategoriasFragment extends Fragment {
     private Spinner spinnerYear;
     private TabLayout tabLayout;
 
-    private TransactionType currentType = TransactionType.EGRESO;
+    private IngresoOEgreso currentType = IngresoOEgreso.EGRESO;
 
     private CategorySummaryAdapter summaryAdapter;
-    private NotificationAdapter detailsAdapter;
+    private TransactionAdapter detailsAdapter;
     private TransactionRepository repository;
     private CategoryRepository categoryRepository;
 
@@ -97,9 +97,9 @@ public class CategoriasFragment extends Fragment {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 if (tab.getPosition() == 0) {
-                    currentType = TransactionType.EGRESO;
+                    currentType = IngresoOEgreso.EGRESO;
                 } else {
-                    currentType = TransactionType.INGRESO;
+                    currentType = IngresoOEgreso.INGRESO;
                 }
                 refreshData();
             }
@@ -125,9 +125,9 @@ public class CategoriasFragment extends Fragment {
         summaryAdapter = new CategorySummaryAdapter(new HashMap<>(), colorMap, this::onCategoryClick);
         recyclerCategories.setAdapter(summaryAdapter);
 
-        // Ensure NotificationAdapter handles deletions if necessary, though mainly for
+        // Ensure TransactionAdapter handles deletions if necessary, though mainly for
         // viewing here
-        detailsAdapter = new NotificationAdapter(new ArrayList<>(), colorMap, item -> {
+        detailsAdapter = new TransactionAdapter(new ArrayList<>(), colorMap, item -> {
             // Optional: Implement deletion from details view if needed
             repository.deleteTransaction(item.getId());
             refreshData();
@@ -153,10 +153,10 @@ public class CategoriasFragment extends Fragment {
 
         // --- Setup Year Spinner ---
         List<String> years = new ArrayList<>();
-        List<NotificationItem> allNotifications = repository.getAllTransactions();
+        List<Transaction> allNotifications = repository.getAllTransactions();
         Calendar cal = Calendar.getInstance();
 
-        for (NotificationItem item : allNotifications) {
+        for (Transaction item : allNotifications) {
             cal.setTimeInMillis(item.getTimestamp());
             String year = String.valueOf(cal.get(Calendar.YEAR));
             if (!years.contains(year)) {
@@ -202,11 +202,11 @@ public class CategoriasFragment extends Fragment {
     private void loadDataForPeriod(int month, int year) {
         if (repository == null)
             repository = RepositoryProvider.getInstance().getTransactionRepository();
-        List<NotificationItem> allNotifications = repository.getAllTransactions();
+        List<Transaction> allNotifications = repository.getAllTransactions();
 
         Map<String, Double> categoryTotals = new HashMap<>();
 
-        for (NotificationItem item : allNotifications) {
+        for (Transaction item : allNotifications) {
             // Filter by date
             Calendar itemCal = Calendar.getInstance();
             itemCal.setTimeInMillis(item.getTimestamp());
@@ -214,9 +214,9 @@ public class CategoriasFragment extends Fragment {
             if (itemCal.get(Calendar.MONTH) == month && itemCal.get(Calendar.YEAR) == year) {
                 // Filter by type
                 if (item.getType() == currentType && item.hasAmount()) {
-                    String category = item.getCategory().getDisplayName();
-                    if (category == null || category.isEmpty()) {
-                        category = "Sin Categoría";
+                    String category = "Sin Categoría";
+                    if (item.getCategory() != null && item.getCategory().getDisplayName() != null) {
+                        category = item.getCategory().getDisplayName();
                     }
 
                     Double amount = item.getAmount();
@@ -244,18 +244,19 @@ public class CategoriasFragment extends Fragment {
 
         int year = Integer.parseInt(selectedYearStr);
 
-        List<NotificationItem> allNotifications = repository.getAllTransactions();
-        List<NotificationItem> filteredList = new ArrayList<>();
+        List<Transaction> allNotifications = repository.getAllTransactions();
+        List<Transaction> filteredList = new ArrayList<>();
 
-        for (NotificationItem item : allNotifications) {
+        for (Transaction item : allNotifications) {
             Calendar itemCal = Calendar.getInstance();
             itemCal.setTimeInMillis(item.getTimestamp());
 
             if (itemCal.get(Calendar.MONTH) == month && itemCal.get(Calendar.YEAR) == year) {
                 if (item.getType() == currentType) {
-                    String itemCategory = item.getCategory().getDisplayName();
-                    if (itemCategory == null || itemCategory.isEmpty())
-                        itemCategory = "Sin Categoría";
+                    String itemCategory = "Sin Categoría";
+                    if (item.getCategory() != null && item.getCategory().getDisplayName() != null) {
+                        itemCategory = item.getCategory().getDisplayName();
+                    }
 
                     if (itemCategory.equals(category)) {
                         filteredList.add(item);

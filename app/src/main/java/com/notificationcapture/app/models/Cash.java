@@ -1,14 +1,20 @@
 package com.notificationcapture.app.models;
 
-import com.notificationcapture.app.enums.TransactionType;
+import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.enums.PaymentMethod;
 
 public class Cash extends Transaction {
 
     public Cash(String title, String text, long timestamp) {
-        super(title, text, timestamp);
+        super(PaymentMethod.EFECTIVO, title, text, timestamp);
     }
 
-    public Cash(String title, String text, long timestamp, TransactionType type, Category category) {
-        super(title, text, timestamp, type, category);
+    public Cash(String title, String text, long timestamp, IngresoOEgreso type, Category category) {
+        super(PaymentMethod.EFECTIVO, title, text, timestamp, type, category);
+    }
+
+    @Override
+    public String getSourceName() {
+        return "Efectivo";
     }
 }

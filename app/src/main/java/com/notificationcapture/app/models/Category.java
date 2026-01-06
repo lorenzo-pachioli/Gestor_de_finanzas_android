@@ -1,33 +1,37 @@
 package com.notificationcapture.app.models;
 
 import com.notificationcapture.app.enums.CatColors;
+import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.interfaces.SpinnerDisplayable;
-import com.notificationcapture.app.enums.TransactionType;
 
 import java.io.Serializable;
 
 public class Category implements Serializable, SpinnerDisplayable {
     private String name;
     private CatColors color; // Color int value
-    private TransactionType type;
+    private IngresoOEgreso type;
 
     @Override
     public String getDisplayName() {
-        return name;
+        return name != null ? name : "Sin Nombre";
     }
 
     @Override
     public Integer getDisplayColor() {
+        if (color == null) {
+            // Default check to avoid NPE
+            color = CatColors.INGRESO_TEAL;
+        }
         return color.getColor();
     }
 
-    public Category(String name, TransactionType type) {
+    public Category(String name, IngresoOEgreso type) {
         this.name = name;
         this.color = CatColors.getOneColorByType(type, 0);
         this.type = type;
     }
 
-    public Category(String name, int color, TransactionType type) {
+    public Category(String name, int color, IngresoOEgreso type) {
         this.name = name;
         this.color = CatColors.fromColor(color);
         this.type = type;
@@ -49,11 +53,11 @@ public class Category implements Serializable, SpinnerDisplayable {
         this.color = CatColors.fromColor(color);
     }
 
-    public TransactionType getType() {
+    public IngresoOEgreso getType() {
         return type;
     }
 
-    public void setType(TransactionType type) {
+    public void setType(IngresoOEgreso type) {
         this.type = type;
     }
 }

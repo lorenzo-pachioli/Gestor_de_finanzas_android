@@ -19,9 +19,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import com.notificationcapture.app.NotificationItem;
 import com.notificationcapture.app.enums.CatColors;
+import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.models.Cash;
 import com.notificationcapture.app.models.Category;
+import com.notificationcapture.app.models.Credit;
+import com.notificationcapture.app.models.Debit;
+import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
@@ -29,21 +33,20 @@ import com.notificationcapture.app.fragments.PaymentMethodBottomSheet;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.fragments.SelectorBottomSheet;
 import com.notificationcapture.app.enums.PaymentMethod;
-import com.notificationcapture.app.enums.TransactionType;
 import com.notificationcapture.app.interfaces.OnDeleteClickListener;
 
-public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
+public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.ViewHolder> {
 
-    private List<NotificationItem> notifications;
+    private List<Transaction> transactions;
     private final java.util.Map<String, Integer> categoryColors;
     private CategoryRepository categoryRepo;
     private TransactionRepository repository;
     private SimpleDateFormat dateFormat;
     private OnDeleteClickListener deleteListener;
 
-    public NotificationAdapter(List<NotificationItem> notifications, java.util.Map<String, Integer> categoryColors,
+    public TransactionAdapter(List<Transaction> transactions, java.util.Map<String, Integer> categoryColors,
             OnDeleteClickListener deleteListener) {
-        this.notifications = notifications;
+        this.transactions = transactions;
         this.categoryColors = categoryColors;
         this.deleteListener = deleteListener;
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
@@ -61,7 +64,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        NotificationItem item = notifications.get(position);
+        Transaction item = transactions.get(position);
         Context context = holder.itemView.getContext();
 
         // Configurar visibilidad según estado de expansión
@@ -80,7 +83,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             }
 
             // Configurar Switch de Tipo
-            boolean isIngreso = item.getType() == TransactionType.INGRESO;
+            boolean isIngreso = item.getType() == IngresoOEgreso.INGRESO;
             holder.switchType.setChecked(!isIngreso); // checked = Egreso, unchecked = Ingreso
 
             // Configurar UI inicial
@@ -88,7 +91,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
             // Configurar Selectores iniciales
             String name = item.getCategory().getName();
-            holder.tvCategorySelector.setText( name != null ? name : "Sin categoría");
+            holder.tvCategorySelector.setText(name != null ? name : "Sin categoría");
 
             String paymentText = getPaymentMethodText(item);
             holder.tvPaymentMethod.setText(paymentText);
@@ -127,26 +130,26 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
                 // Guardar tipo
                 // checked = true -> Egreso, false -> Ingreso
                 boolean isEgresoSelected = holder.switchType.isChecked();
-                item.setType(isEgresoSelected ? TransactionType.EGRESO
-                        : TransactionType.INGRESO);
+                item.setType(
+                        IngresoOEgreso.getTransactionType(isEgresoSelected)
+                );
 
                 // Guardar categoría selecccionada
-                item.setCategory(new Category(holder.tvCategorySelector.getText().toString(), TransactionType.getTransactionType(holder.switchType.isChecked())));
+                item.setCategory(new Category(holder.tvCategorySelector.getText().toString(), item.getType()));
 
                 // Guardar billetera / Metodo de Pago
                 // Los cambios ya se guardaron en el Bottom<Sheet en el objeto ¨ítem¨
                 // solo debemos persistir el iitem
 
                 // Ensure packageName is set if we have detail from payment method
-                if (item.getPaymentMethod() == PaymentMethod.DEBITO) {
-                    String pkg = getPackageNameFromApp(item.getPaymentMethodDetail());
-                    if (pkg != null)
-                        item.setPackageName(pkg);
-                } else if (item.getPaymentMethod() == PaymentMethod.EFECTIVO) {
-                    item.setPackageName("com.cash.payment");
+                // <--------------- Revisar
+                if (item instanceof Debit d) {
+                    item.setPaymentMethod(PaymentMethod.DEBITO);
+                } else if (item instanceof Cash) {
+                    item.setPaymentMethod(PaymentMethod.EFECTIVO);
+                } else {
+                    item.setPaymentMethod(PaymentMethod.CREDITO);
                 }
-                // For Credit, strictly speaking it doesn't map to an app package usually,
-                // but we might want to store something or leave current.
 
                 String amountStr = holder.etAmount.getText().toString();
                 if (!amountStr.isEmpty()) {
@@ -177,7 +180,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             holder.layoutEdit.setVisibility(View.GONE);
 
             // Cargar datos en el resumen
-            holder.tvAppName.setText(item.getAppName());
+            holder.tvAppName.setText(item.getSourceName());
             holder.tvCategory.setText(item.getCategory().getName());
             holder.tvTitle.setText(item.getTitle());
             holder.tvText.setText(item.getText());
@@ -188,7 +191,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             // Mostrar el monto si existe
             if (item.hasAmount()) {
                 holder.tvAmount.setVisibility(View.VISIBLE);
-                holder.tvAmount.setText(TransactionType.getTypeIndicator(item.getType()) + " " + item.getFormattedAmount());
+                holder.tvAmount
+                        .setText(IngresoOEgreso.getTypeIndicator(item.getType()) + " " + item.getFormattedAmount());
                 holder.tvAmount.setTextColor(CatColors.getOneIntColorByType(item.getType(), 0));
             } else {
                 holder.tvAmount.setVisibility(View.GONE);
@@ -209,7 +213,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             // Set Border Color
             int categoryColor = android.graphics.Color.LTGRAY; // Default
             if (categoryColors != null && item.getCategory() != null) {
-                Integer color = categoryColors.get(item.getCategory());
+                // Fix: Use getName() as key because Map is <String, Integer>
+                Integer color = categoryColors.get(item.getCategory().getName());
                 if (color != null) {
                     categoryColor = color;
                 }
@@ -232,9 +237,11 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     }
 
     private void showCategorySelector(Context context, TextView targetView, boolean isIngreso) {
-        //String[] categories = isIngreso ? NotificationItem.INCOME_CATEGORIES : NotificationItem.OUTCOME_CATEGORIES;
-        List<String> options =  categoryRepo.getCategoryNames(isIngreso ? TransactionType.INGRESO : TransactionType.EGRESO);
-        //java.util.List<String> options = java.util.Arrays.asList(categories);
+        // String[] categories = isIngreso ? NotificationItem.INCOME_CATEGORIES :
+        // NotificationItem.OUTCOME_CATEGORIES;
+        List<String> options = categoryRepo
+                .getCategoryNames(isIngreso ? IngresoOEgreso.INGRESO : IngresoOEgreso.EGRESO);
+        // java.util.List<String> options = java.util.Arrays.asList(categories);
 
         SelectorBottomSheet sheet = SelectorBottomSheet.newInstance(
                 "Seleccionar Categoría",
@@ -252,14 +259,14 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         }
     }
 
-    private void showPaymentMethodSelector(Context context, TextView targetView, NotificationItem item) {
+    private void showPaymentMethodSelector(Context context, TextView targetView, Transaction item) {
         if (context instanceof androidx.fragment.app.FragmentActivity) {
             PaymentMethodBottomSheet bottomSheet = new PaymentMethodBottomSheet();
 
             // Configure restrictions based on current payment method
-            if (item.getPaymentMethod() == PaymentMethod.CREDITO) {
+            if (item instanceof Credit c) {
                 bottomSheet.setRestrictedMode(true); // Restrict to CREDIT
-                bottomSheet.setInitialInstallments(item.getInstallments());
+                bottomSheet.setInitialInstallments(c.getInstallments());
             } else {
                 bottomSheet.setRestrictedMode(false); // Restrict to CASH/DEBIT
                 // Initial installments irrelevant for Cash/Debit or default to 1
@@ -268,15 +275,10 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             bottomSheet.setListener((method, detail, installments) -> {
                 // Update Item
                 item.setPaymentMethod(method);
-                item.setPaymentMethodDetail(detail);
-                // Only update installments if method is CREDIT (though restricted mode ensures
-                // this)
-                // If it was Credit and we are in restricted mode, the installments returned
-                // might be the same (since input disabled)
-                if (method == PaymentMethod.CREDITO) {
-                    item.setInstallments(installments);
-                } else {
-                    item.setInstallments(1);
+                // item.setPaymentMethodDetail(detail);
+
+                if (item instanceof Credit c) {
+                    c.setInstallments(installments);
                 }
 
                 // Update UI text immediately
@@ -296,32 +298,27 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         }
     }
 
-    private String getPaymentMethodText(NotificationItem item) {
-        if (item.getPaymentMethod() == null) {
-            // Backward compatibility or default
-            return item.getAppName(); // Fallback to app name if no method set
-        }
+    private String getPaymentMethodText(Transaction item) {
 
-        String detail = item.getPaymentMethodDetail();
-        int installments = item.getInstallments();
-
-        if (item.getPaymentMethod() == PaymentMethod.EFECTIVO) {
-            return "Efectivo";
-        } else if (item.getPaymentMethod() == PaymentMethod.DEBITO) {
-            return "Débito - " + (detail != null ? detail : "");
-        } else {
+        String detail = item.getSourceName();
+        if (item instanceof Credit c) {
+            int installments = c.getInstallments();
             return "Crédito - " + (detail != null ? detail : "")
                     + (installments > 1 ? " (" + installments + " cuotas)" : "");
+        } else if (item instanceof Debit) {
+            return "Débito - " + (detail != null ? detail : "");
+        } else {
+            return "Efectivo";
         }
     }
 
     @Override
     public int getItemCount() {
-        return notifications.size();
+        return transactions.size();
     }
 
-    public void updateData(List<NotificationItem> newNotifications) {
-        this.notifications = newNotifications;
+    public void updateData(List<Transaction> newNotifications) {
+        this.transactions = newNotifications;
         notifyDataSetChanged();
     }
 

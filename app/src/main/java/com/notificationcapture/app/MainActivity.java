@@ -20,6 +20,7 @@ import com.notificationcapture.app.fragments.HistorialFragment;
 import com.notificationcapture.app.fragments.InicioFragment;
 import com.notificationcapture.app.fragments.PerfilFragment;
 import com.notificationcapture.app.repositories.RepositoryProvider;
+import com.notificationcapture.app.utils.ErrorDialog;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -111,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadFragment(Fragment fragment) {
+        try {
         // Obtener el fragmento actual
         Fragment currentFragment = fragmentManager.findFragmentById(R.id.frameLayout);
 
@@ -128,6 +130,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         transaction.commit();
+        } catch (Exception e) {
+            // Toast.makeText(context, "Error: " + e.getMessage(), 5);
+            ErrorDialog.show("Error: " + e.getMessage());
+        }
     }
 
     private void syncBottomNavigationWithCurrentFragment() {

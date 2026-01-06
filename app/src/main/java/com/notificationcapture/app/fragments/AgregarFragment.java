@@ -21,13 +21,18 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import com.notificationcapture.app.NotificationItem;
+import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.models.Cash;
+import com.notificationcapture.app.models.Credit;
+import com.notificationcapture.app.models.CreditCard;
+import com.notificationcapture.app.models.Debit;
+import com.notificationcapture.app.models.Transaction;
+import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
-import com.notificationcapture.app.enums.TransactionType;
 import com.notificationcapture.app.enums.PaymentMethod;
 import com.notificationcapture.app.models.Category;
 
@@ -129,9 +134,9 @@ public class AgregarFragment extends Fragment {
         // isChecked = false -> Ingreso
         boolean isEgreso = swType.isChecked();
 
-        TransactionType type = isEgreso
-                ? TransactionType.EGRESO
-                : TransactionType.INGRESO;
+        IngresoOEgreso type = isEgreso
+                ? IngresoOEgreso.EGRESO
+                : IngresoOEgreso.INGRESO;
 
         java.util.List<com.notificationcapture.app.models.Category> categories = categoryRepository.getCategories(type);
         UniversalSpinnerAdapter<Category> adapterCategories = new UniversalSpinnerAdapter<>(
@@ -160,16 +165,9 @@ public class AgregarFragment extends Fragment {
         }
 
         // Determinar tipo de transacción
-        TransactionType type = swType.isChecked()
-                ? TransactionType.EGRESO
-                : TransactionType.INGRESO;
-
-        // Crear package name (intentar deducir del detalle si es posible, o usar
-        // default)
-        String packageName = getPackageNameFromApp(selectedMethodDetail);
-        if (packageName.equals("com.wallet.custom") && selectedMethod == PaymentMethod.EFECTIVO) {
-            packageName = "com.cash.payment"; // Opcional: un paquete dummy para efectivo
-        }
+        IngresoOEgreso type = swType.isChecked()
+                ? IngresoOEgreso.EGRESO
+                : IngresoOEgreso.INGRESO;
 
         // Loop for installments
         java.util.Calendar calendar = java.util.Calendar.getInstance();
@@ -182,22 +180,43 @@ public class AgregarFragment extends Fragment {
 
         for (int i = 1; i <= totalInstallments; i++) {
             long itemTimestamp = calendar.getTimeInMillis();
+            String itemTitle = title + (totalInstallments > 1 ? " (" + i + "/" + totalInstallments + ")" : "");
 
-            NotificationItem notification = new NotificationItem(
-                    packageName,
-                    title + (totalInstallments > 1 ? " (" + i + "/" + totalInstallments + ")" : ""),
-                    text,
-                    itemTimestamp,
-                    type,
-                    new Category(category, type));
+            Transaction transaction = null;
 
-            notification.setPaymentMethod(selectedMethod);
-            notification.setPaymentMethodDetail(selectedMethodDetail);
-            notification.setInstallments(totalInstallments);
-            notification.setCurrentInstallment(i);
-            notification.setInstallmentGroupId(installmentGroupId);
+            if (selectedMethod == PaymentMethod.CREDITO) {
+                // Create Credit Transaction
+                CreditCard card = new CreditCard(
+                        selectedMethodDetail != null ? selectedMethodDetail : "Tarjeta de Crédito", 1, 0);
+                transaction = new Credit(itemTitle, text, itemTimestamp, type,
+                        new Category(category, type), card, totalInstallments, i, installmentGroupId);
+            } else if (selectedMethod == PaymentMethod.DEBITO) {
+                // Create Debit Transaction
+                String pkg = getPackageNameFromApp(selectedMethodDetail);
+                Wallets wallet = new Wallets(selectedMethodDetail != null ? selectedMethodDetail : "Wallet", pkg);
+                transaction = new Debit(itemTitle, text, itemTimestamp, type,
+                        new Category(category, type), wallet);
+            } else {
+                // Create Cash Transaction
+                transaction = new Cash(itemTitle, text, itemTimestamp, type,
+                        new Category(category, type));
+            }
 
-            repository.saveTransaction(notification);
+            // Assign Amount ?? Transaction constructor extracts amount from title/text.
+            // NOTE: The previous code didn't assign amount explicitly from logic, it relied
+            // on constructor extraction.
+            // But if user enters generic text, amount might be null.
+            // Does AgregarFragment have Amount field? NO. It seems it relies on parsing
+            // title/text for amount?
+            // Wait, looking at AgregarFragment UI... NO visible Amount field in
+            // `onViewCreated` or imports!
+            // Wait, `etText` might contain "$100".
+            // However, NotificationItem constructor `extractAmount(title, text)` does the
+            // job.
+            // Transaction constructor does `this.amount = extractAmount(title, text);`.
+            // So if user puts amount in title/text, it works.
+
+            repository.saveTransaction(transaction);
 
             // Add 1 month for next installment
             calendar.add(java.util.Calendar.MONTH, 1);
@@ -225,7 +244,7 @@ public class AgregarFragment extends Fragment {
         updateDateField(selectedDateTimestamp);
 
         // Confirmación
-        String typeText = type == TransactionType.INGRESO ? "Ingreso" : "Egreso";
+        String typeText = type == IngresoOEgreso.INGRESO ? "Ingreso" : "Egreso";
         Toast.makeText(requireContext(),
                 "✅ " + typeText + " creado exitosamente",
                 Toast.LENGTH_SHORT).show();

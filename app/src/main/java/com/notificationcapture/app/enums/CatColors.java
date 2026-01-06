@@ -36,7 +36,7 @@ public enum CatColors {
         return color;
     }
 
-    // Método estático para obtener todos los colores de INGRESOS como array
+    // Metodo estático para obtener todos los colores de INGRESOS como array
     public static int[] getIntIngresosColors() {
         return new int[] {
                 INGRESO_TEAL.color,
@@ -63,7 +63,7 @@ public enum CatColors {
         };
     }
 
-    // Método estático para obtener todos los colores de EGRESOS como array
+    // Metodo estático para obtener todos los colores de EGRESOS como array
     public static int[] getIntEgresosColors() {
         return new int[] {
                 EGRESO_RED.color,
@@ -96,20 +96,20 @@ public enum CatColors {
         };
     }
 
-    // Método para obtener colores según el tipo de transacción
-    public static int[] getColorsByType(TransactionType type) {
-        return type == TransactionType.INGRESO ? getIntIngresosColors() : getIntEgresosColors();
+    // Metodo para obtener colores según el tipo de transacción
+    public static int[] getColorsByType(IngresoOEgreso type) {
+        return type == IngresoOEgreso.INGRESO ? getIntIngresosColors() : getIntEgresosColors();
     }
 
-    public static int getOneIntColorByType(TransactionType type, int color) {
-        return type == TransactionType.INGRESO ? getIntIngresosColors()[color] : getIntEgresosColors()[color];
+    public static int getOneIntColorByType(IngresoOEgreso type, int color) {
+        return type == IngresoOEgreso.INGRESO ? getIntIngresosColors()[color] : getIntEgresosColors()[color];
     }
 
-    public static CatColors getOneColorByType(TransactionType type, int color) {
-        return type == TransactionType.INGRESO ? getIngresosColors()[color] : getEgresosColors()[color];
+    public static CatColors getOneColorByType(IngresoOEgreso type, int color) {
+        return type == IngresoOEgreso.INGRESO ? getIngresosColors()[color] : getEgresosColors()[color];
     }
 
-    // Método para obtener un CatColors desde un valor de color int
+    // Metodo para obtener un CatColors desde un valor de color int
     public static CatColors fromColor(int colorValue) {
         for (CatColors catColor : CatColors.values()) {
             if (catColor.color == colorValue) {

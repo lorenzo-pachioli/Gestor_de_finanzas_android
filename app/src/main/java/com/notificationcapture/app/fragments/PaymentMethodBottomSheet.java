@@ -250,7 +250,7 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
 
                 // If restricted, we might want to preserve original installments,
                 // but the bottom sheet doesn't know original.
-                // The caller (NotificationAdapter) handles updating the item.
+                // The caller (TransactionAdapter) handles updating the item.
                 // The BottomSheet returns the value from EditText.
                 // If disabled, user can't change it, so it returns default (1) or whatever is
                 // there.
