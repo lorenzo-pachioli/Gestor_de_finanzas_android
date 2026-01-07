@@ -20,7 +20,7 @@ import com.notificationcapture.app.fragments.HistorialFragment;
 import com.notificationcapture.app.fragments.InicioFragment;
 import com.notificationcapture.app.fragments.PerfilFragment;
 import com.notificationcapture.app.repositories.RepositoryProvider;
-import com.notificationcapture.app.utils.ErrorDialog;
+import com.notificationcapture.app.utils.Dialog;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
         transaction.commit();
         } catch (Exception e) {
             // Toast.makeText(context, "Error: " + e.getMessage(), 5);
-            ErrorDialog.show("Error: " + e.getMessage());
+            Dialog.show("Error: " + e.getMessage());
         }
     }
 

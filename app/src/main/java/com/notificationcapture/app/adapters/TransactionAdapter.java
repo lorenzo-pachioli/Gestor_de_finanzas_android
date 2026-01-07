@@ -34,6 +34,8 @@ import com.notificationcapture.app.R;
 import com.notificationcapture.app.fragments.SelectorBottomSheet;
 import com.notificationcapture.app.enums.PaymentMethod;
 import com.notificationcapture.app.interfaces.OnDeleteClickListener;
+import com.notificationcapture.app.utils.Dialog;
+import com.notificationcapture.app.enums.DialogType;
 
 public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.ViewHolder> {
 
@@ -131,8 +133,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 // checked = true -> Egreso, false -> Ingreso
                 boolean isEgresoSelected = holder.switchType.isChecked();
                 item.setType(
-                        IngresoOEgreso.getTransactionType(isEgresoSelected)
-                );
+                        IngresoOEgreso.getTransactionType(isEgresoSelected));
 
                 // Guardar categoría selecccionada
                 item.setCategory(new Category(holder.tvCategorySelector.getText().toString(), item.getType()));
@@ -199,9 +200,14 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             }
 
             holder.btnDelete.setOnClickListener(v -> {
-                if (deleteListener != null) {
-                    deleteListener.onDeleteClick(item);
-                }
+                Dialog.show(
+                        "¿Estás seguro de que deseas eliminar esta transacción?",
+                        DialogType.CONFIRMATION,
+                        () -> {
+                            if (deleteListener != null) {
+                                deleteListener.onDeleteClick(item);
+                            }
+                        });
             });
 
             // Click para expandir

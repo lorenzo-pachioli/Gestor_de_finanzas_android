@@ -1,7 +1,5 @@
 package com.notificationcapture.app.repositories;
 
-import static androidx.core.content.ContentProviderCompat.requireContext;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.widget.Toast;
@@ -19,13 +17,12 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.notificationcapture.app.fragments.AgregarFragment;
 import com.notificationcapture.app.interfaces.GsonAccess;
 import com.notificationcapture.app.models.Cash;
 import com.notificationcapture.app.models.Credit;
 import com.notificationcapture.app.models.Debit;
 import com.notificationcapture.app.models.Transaction;
-import com.notificationcapture.app.utils.ErrorDialog;
+import com.notificationcapture.app.utils.Dialog;
 
 public class TransactionRepository implements GsonAccess {
 
@@ -80,7 +77,7 @@ public class TransactionRepository implements GsonAccess {
             prefs.edit().putString(KEY_NOTIFICATIONS, json).apply();
         } catch (Exception e) {
             // Toast.makeText(context, "Error: " + e.getMessage(), 5);
-            ErrorDialog.show("Error: " + e.getMessage());
+            Dialog.show("Error: " + e.getMessage());
         }
     }
 
