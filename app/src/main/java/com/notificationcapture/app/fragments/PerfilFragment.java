@@ -63,8 +63,6 @@ public class PerfilFragment extends Fragment {
     private List<String> currentWallets;
     private List<CreditCard> currentCreditCards;
 
-    private Button btnShowBottomSheet;
-
     private int selectedColor; // Set dynamically
 
     public PerfilFragment() {
@@ -98,11 +96,11 @@ public class PerfilFragment extends Fragment {
         Button btnAddCategory = view.findViewById(R.id.btnAddCategory);
         Button btnAddWallet = view.findViewById(R.id.btnAddWallet);
         Button btnAddCreditCard = view.findViewById(R.id.btnAddCreditCard);
-        Button btnShowBottomSheet = view.findViewById(R.id.btnShowBottomSheet);
+
 
         spinnerCreditCards = view.findViewById(R.id.spinnerCreditCards);
 
-        btnShowBottomSheet.setOnClickListener(v -> showTestDialog());
+
 
         // Setup Listeners
         btnAddCategory.setOnClickListener(v -> showAddCategoryDialog());
@@ -204,7 +202,7 @@ public class PerfilFragment extends Fragment {
             @Override
             public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
                 if (position > 0) { // 0 is placeholder
-                    Category selectedCat = categoryRepository.getAllCategories().get(position - 1);
+                    Category selectedCat = currentCategories.get(position - 1);
                     showEditCategoryDialog(selectedCat);
                     // Reset selection
                     spinnerCategories.setSelection(0);
@@ -317,7 +315,8 @@ public class PerfilFragment extends Fragment {
                 ? IngresoOEgreso.EGRESO
                 : IngresoOEgreso.INGRESO;
 
-        int[] colors = CatColors.getColorsByType(type); //(type == IngresoOEgreso.INGRESO) ? CatColors.INGRESOS_COLORS : CatColors.EGRESOS_COLORS;
+        int[] colors = CatColors.getColorsByType(type); // (type == IngresoOEgreso.INGRESO) ? CatColors.INGRESOS_COLORS
+                                                        // : CatColors.EGRESOS_COLORS;
         selectedColor = colors[0]; // Default to first
 
         populateColorPicker(containerColors, colors);
@@ -455,15 +454,14 @@ public class PerfilFragment extends Fragment {
         etName.setText(category.getName());
         selectedColor = category.getDisplayColor();
 
-        etName.setText(category.getName());
-        selectedColor = category.getDisplayColor();
-
         // Populate Colors
-        //int[] colors = (category.getType() == IngresoOEgreso.INGRESO) ? CatColors.INGRESOS_COLORS
-        //   CatColors.EGRESOS_COLORS;
+        // int[] colors = (category.getType() == IngresoOEgreso.INGRESO) ?
+        // CatColors.INGRESOS_COLORS
+        // CatColors.EGRESOS_COLORS;
         populateColorPicker(containerColors, CatColors.getColorsByType(category.getType()));
 
         Button btnCreate = dialogView.findViewById(R.id.btnCreate);
+        btnCreate.setText("Guardar");
         Button btnDelete = dialogView.findViewById(R.id.btnDelete);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
@@ -657,11 +655,4 @@ public class PerfilFragment extends Fragment {
             colorViews.add(colorDot);
         }
     }
-
-    private void showTestDialog() {
-        MyBottomSheetDialogFragment bottomSheet = MyBottomSheetDialogFragment.newInstance("Test Dialog",
-                new ArrayList<>(), new HashMap<>());
-        bottomSheet.show(getParentFragmentManager(), "EtiquetaUnica");
-    }
-
 }

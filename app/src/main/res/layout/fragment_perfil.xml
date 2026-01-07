@@ -320,14 +320,6 @@
             android:background="@drawable/bg_spinner_field"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="20dp"/>
-
-        <Button
-            android:id="@+id/btnShowBottomSheet"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/abrir_bottom_sheet" />
-
     </LinearLayout>
 
 </androidx.core.widget.NestedScrollView>
