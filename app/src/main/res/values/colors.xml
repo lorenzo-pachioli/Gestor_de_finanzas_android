@@ -16,8 +16,11 @@
     <color name="primary_main">#F4F4F9</color>
     <color name="secondary_main">#626262</color>
     <color name="accent_main">#00A896</color>
+
     <!--
     <color name="accent_main">#B8DBD9</color>
+
+    <color name="accent_main">linear-gradient(90deg,rgba(58, 108, 166, 0.9) 10%, rgba(70, 180, 169, 0.9) 90%)</color>
     -->
     <color name="accent_secondary">#02C39A</color>
 </resources>
