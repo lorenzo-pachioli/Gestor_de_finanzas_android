@@ -18,8 +18,9 @@ public abstract class Transaction implements Serializable {
     private IngresoOEgreso type;
     private Category category;
     private boolean expanded = false;
+    private boolean isNotification;
 
-    public Transaction(PaymentMethod paymentMethod, String title, String text, long timestamp) {
+    public Transaction(PaymentMethod paymentMethod, String title, String text, long timestamp, boolean isNotification) {
         this.id = generateId();
         this.paymentMethod = paymentMethod;
         this.title = title;
@@ -28,11 +29,12 @@ public abstract class Transaction implements Serializable {
         this.amount = extractAmount(title, text);
         this.type = detectTransactionType(title, text);
         this.category = new Category("Otros", this.type); // Por defecto
+        this.isNotification = isNotification;
     }
 
     // Constructor con tipo y categoría explícitos (para formulario manual)
     public Transaction(PaymentMethod paymentMethod, String title, String text, long timestamp,
-                       IngresoOEgreso type, Category category) {
+                       IngresoOEgreso type, Category category, boolean isNotification) {
         this.id = generateId();
         this.paymentMethod = paymentMethod;
         this.title = title;
@@ -41,6 +43,7 @@ public abstract class Transaction implements Serializable {
         this.amount = extractAmount(title, text);
         this.type = type;
         this.category = category;
+        this.isNotification = isNotification;
     }
 
     private String generateId() {
@@ -121,6 +124,14 @@ public abstract class Transaction implements Serializable {
 
     public void setExpanded(boolean expanded) {
         this.expanded = expanded;
+    }
+
+    public boolean isNotification() {
+        return isNotification;
+    }
+
+    public void setNotification(boolean notification) {
+        isNotification = notification;
     }
 
     public String getFormattedAmount() {

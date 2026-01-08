@@ -189,17 +189,17 @@ public class AgregarFragment extends Fragment {
                 CreditCard card = new CreditCard(
                         selectedMethodDetail != null ? selectedMethodDetail : "Tarjeta de Crédito", 1, 0);
                 transaction = new Credit(itemTitle, text, itemTimestamp, type,
-                        new Category(category, type), card, totalInstallments, i, installmentGroupId);
+                        new Category(category, type), card, totalInstallments, i, installmentGroupId, false);
             } else if (selectedMethod == PaymentMethod.DEBITO) {
                 // Create Debit Transaction
                 String pkg = getPackageNameFromApp(selectedMethodDetail);
                 Wallets wallet = new Wallets(selectedMethodDetail != null ? selectedMethodDetail : "Wallet", pkg);
                 transaction = new Debit(itemTitle, text, itemTimestamp, type,
-                        new Category(category, type), wallet);
+                        new Category(category, type), wallet, false);
             } else {
                 // Create Cash Transaction
                 transaction = new Cash(itemTitle, text, itemTimestamp, type,
-                        new Category(category, type));
+                        new Category(category, type), false);
             }
 
             // Assign Amount ?? Transaction constructor extracts amount from title/text.

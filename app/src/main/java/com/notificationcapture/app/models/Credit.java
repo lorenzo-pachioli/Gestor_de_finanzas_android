@@ -11,8 +11,8 @@ public class Credit extends Transaction {
     private String installmentGroupId; // ID to group related installments
 
     public Credit(String title, String text, long timestamp, CreditCard creditCard, int installments,
-            int currentInstallment, String installmentGroupId) {
-        super(PaymentMethod.CREDITO, title, text, timestamp);
+            int currentInstallment, String installmentGroupId, boolean isNotification) {
+        super(PaymentMethod.CREDITO, title, text, timestamp, isNotification);
         this.creditCard = creditCard;
         this.installments = installments;
         this.currentInstallment = currentInstallment;
@@ -20,8 +20,8 @@ public class Credit extends Transaction {
     }
 
     public Credit(String title, String text, long timestamp, IngresoOEgreso type, Category category,
-                  CreditCard creditCard, int installments, int currentInstallment, String installmentGroupId) {
-        super(PaymentMethod.CREDITO, title, text, timestamp, type, category);
+                  CreditCard creditCard, int installments, int currentInstallment, String installmentGroupId, boolean isNotification) {
+        super(PaymentMethod.CREDITO, title, text, timestamp, type, category, isNotification);
         this.creditCard = creditCard;
         this.installments = installments;
         this.currentInstallment = currentInstallment;

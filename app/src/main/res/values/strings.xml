@@ -26,6 +26,7 @@
     <string name="egresos">Expenses</string>
     <string name="balance">Balance</string>
     <string name="no_notificaciones">No notifications captured</string>
+    <string name="notificacion">notification</string>
     <string name="default_amount">$0.00</string>
     
     <!-- Fragment Agregar -->
@@ -77,6 +78,7 @@
     <string name="monto">Amount</string>
     <string name="cancelar">Cancel</string>
     <string name="guardar">Save</string>
+    <string name="es_notificacion">Is notification</string>
     
     <!-- Dialog Add Category -->
     <string name="nombre_categoria">Category Name</string>

@@ -98,6 +98,9 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             String paymentText = getPaymentMethodText(item);
             holder.tvPaymentMethod.setText(paymentText);
 
+            // Configurar Switch isNotification
+            holder.switchIsNotification.setChecked(item.isNotification());
+
             // Listeners para abrir BottomSheets
             holder.tvCategorySelector.setOnClickListener(v -> {
                 // Chequear estado actual del switch
@@ -142,6 +145,8 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 // Los cambios ya se guardaron en el Bottom<Sheet en el objeto ¨ítem¨
                 // solo debemos persistir el iitem
 
+                item.setNotification(holder.switchIsNotification.isChecked());
+
                 // Ensure packageName is set if we have detail from payment method
                 // <--------------- Revisar
                 if (item instanceof Debit d) {
@@ -185,6 +190,9 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             holder.tvCategory.setText(item.getCategory().getName());
             holder.tvTitle.setText(item.getTitle());
             holder.tvText.setText(item.getText());
+
+            // Mostrar/Ocultar tag de notificación
+            holder.tvNotificacion.setVisibility(item.isNotification() ? View.VISIBLE : View.GONE);
 
             String formattedDate = dateFormat.format(new Date(item.getTimestamp()));
             holder.tvTimestamp.setText(formattedDate);
@@ -339,6 +347,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         TextView tvText;
         TextView tvAmount;
         TextView tvTimestamp;
+        TextView tvNotificacion;
         View btnDelete;
 
         EditText etTitle;
@@ -349,6 +358,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         TextView tvEgreso;
         TextView tvCategorySelector;
         TextView tvPaymentMethod;
+        SwitchCompat switchIsNotification;
         Button btnSave;
         Button btnCancel;
 
@@ -365,6 +375,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             tvText = itemView.findViewById(R.id.tvText);
             tvAmount = itemView.findViewById(R.id.tvAmount);
             tvTimestamp = itemView.findViewById(R.id.tvTimestamp);
+            tvNotificacion = itemView.findViewById(R.id.tvNotificacion);
             btnDelete = itemView.findViewById(R.id.btnDelete);
 
             // Edit Views
@@ -376,6 +387,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             tvEgreso = itemView.findViewById(R.id.tvEgreso);
             tvCategorySelector = itemView.findViewById(R.id.tvCategorySelector);
             tvPaymentMethod = itemView.findViewById(R.id.tvPaymentMethod);
+            switchIsNotification = itemView.findViewById(R.id.switchIsNotification);
             btnSave = itemView.findViewById(R.id.btnSave);
             btnCancel = itemView.findViewById(R.id.btnCancel);
         }

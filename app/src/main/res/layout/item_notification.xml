@@ -75,6 +75,20 @@
                         android:textColor="@color/accent_main"
                         android:layout_marginBottom="4dp"/>
 
+                    <TextView
+                        android:id="@+id/tvNotificacion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/notificacion"
+                        android:textStyle="bold"
+                        android:textSize="12sp"
+                        android:textColor="@color/white"
+                        android:background="@drawable/bg_button_rounded_2"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="1dp"
+                        android:layout_marginLeft="60dp"
+                        android:layout_marginBottom="2dp"/>
+
                 </LinearLayout>
 
                 <TextView
@@ -276,6 +290,27 @@
                 android:text="@string/metodo_pago"
                 android:drawableEnd="@android:drawable/arrow_down_float"
                 android:layout_marginBottom="16dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/es_notificacion"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"/>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchIsNotification"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"

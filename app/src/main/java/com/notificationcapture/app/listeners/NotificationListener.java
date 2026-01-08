@@ -109,7 +109,8 @@ public class NotificationListener extends NotificationListenerService {
                 title != null ? title : "Sin título",
                 text,
                 timestamp,
-                wallet);
+                wallet,
+                true);
 
         repository.saveTransactionNotFiltered(item);
 

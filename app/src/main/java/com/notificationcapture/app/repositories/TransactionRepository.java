@@ -230,6 +230,7 @@ public class TransactionRepository implements GsonAccess {
                 c.setPaymentMethod(updatedCredit.getPaymentMethod());
                 c.setCreditCard(updatedCredit.getCreditCard());
                 c.setInstallments(updatedCredit.getInstallments());
+                c.setNotification(updatedCredit.isNotification());
                 // Preserved fields: Id, Timestamp, CurrentInstallment
 
                 found = true;
