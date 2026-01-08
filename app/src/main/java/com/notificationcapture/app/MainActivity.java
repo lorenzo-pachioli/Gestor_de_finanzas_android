@@ -9,6 +9,7 @@ import android.view.animation.AnimationUtils;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -25,7 +26,7 @@ import com.notificationcapture.app.utils.Dialog;
 public class MainActivity extends AppCompatActivity {
 
     private BottomNavigationView bottomNavigation;
-    private FloatingActionButton fabAdd;
+    private CardView fabAdd;
     private FragmentManager fragmentManager;
     private boolean isNavigatingProgrammatically = false;
 

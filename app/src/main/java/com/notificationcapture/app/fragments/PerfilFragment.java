@@ -172,10 +172,10 @@ public class PerfilFragment extends Fragment {
         if (isEnglish) {
             // English selected (Switch ON, Right)
             tvEspanol.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_unselected));
-            tvEnglish.setTextColor(ContextCompat.getColor(requireContext(), R.color.accent_main));
+            tvEnglish.setTextColor(ContextCompat.getColor(requireContext(), R.color.end_color));
         } else {
             // Español selected (Switch OFF, Left)
-            tvEspanol.setTextColor(ContextCompat.getColor(requireContext(), R.color.accent_main));
+            tvEspanol.setTextColor(ContextCompat.getColor(requireContext(), R.color.start_color));
             tvEnglish.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_unselected));
         }
     }

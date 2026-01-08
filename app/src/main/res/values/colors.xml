@@ -17,6 +17,9 @@
     <color name="secondary_main">#626262</color>
     <color name="accent_main">#00A896</color>
 
+    <color name="start_color">#E63A6CA6</color>
+    <color name="end_color">#E646B4A9</color>
+
     <!--
     <color name="accent_main">#B8DBD9</color>
 

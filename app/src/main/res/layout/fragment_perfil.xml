@@ -103,7 +103,7 @@
                 android:layout_height="wrap_content"
                 android:paddingEnd="16dp"
                 android:text="@string/espanol"
-                android:textColor="@color/accent_main"
+                android:textColor="@color/start_color"
                 android:textSize="25sp"
                 android:textStyle="bold" />
 

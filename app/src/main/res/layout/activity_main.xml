@@ -50,19 +50,25 @@
         app:itemIconSize="28dp"
         app:elevation="8dp"/>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <androidx.cardview.widget.CardView
         android:id="@+id/fabAdd"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="50dp"
-        android:src="@drawable/ic_add"
-        app:tint="@android:color/white"
-        app:backgroundTint="@color/accent_main"
-        app:elevation="12dp"
-        app:fabSize="normal"
-        app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.Full"
-        android:contentDescription="Agregar transacción"/>
+        app:cardCornerRadius="28dp"
+        app:cardElevation="15dp"
+        app:cardMaxElevation="20dp"
+        app:cardBackgroundColor="#00A896">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_add_circle"
+            android:scaleType="centerInside"
+            android:padding="1.5dp" />
+
+    </androidx.cardview.widget.CardView>
 
 </RelativeLayout>
