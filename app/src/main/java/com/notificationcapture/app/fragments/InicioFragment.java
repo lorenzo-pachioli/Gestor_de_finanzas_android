@@ -37,7 +37,7 @@ public class InicioFragment extends Fragment {
     private RecyclerView recyclerView;
     private TransactionAdapter adapter;
     private TextView emptyView;
-    private Button btnEnableAccess;
+
     private TextView tvIngresos;
     private TextView tvEgresos;
     private TextView tvBalance;
@@ -62,7 +62,7 @@ public class InicioFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recyclerView);
         emptyView = view.findViewById(R.id.emptyView);
-        btnEnableAccess = view.findViewById(R.id.btnEnableAccess);
+
         tvIngresos = view.findViewById(R.id.tvIngresos);
         tvEgresos = view.findViewById(R.id.tvEgresos);
         tvBalance = view.findViewById(R.id.tvBalance);
@@ -83,9 +83,9 @@ public class InicioFragment extends Fragment {
         });
         recyclerView.setAdapter(adapter);
 
-        btnEnableAccess.setOnClickListener(v -> showPermissionDialog());
 
-        checkNotificationPermission();
+
+
         loadNotifications();
 
         notificationReceiver = new BroadcastReceiver() {
@@ -104,7 +104,6 @@ public class InicioFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        checkNotificationPermission();
         loadNotifications();
     }
 
@@ -116,43 +115,7 @@ public class InicioFragment extends Fragment {
         }
     }
 
-    private void checkNotificationPermission() {
-        if (!isNotificationServiceEnabled()) {
-            btnEnableAccess.setVisibility(View.VISIBLE);
-        } else {
-            btnEnableAccess.setVisibility(View.GONE);
-        }
-    }
 
-    private boolean isNotificationServiceEnabled() {
-        String pkgName = requireContext().getPackageName();
-        final String flat = Settings.Secure.getString(requireContext().getContentResolver(),
-                "enabled_notification_listeners");
-        if (flat != null && !flat.isEmpty()) {
-            final String[] names = flat.split(":");
-            for (String name : names) {
-                if (name.contains(pkgName)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private void showPermissionDialog() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Permiso Requerido")
-                .setMessage(
-                        "Esta aplicación necesita acceso a las notificaciones para poder capturarlas y mostrarlas.\n\n"
-                                +
-                                "Por favor, habilita el acceso en la siguiente pantalla buscando esta aplicación y activando el permiso.")
-                .setPositiveButton("Ir a Configuración", (dialog, which) -> {
-                    Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-                    startActivity(intent);
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
-    }
 
     private void loadNotifications() {
         List<Transaction> allNotifications = repository.getAllTransactions();

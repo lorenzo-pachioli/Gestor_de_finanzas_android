@@ -1,24 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragments.HistorialFragment">
 
+    <Button
+        android:id="@+id/btnEnableAccess"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_card_rounded"
+        android:backgroundTint="@null"
+        android:backgroundTintMode="@null"
+        android:padding="10dp"
+        android:text="@string/habilitar_acceso_notificaciones"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        android:visibility="visible" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewHistorial"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/text"
-        android:visibility="gone"/>
+        android:layout_below="@+id/btnEnableAccess"
+        android:layout_marginTop="16dp"
+        android:visibility="visible" />
+
     <TextView
         android:id="@+id/emptyViewHistorial"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
+        android:layout_gravity="center_vertical"
         android:text="@string/no_notificaciones"
-        android:textSize="18sp"
+        android:textAlignment="center"
         android:textColor="@color/text_secondary"
-        android:visibility="visible"/>
+        android:textSize="18sp"
+        android:visibility="gone"
+        tools:ignore="RtlCompat" />
 
-</FrameLayout>
+</RelativeLayout>

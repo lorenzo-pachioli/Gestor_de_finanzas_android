@@ -1,16 +1,20 @@
 package com.notificationcapture.app.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -33,6 +37,7 @@ public class HistorialFragment extends Fragment {
     private TransactionRepository repository;
     private CategoryRepository categoryRepository;
     private TransactionAdapter adapter;
+    private Button btnEnableAccess;
 
     public HistorialFragment() {
         // Required empty public constructor
@@ -60,6 +65,7 @@ public class HistorialFragment extends Fragment {
 
         emptyView = view.findViewById(R.id.emptyViewHistorial);
         recyclerView = view.findViewById(R.id.recyclerViewHistorial);
+        btnEnableAccess = view.findViewById(R.id.btnEnableAccess);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
@@ -76,13 +82,17 @@ public class HistorialFragment extends Fragment {
             loadNotifications();
         });
 
+        checkNotificationPermission();
+
         recyclerView.setAdapter(adapter);
+        btnEnableAccess.setOnClickListener(v -> showPermissionDialog());
         loadNotifications();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        checkNotificationPermission();
         loadNotifications();
     }
 
@@ -97,5 +107,43 @@ public class HistorialFragment extends Fragment {
             emptyView.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void checkNotificationPermission() {
+        if (!isNotificationServiceEnabled()) {
+            btnEnableAccess.setVisibility(View.VISIBLE);
+        } else {
+            btnEnableAccess.setVisibility(View.GONE);
+        }
+    }
+
+    private boolean isNotificationServiceEnabled() {
+        String pkgName = requireContext().getPackageName();
+        final String flat = Settings.Secure.getString(requireContext().getContentResolver(),
+                "enabled_notification_listeners");
+        if (flat != null && !flat.isEmpty()) {
+            final String[] names = flat.split(":");
+            for (String name : names) {
+                if (name.contains(pkgName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void showPermissionDialog() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Permiso Requerido")
+                .setMessage(
+                        "Esta aplicación necesita acceso a las notificaciones para poder capturarlas y mostrarlas.\n\n"
+                                +
+                                "Por favor, habilita el acceso en la siguiente pantalla buscando esta aplicación y activando el permiso.")
+                .setPositiveButton("Ir a Configuración", (dialog, which) -> {
+                    Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
+                    startActivity(intent);
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
     }
 }
