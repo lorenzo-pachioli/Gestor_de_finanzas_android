@@ -37,6 +37,16 @@ public class CreditCardRepository implements GsonAccess {
         saveCreditCards(cards);
     }
 
+    public com.notificationcapture.app.models.CreditCard getCreditCardById(String id) {
+        if (id == null)
+            return null;
+        for (com.notificationcapture.app.models.CreditCard card : getCreditCards()) {
+            if (card.getId().equals(id))
+                return card;
+        }
+        return null;
+    }
+
     public void deleteCreditCard(String id) {
         List<com.notificationcapture.app.models.CreditCard> cards = getCreditCards();
         for (int i = 0; i < cards.size(); i++) {

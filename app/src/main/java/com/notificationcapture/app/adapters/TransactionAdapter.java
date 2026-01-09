@@ -1,7 +1,5 @@
 package com.notificationcapture.app.adapters;
 
-import static com.notificationcapture.app.repositories.WalletRepository.getPackageNameFromApp;
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,6 +39,8 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
 
     private List<Transaction> transactions;
     private CategoryRepository categoryRepo;
+    private com.notificationcapture.app.repositories.WalletRepository walletRepo;
+    private com.notificationcapture.app.repositories.CreditCardRepository cardRepo;
     private TransactionRepository repository;
     private SimpleDateFormat dateFormat;
     private OnDeleteClickListener deleteListener;
@@ -50,6 +50,8 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         this.deleteListener = deleteListener;
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
         categoryRepo = RepositoryProvider.getInstance().getCategoryRepository();
+        walletRepo = RepositoryProvider.getInstance().getWalletRepository();
+        cardRepo = RepositoryProvider.getInstance().getCreditCardRepository();
         repository = RepositoryProvider.getInstance().getTransactionRepository();
     }
 
@@ -177,7 +179,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             holder.layoutEdit.setVisibility(View.GONE);
 
             // Cargar datos en el resumen
-            holder.tvAppName.setText(item.getSourceName());
+            holder.tvAppName.setText(resolveSourceName(item));
             Category displayCat = categoryRepo.getCategoryById(item.getCategoryId());
             if (displayCat == null) {
                 displayCat = new Category("Otros", item.getType() != null ? item.getType() : IngresoOEgreso.EGRESO);
@@ -275,23 +277,17 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 bottomSheet.setRestrictedMode(false);
             }
 
-            bottomSheet.setListener((method, detail, installments) -> {
+            bottomSheet.setListener((method, detailId, installments) -> {
                 item.setPaymentMethod(method);
 
                 if (item instanceof Credit c) {
+                    c.setCreditCardId(detailId);
                     c.setInstallments(installments);
+                } else if (item instanceof Debit d) {
+                    d.setWalletId(detailId);
                 }
 
-                String displayText;
-                if (method == PaymentMethod.EFECTIVO) {
-                    displayText = "Efectivo";
-                } else if (method == PaymentMethod.DEBITO) {
-                    displayText = "Débito - " + (detail != null ? detail : "");
-                } else {
-                    displayText = "Crédito - " + (detail != null ? detail : "")
-                            + (installments > 1 ? " (" + installments + " cuotas)" : "");
-                }
-                targetView.setText(displayText);
+                targetView.setText(getPaymentMethodText(item));
             });
             bottomSheet.show(((androidx.fragment.app.FragmentActivity) context).getSupportFragmentManager(),
                     "PaymentMethodSelector");
@@ -299,7 +295,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     }
 
     private String getPaymentMethodText(Transaction item) {
-        String detail = item.getSourceName();
+        String detail = resolveSourceName(item);
         if (item instanceof Credit c) {
             int installments = c.getInstallments();
             return "Crédito - " + (detail != null ? detail : "")
@@ -309,6 +305,23 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         } else {
             return "Efectivo";
         }
+    }
+
+    private String resolveSourceName(Transaction item) {
+        if (item instanceof Debit d) {
+            com.notificationcapture.app.models.Wallets w = walletRepo.getWalletById(d.getWalletId());
+            if (w != null)
+                return w.getAppName();
+            return d.getSourceName(); // Fallback to migration object name
+        } else if (item instanceof Credit c) {
+            com.notificationcapture.app.models.CreditCard card = cardRepo.getCreditCardById(c.getCreditCardId());
+            if (card != null)
+                return card.getName();
+            return c.getSourceName(); // Fallback to migration object name
+        } else if (item instanceof Cash) {
+            return "Efectivo";
+        }
+        return "Desconocido";
     }
 
     @Override

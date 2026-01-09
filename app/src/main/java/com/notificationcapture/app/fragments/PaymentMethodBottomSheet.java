@@ -183,11 +183,11 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
         }
 
         void bind() {
-            List<String> wallets = walletRepository.getWallets();
+            List<com.notificationcapture.app.models.Wallets> wallets = walletRepository.getAllWallets();
             // Using a simple adapter for wallets directly here
-            SimpleTextAdapter adapter = new SimpleTextAdapter(wallets, walletName -> {
+            SimpleWalletAdapter adapter = new SimpleWalletAdapter(wallets, wallet -> {
                 if (listener != null) {
-                    listener.onPaymentMethodSelected(PaymentMethod.DEBITO, walletName, 1);
+                    listener.onPaymentMethodSelected(PaymentMethod.DEBITO, wallet.getId(), 1);
                 }
                 dismiss();
             });
@@ -266,7 +266,7 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
                 // original value here yet.
 
                 if (listener != null) {
-                    listener.onPaymentMethodSelected(PaymentMethod.CREDITO, selectedCard.getName(),
+                    listener.onPaymentMethodSelected(PaymentMethod.CREDITO, selectedCard.getId(),
                             cuotas);
                 }
                 dismiss();
@@ -275,15 +275,15 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
     }
 
     // Simple Adapter for Wallets RecyclerView
-    private static class SimpleTextAdapter extends RecyclerView.Adapter<SimpleTextAdapter.ViewHolder> {
-        private final List<String> items;
+    private static class SimpleWalletAdapter extends RecyclerView.Adapter<SimpleWalletAdapter.ViewHolder> {
+        private final List<com.notificationcapture.app.models.Wallets> items;
         private final OnItemClickListener listener;
 
         interface OnItemClickListener {
-            void onItemClick(String item);
+            void onItemClick(com.notificationcapture.app.models.Wallets item);
         }
 
-        SimpleTextAdapter(List<String> items, OnItemClickListener listener) {
+        SimpleWalletAdapter(List<com.notificationcapture.app.models.Wallets> items, OnItemClickListener listener) {
             this.items = items;
             this.listener = listener;
         }
@@ -299,8 +299,8 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            String item = items.get(position);
-            holder.textView.setText(item);
+            com.notificationcapture.app.models.Wallets item = items.get(position);
+            holder.textView.setText(item.getAppName());
             holder.itemView.setOnClickListener(v -> listener.onItemClick(item));
         }
 

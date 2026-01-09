@@ -10,10 +10,12 @@ import com.notificationcapture.app.models.Debit;
 import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
+import com.notificationcapture.app.repositories.WalletRepository;
 
 public class NotificationListener extends NotificationListenerService {
 
     private TransactionRepository repository;
+    private WalletRepository walletsRepository;
 
     // Lista de apps de wallet/bancos conocidas (añade las que uses)
     private String[] walletApps = {
@@ -77,6 +79,7 @@ public class NotificationListener extends NotificationListenerService {
     public void onCreate() {
         super.onCreate();
         repository = RepositoryProvider.getInstance().getTransactionRepository();
+        walletsRepository = RepositoryProvider.getInstance().getWalletRepository();
     }
 
     @Override
@@ -103,13 +106,13 @@ public class NotificationListener extends NotificationListenerService {
 
         long timestamp = sbn.getPostTime();
         // Crear el objeto Transaction (Debit por defecto)
-        Wallets wallet = new Wallets(title, packageName); // Usamos packageName temporalmente como nombre si no hay
+        Wallets wallet = walletsRepository.getWalletByPackageName(title,packageName); // Usamos packageName temporalmente como nombre si no hay
                                                           // mapping
         Debit item = new Debit(
                 title != null ? title : "Sin título",
                 text,
                 timestamp,
-                wallet,
+                wallet.getId(),
                 true);
 
         repository.saveTransactionNotFiltered(item);

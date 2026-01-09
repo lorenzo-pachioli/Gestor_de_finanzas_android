@@ -4,7 +4,7 @@ import com.notificationcapture.app.interfaces.SpinnerDisplayable;
 
 import java.io.Serializable;
 
-public class Wallets  implements Serializable, SpinnerDisplayable {
+public class Wallets implements Serializable, SpinnerDisplayable {
 
     private final String id;
     private String name;
@@ -24,7 +24,6 @@ public class Wallets  implements Serializable, SpinnerDisplayable {
         return id;
     }
 
-
     public String getName() {
         return name;
     }
@@ -42,6 +41,9 @@ public class Wallets  implements Serializable, SpinnerDisplayable {
     }
 
     public String getAppName() {
+        if (name != null && !name.isEmpty()) {
+            return name;
+        }
         // Map package names to friendly app names
         switch (packageName) {
             case "com.mercadopago.wallet":

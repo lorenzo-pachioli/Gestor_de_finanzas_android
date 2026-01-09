@@ -1,0 +1,92 @@
+[
+  {
+    "id": "wal_mp",
+    "name": "Mercado Pago",
+    "packageName": "com.mercadopago.wallet"
+  },
+  {
+    "id": "wal_uala",
+    "name": "Ualá",
+    "packageName": "com.uala.app"
+  },
+  {
+    "id": "wal_brubank",
+    "name": "Brubank",
+    "packageName": "brubank.app"
+  },
+  {
+    "id": "wal_naranja",
+    "name": "Naranja X",
+    "packageName": "com.naranja.app"
+  },
+  {
+    "id": "wal_modo",
+    "name": "Modo",
+    "packageName": "com.reba.contactless"
+  },
+  {
+    "id": "wal_ppay",
+    "name": "Personal Pay",
+    "packageName": "personal.pay"
+  },
+  {
+    "id": "wal_santander",
+    "name": "Santander Río",
+    "packageName": "ar.com.santander.rio"
+  },
+  {
+    "id": "wal_bbva",
+    "name": "BBVA",
+    "packageName": "com.bbva.nxt_argentina"
+  },
+  {
+    "id": "wal_galicia",
+    "name": "Galicia",
+    "packageName": "ar.com.bancogalicia"
+  },
+  {
+    "id": "wal_macro",
+    "name": "Macro",
+    "packageName": "com.macro"
+  },
+  {
+    "id": "wal_nacion",
+    "name": "Banco Nación",
+    "packageName": "ar.com.bna"
+  },
+  {
+    "id": "wal_cash",
+    "name": "Efectivo",
+    "packageName": "com.wallet.custom"
+  },
+  {
+    "id": "wal_bimo",
+    "name": "Bimo",
+    "packageName": "bimo.app"
+  },
+  {
+    "id": "wal_bind",
+    "name": "BIND",
+    "packageName": "ar.com.bind"
+  },
+  {
+    "id": "wal_prex",
+    "name": "Prex",
+    "packageName": "ar.com.prex"
+  },
+  {
+    "id": "wal_wilobank",
+    "name": "Wilobank",
+    "packageName": "ar.wilobank"
+  },
+  {
+    "id": "wal_miarg",
+    "name": "Mi Argentina",
+    "packageName": "ar.gov.anses.mi"
+  },
+  {
+    "id": "wal_claro",
+    "name": "Claro Pay",
+    "packageName": "com.claro.pay"
+  }
+]

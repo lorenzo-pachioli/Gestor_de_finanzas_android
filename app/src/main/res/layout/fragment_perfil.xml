@@ -259,14 +259,14 @@
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"/>
 
-            <Button
-                android:id="@+id/btnAddWallet"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_card_rounded"
-                android:text="@string/agregar"
-                android:textColor="@color/accent_main" />
+<!--            <Button-->
+<!--                android:id="@+id/btnAddWallet"-->
+<!--                style="@style/Widget.MaterialComponents.Button.TextButton"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:background="@drawable/bg_card_rounded"-->
+<!--                android:text="@string/agregar"-->
+<!--                android:textColor="@color/accent_main" />-->
         </LinearLayout>
 
         <Spinner

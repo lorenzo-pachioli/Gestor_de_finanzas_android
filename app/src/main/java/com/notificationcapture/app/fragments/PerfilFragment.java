@@ -27,6 +27,7 @@ import static android.view.View.VISIBLE;
 
 import com.notificationcapture.app.enums.CatColors;
 import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.CreditCardRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
@@ -60,7 +61,7 @@ public class PerfilFragment extends Fragment {
 
     // Listas para mantener referencia a los objetos actuales
     private List<Category> currentCategories;
-    private List<String> currentWallets;
+    private List<com.notificationcapture.app.models.Wallets> currentWallets;
     private List<CreditCard> currentCreditCards;
 
     private int selectedColor; // Set dynamically
@@ -94,14 +95,14 @@ public class PerfilFragment extends Fragment {
         tvEspanol = view.findViewById(R.id.tvEspanol);
         tvEnglish = view.findViewById(R.id.tvEnglish);
         Button btnAddCategory = view.findViewById(R.id.btnAddCategory);
-        Button btnAddWallet = view.findViewById(R.id.btnAddWallet);
+        // Button btnAddWallet = view.findViewById(R.id.btnAddWallet);
         Button btnAddCreditCard = view.findViewById(R.id.btnAddCreditCard);
 
         spinnerCreditCards = view.findViewById(R.id.spinnerCreditCards);
 
         // Setup Listeners
         btnAddCategory.setOnClickListener(v -> showAddCategoryDialog());
-        btnAddWallet.setOnClickListener(v -> showAddWalletDialog());
+        // btnAddWallet.setOnClickListener(v -> showAddWalletDialog());
         btnAddCreditCard.setOnClickListener(v -> showAddCreditCardDialog());
 
         // Setup Dark Mode Switch
@@ -215,7 +216,7 @@ public class PerfilFragment extends Fragment {
             @Override
             public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
                 if (position > 0) { // 0 is placeholder
-                    String selectedWallet = currentWallets.get(position - 1);
+                    com.notificationcapture.app.models.Wallets selectedWallet = currentWallets.get(position - 1);
                     showEditWalletDialog(selectedWallet);
                     // Reset selection
                     spinnerWallets.setSelection(0);
@@ -275,13 +276,14 @@ public class PerfilFragment extends Fragment {
     }
 
     private void loadWallets() {
-        currentWallets = walletRepository.getWallets();
+        currentWallets = walletRepository.getAllWallets();
 
-        List<String> displayList = new ArrayList<>();
-        displayList.add("Seleccionar para editar/borrar..."); // Placeholder
+        List<Wallets> displayList = new ArrayList<>();
+        displayList.add(new Wallets("Seleccionar para editar/borrar...", "")); // Placeholder
         displayList.addAll(currentWallets);
 
-        UniversalSpinnerAdapter<String> adapter = new UniversalSpinnerAdapter<>(requireContext(), displayList);
+        UniversalSpinnerAdapter<com.notificationcapture.app.models.Wallets> adapter = new UniversalSpinnerAdapter<>(
+                requireContext(), displayList);
         spinnerWallets.setAdapter(adapter);
     }
 
@@ -365,7 +367,9 @@ public class PerfilFragment extends Fragment {
         btnCreate.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             if (!name.isEmpty()) {
-                walletRepository.addWallet(name);
+                Wallets newWallet = new Wallets(name, ("com." + name + ".app")); // definir si se habilita crear wallets
+                                                                                 // y como
+                walletRepository.addWallet(newWallet);
                 loadWallets();
                 Toast.makeText(requireContext(), "Billetera agregada", Toast.LENGTH_SHORT).show();
             }
@@ -458,7 +462,7 @@ public class PerfilFragment extends Fragment {
         populateColorPicker(containerColors, CatColors.getColorsByType(category.getType()));
 
         Button btnCreate = dialogView.findViewById(R.id.btnCreate);
-        btnCreate.setText("Guardar");
+        btnCreate.setText(R.string.guardar);
         Button btnDelete = dialogView.findViewById(R.id.btnDelete);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
@@ -500,18 +504,20 @@ public class PerfilFragment extends Fragment {
         dialog.show();
     }
 
-    private void showEditWalletDialog(String currentName) {
+    private void showEditWalletDialog(Wallets wallet) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_wallet, null);
         builder.setView(dialogView);
         AlertDialog dialog = builder.create();
 
         EditText etName = dialogView.findViewById(R.id.etWalletName);
-        etName.setText(currentName);
+        etName.setText(wallet.getName());
 
         Button btnCreate = dialogView.findViewById(R.id.btnCreate);
         Button btnDelete = dialogView.findViewById(R.id.btnDelete);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
+
+        btnCreate.setText(R.string.guardar);
 
         btnCreate.setVisibility(VISIBLE);
         btnDelete.setVisibility(VISIBLE);
@@ -520,7 +526,9 @@ public class PerfilFragment extends Fragment {
         btnCreate.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             if (!name.isEmpty()) {
-                walletRepository.updateWallet(currentName, name);
+                wallet.setName(name);
+                wallet.setPackageName(wallet.getPackageName());
+                walletRepository.updateWallet(wallet);
                 loadWallets();
                 Toast.makeText(requireContext(), "Billetera actualizada", Toast.LENGTH_SHORT).show();
             }
@@ -531,9 +539,9 @@ public class PerfilFragment extends Fragment {
             new AlertDialog.Builder(requireContext())
                     .setView(LayoutInflater.from(requireContext()).inflate(R.layout.delete_confirmation_layout, null))
                     .setTitle("Eliminar Billetera")
-                    .setMessage("¿Estás seguro de eliminar '" + currentName + "'?")
+                    .setMessage("¿Estás seguro de eliminar '" + wallet.getAppName() + "'?")
                     .setPositiveButton("Eliminar", (d, w) -> {
-                        walletRepository.deleteWallet(currentName);
+                        walletRepository.deleteWallet(wallet.getId());
                         loadWallets();
                         Toast.makeText(requireContext(), "Billetera eliminada", Toast.LENGTH_SHORT).show();
                     })

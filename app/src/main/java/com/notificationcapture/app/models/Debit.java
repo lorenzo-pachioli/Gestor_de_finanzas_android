@@ -5,25 +5,30 @@ import com.notificationcapture.app.enums.PaymentMethod;
 
 public class Debit extends Transaction {
 
-    private Wallets wallet;
+    private String walletId;
+    private Wallets wallet; // Migración
 
-    public Debit(String title, String text, long timestamp, Wallets wallet, boolean isNotification) {
+    public Debit(String title, String text, long timestamp, String walletId, boolean isNotification) {
         super(PaymentMethod.DEBITO, title, text, timestamp, isNotification);
-        this.wallet = wallet;
+        this.walletId = walletId;
     }
 
-    public Debit(String title, String text, long timestamp, IngresoOEgreso type, String categoryId, Wallets wallet,
+    public Debit(String title, String text, long timestamp, IngresoOEgreso type, String categoryId, String walletId,
             boolean isNotification) {
         super(PaymentMethod.DEBITO, title, text, timestamp, type, categoryId, isNotification);
-        this.wallet = wallet;
+        this.walletId = walletId;
     }
 
-    public Wallets getWallet() {
-        return wallet;
+    public String getWalletId() {
+        if (walletId == null && wallet != null) {
+            return wallet.getId();
+        }
+        return walletId;
     }
 
-    public void setWallet(Wallets wallet) {
-        this.wallet = wallet;
+    public void setWalletId(String walletId) {
+        this.walletId = walletId;
+        this.wallet = null; // Clear old object on new ID assignment
     }
 
     @Override

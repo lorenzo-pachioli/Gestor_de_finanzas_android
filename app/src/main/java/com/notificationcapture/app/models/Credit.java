@@ -5,36 +5,41 @@ import com.notificationcapture.app.enums.PaymentMethod;
 
 public class Credit extends Transaction {
 
-    private CreditCard creditCard;
+    private String creditCardId;
+    private CreditCard creditCard; // Migración
     private int installments = 1; // Default 1
     private int currentInstallment = 1; // Default 1
     private String installmentGroupId; // ID to group related installments
 
-    public Credit(String title, String text, long timestamp, CreditCard creditCard, int installments,
+    public Credit(String title, String text, long timestamp, String creditCardId, int installments,
             int currentInstallment, String installmentGroupId, boolean isNotification) {
         super(PaymentMethod.CREDITO, title, text, timestamp, isNotification);
-        this.creditCard = creditCard;
+        this.creditCardId = creditCardId;
         this.installments = installments;
         this.currentInstallment = currentInstallment;
         this.installmentGroupId = installmentGroupId;
     }
 
     public Credit(String title, String text, long timestamp, IngresoOEgreso type, String categoryId,
-            CreditCard creditCard, int installments, int currentInstallment, String installmentGroupId,
+            String creditCardId, int installments, int currentInstallment, String installmentGroupId,
             boolean isNotification) {
         super(PaymentMethod.CREDITO, title, text, timestamp, type, categoryId, isNotification);
-        this.creditCard = creditCard;
+        this.creditCardId = creditCardId;
         this.installments = installments;
         this.currentInstallment = currentInstallment;
         this.installmentGroupId = installmentGroupId;
     }
 
-    public CreditCard getCreditCard() {
-        return creditCard;
+    public String getCreditCardId() {
+        if (creditCardId == null && creditCard != null) {
+            return creditCard.getId();
+        }
+        return creditCardId;
     }
 
-    public void setCreditCard(CreditCard creditCard) {
-        this.creditCard = creditCard;
+    public void setCreditCardId(String creditCardId) {
+        this.creditCardId = creditCardId;
+        this.creditCard = null; // Clear old object on new ID assignment
     }
 
     public int getInstallments() {

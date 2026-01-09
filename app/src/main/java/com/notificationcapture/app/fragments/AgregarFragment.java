@@ -49,10 +49,12 @@ public class AgregarFragment extends Fragment {
     private TextView tvPaymentMethod;
     private TransactionRepository repository;
     private CategoryRepository categoryRepository;
+    private com.notificationcapture.app.repositories.WalletRepository walletRepository;
+    private com.notificationcapture.app.repositories.CreditCardRepository creditCardRepository;
     private long selectedDateTimestamp;
 
     private PaymentMethod selectedMethod = PaymentMethod.EFECTIVO;
-    private String selectedMethodDetail = "";
+    private String selectedMethodDetailId = "";
     private int selectedInstallments = 1;
 
     // Removed hardcoded walletApps
@@ -70,6 +72,8 @@ public class AgregarFragment extends Fragment {
 
         repository = RepositoryProvider.getInstance().getTransactionRepository();
         categoryRepository = RepositoryProvider.getInstance().getCategoryRepository();
+        walletRepository = RepositoryProvider.getInstance().getWalletRepository();
+        creditCardRepository = RepositoryProvider.getInstance().getCreditCardRepository();
 
         tvPaymentMethod = view.findViewById(R.id.tvPaymentMethod);
         etTitle = view.findViewById(R.id.etTitle);
@@ -194,18 +198,15 @@ public class AgregarFragment extends Fragment {
 
             if (selectedMethod == PaymentMethod.CREDITO) {
                 // Create Credit Transaction
-                CreditCard card = new CreditCard(
-                        selectedMethodDetail != null ? selectedMethodDetail : "Tarjeta de Crédito", 1, 0);
-                // CAMBIO: Usar selectedCategory.getId()
+                // CAMBIO: Usar selectedMethodDetailId
                 transaction = new Credit(itemTitle, text, itemTimestamp, type,
-                        selectedCategory.getId(), card, totalInstallments, i, installmentGroupId, false);
+                        selectedCategory.getId(), selectedMethodDetailId, totalInstallments, i, installmentGroupId,
+                        false);
             } else if (selectedMethod == PaymentMethod.DEBITO) {
                 // Create Debit Transaction
-                String pkg = getPackageNameFromApp(selectedMethodDetail);
-                Wallets wallet = new Wallets(selectedMethodDetail != null ? selectedMethodDetail : "Wallet", pkg);
-                // CAMBIO: Usar selectedCategory.getId()
+                // CAMBIO: Usar selectedMethodDetailId
                 transaction = new Debit(itemTitle, text, itemTimestamp, type,
-                        selectedCategory.getId(), wallet, false);
+                        selectedCategory.getId(), selectedMethodDetailId, false);
             } else {
                 // Create Cash Transaction
                 // CAMBIO: Usar selectedCategory.getId()
@@ -229,7 +230,7 @@ public class AgregarFragment extends Fragment {
 
         // Reset Payment Method
         selectedMethod = PaymentMethod.EFECTIVO;
-        selectedMethodDetail = "";
+        selectedMethodDetailId = "";
         selectedInstallments = 1;
         tvPaymentMethod.setText("Efectivo");
 
@@ -249,18 +250,20 @@ public class AgregarFragment extends Fragment {
 
     private void showPaymentMethodBottomSheet() {
         PaymentMethodBottomSheet bottomSheet = new PaymentMethodBottomSheet();
-        bottomSheet.setListener((method, detail, installments) -> {
+        bottomSheet.setListener((method, detailId, installments) -> {
             this.selectedMethod = method;
-            this.selectedMethodDetail = detail != null ? detail : "";
+            this.selectedMethodDetailId = detailId != null ? detailId : "";
             this.selectedInstallments = installments;
 
             String displayText;
             if (method == PaymentMethod.EFECTIVO) {
                 displayText = "Efectivo";
             } else if (method == PaymentMethod.DEBITO) {
-                displayText = "Débito - " + selectedMethodDetail;
+                Wallets w = walletRepository.getWalletById(selectedMethodDetailId);
+                displayText = "Débito - " + (w != null ? w.getAppName() : "Wallet");
             } else {
-                displayText = "Crédito - " + selectedMethodDetail
+                CreditCard c = creditCardRepository.getCreditCardById(selectedMethodDetailId);
+                displayText = "Crédito - " + (c != null ? c.getName() : "Tarjeta")
                         + (installments > 1 ? " (" + installments + " cuotas)" : "");
             }
             tvPaymentMethod.setText(displayText);
