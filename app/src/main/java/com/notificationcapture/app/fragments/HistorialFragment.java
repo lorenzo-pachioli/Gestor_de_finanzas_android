@@ -69,14 +69,7 @@ public class HistorialFragment extends Fragment {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        // Prepare colors
-        List<Category> allCategories = categoryRepository.getAllCategories();
-        Map<String, Integer> colorMap = new HashMap<>();
-        for (Category c : allCategories) {
-            colorMap.put(c.getName(), c.getDisplayColor());
-        }
-
-        adapter = new TransactionAdapter(new ArrayList<>(), colorMap, (item) -> {
+        adapter = new TransactionAdapter(new ArrayList<>(), (item) -> {
             // Callback para eliminar notificación
             repository.deleteTransaction(item.getId());
             loadNotifications();

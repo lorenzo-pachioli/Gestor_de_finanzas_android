@@ -38,18 +38,15 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
     private static final String ARG_TITLE = "arg_title";
     private static final String ARG_NOTIFICATIONS = "arg_notifications";
-    private static final String ARG_COLOR_MAP = "arg_color_map";
 
     public MyBottomSheetDialogFragment() {
     }
 
-    public static MyBottomSheetDialogFragment newInstance(String title, List<Transaction> notifications,
-            Map<String, Integer> colorMap) {
+    public static MyBottomSheetDialogFragment newInstance(String title, List<Transaction> notifications) {
         MyBottomSheetDialogFragment fragment = new MyBottomSheetDialogFragment();
         Bundle args = new Bundle();
         args.putString(ARG_TITLE, title);
         args.putSerializable(ARG_NOTIFICATIONS, (Serializable) notifications);
-        args.putSerializable(ARG_COLOR_MAP, (Serializable) colorMap);
         fragment.setArguments(args);
         return fragment;
     }
@@ -72,17 +69,14 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
             String title = getArguments().getString(ARG_TITLE);
             List<Transaction> notifications = (List<Transaction>) getArguments()
                     .getSerializable(ARG_NOTIFICATIONS);
-            Map<String, Integer> colorMap = (Map<String, Integer>) getArguments().getSerializable(ARG_COLOR_MAP);
 
             if (title != null)
                 tvTitle.setText(title);
             if (notifications != null) {
                 android.widget.Toast.makeText(getContext(), "Mostrando " + notifications.size() + " items",
                         android.widget.Toast.LENGTH_SHORT).show();
-                if (colorMap == null)
-                    colorMap = new HashMap<>();
 
-                adapter = new TransactionAdapter(notifications, colorMap, item -> {
+                adapter = new TransactionAdapter(notifications, item -> {
                     TransactionRepository repository = RepositoryProvider.getInstance().getTransactionRepository();
                     repository.deleteTransaction(item.getId());
                     notifications.remove(item);

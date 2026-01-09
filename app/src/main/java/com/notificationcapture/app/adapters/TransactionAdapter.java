@@ -40,16 +40,13 @@ import com.notificationcapture.app.enums.DialogType;
 public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.ViewHolder> {
 
     private List<Transaction> transactions;
-    private final java.util.Map<String, Integer> categoryColors;
     private CategoryRepository categoryRepo;
     private TransactionRepository repository;
     private SimpleDateFormat dateFormat;
     private OnDeleteClickListener deleteListener;
 
-    public TransactionAdapter(List<Transaction> transactions, java.util.Map<String, Integer> categoryColors,
-            OnDeleteClickListener deleteListener) {
+    public TransactionAdapter(List<Transaction> transactions, OnDeleteClickListener deleteListener) {
         this.transactions = transactions;
-        this.categoryColors = categoryColors;
         this.deleteListener = deleteListener;
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
         categoryRepo = RepositoryProvider.getInstance().getCategoryRepository();
@@ -88,12 +85,18 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             boolean isIngreso = item.getType() == IngresoOEgreso.INGRESO;
             holder.switchType.setChecked(!isIngreso); // checked = Egreso, unchecked = Ingreso
 
+            // *** NUEVO: Inicializar la categoría seleccionada ***
+            Category currentCat = categoryRepo.getCategoryById(item.getCategoryId());
+            if (currentCat == null) {
+                currentCat = new Category("Otros", item.getType() != null ? item.getType() : IngresoOEgreso.EGRESO);
+            }
+            holder.selectedCategory = currentCat;
+
             // Configurar UI inicial
             updateToggleUI(holder, !isIngreso);
 
             // Configurar Selectores iniciales
-            String name = item.getCategory().getName();
-            holder.tvCategorySelector.setText(name != null ? name : "Sin categoría");
+            holder.tvCategorySelector.setText(currentCat.getName());
 
             String paymentText = getPaymentMethodText(item);
             holder.tvPaymentMethod.setText(paymentText);
@@ -101,54 +104,45 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             // Configurar Switch isNotification
             holder.switchIsNotification.setChecked(item.isNotification());
 
-            // Listeners para abrir BottomSheets
+            // *** MODIFICADO: Pasar holder en lugar de solo el TextView ***
             holder.tvCategorySelector.setOnClickListener(v -> {
-                // Chequear estado actual del switch
                 boolean currentIsIngreso = !holder.switchType.isChecked();
-                showCategorySelector(context, holder.tvCategorySelector, currentIsIngreso);
+                showCategorySelector(context, holder, currentIsIngreso);
             });
 
             holder.tvPaymentMethod.setOnClickListener(v -> {
                 showPaymentMethodSelector(context, holder.tvPaymentMethod, item);
             });
 
-            // Listener para el cambio de tipo (solo actualiza UI del toggle, la categoría
-            // se mantiene hasta que el usuario la cambie o valida al guardar)
-            // Opcional: resetear categoría si cambia tipo
+            // *** MODIFICADO: Resetear categoría cuando cambia el tipo ***
             holder.switchType.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 updateToggleUI(holder, isChecked);
-                // Si cambia el tipo, podrías querer resetear la categoría o avisar. Por ahora
-                // mantenemos la actual o actualizamos si abren el selector.
-                // Al abrir el selector de nuevo, leerá el isChecked actual.
+
+                // Resetear a "Otros" del tipo correspondiente cuando cambia el tipo
+                boolean isIngresoNow = !isChecked;
+                IngresoOEgreso newType = isIngresoNow ? IngresoOEgreso.INGRESO : IngresoOEgreso.EGRESO;
+                holder.selectedCategory = new Category("Otros", newType);
+                holder.tvCategorySelector.setText("Otros");
             });
 
             // Listeners para los textos
             holder.tvIngreso.setOnClickListener(v -> holder.switchType.setChecked(false));
             holder.tvEgreso.setOnClickListener(v -> holder.switchType.setChecked(true));
 
-            // Configurar botones de acción
+            // *** MODIFICADO: Usar selectedCategory en lugar de crear nueva ***
             holder.btnSave.setOnClickListener(v -> {
-                // Guardar cambios
                 item.setTitle(holder.etTitle.getText().toString());
                 item.setText(holder.etText.getText().toString());
 
                 // Guardar tipo
-                // checked = true -> Egreso, false -> Ingreso
                 boolean isEgresoSelected = holder.switchType.isChecked();
-                item.setType(
-                        IngresoOEgreso.getTransactionType(isEgresoSelected));
+                item.setType(IngresoOEgreso.getTransactionType(isEgresoSelected));
 
-                // Guardar categoría selecccionada
-                item.setCategory(new Category(holder.tvCategorySelector.getText().toString(), item.getType()));
-
-                // Guardar billetera / Metodo de Pago
-                // Los cambios ya se guardaron en el Bottom<Sheet en el objeto ¨ítem¨
-                // solo debemos persistir el iitem
+                // *** USAR selectedCategory ID ***
+                item.setCategoryId(holder.selectedCategory.getId());
 
                 item.setNotification(holder.switchIsNotification.isChecked());
 
-                // Ensure packageName is set if we have detail from payment method
-                // <--------------- Revisar
                 if (item instanceof Debit d) {
                     item.setPaymentMethod(PaymentMethod.DEBITO);
                 } else if (item instanceof Cash) {
@@ -162,17 +156,14 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                     try {
                         item.setAmount(Double.parseDouble(amountStr));
                     } catch (NumberFormatException e) {
-                        // Ignorar formato inválido o manejar error
+                        // Ignorar formato inválido
                     }
                 } else {
-                    item.setAmount(null); // O 0.0
+                    item.setAmount(null);
                 }
 
                 item.setExpanded(false);
-
-                // Persistir cambios
                 repository.updateTransaction(item);
-
                 notifyItemChanged(holder.getAdapterPosition());
             });
 
@@ -187,7 +178,11 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
 
             // Cargar datos en el resumen
             holder.tvAppName.setText(item.getSourceName());
-            holder.tvCategory.setText(item.getCategory().getName());
+            Category displayCat = categoryRepo.getCategoryById(item.getCategoryId());
+            if (displayCat == null) {
+                displayCat = new Category("Otros", item.getType() != null ? item.getType() : IngresoOEgreso.EGRESO);
+            }
+            holder.tvCategory.setText(displayCat.getName());
             holder.tvTitle.setText(item.getTitle());
             holder.tvText.setText(item.getText());
 
@@ -225,14 +220,8 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             });
 
             // Set Border Color
-            int categoryColor = android.graphics.Color.LTGRAY; // Default
-            if (categoryColors != null && item.getCategory() != null) {
-                // Fix: Use getName() as key because Map is <String, Integer>
-                Integer color = categoryColors.get(item.getCategory().getName());
-                if (color != null) {
-                    categoryColor = color;
-                }
-            }
+            Category borderCat = categoryRepo.getCategoryById(item.getCategoryId());
+            int categoryColor = (borderCat != null) ? borderCat.getDisplayColor() : android.graphics.Color.LTGRAY;
             holder.viewNotificationBorder.setBackgroundColor(categoryColor);
         }
     }
@@ -240,31 +229,33 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     private void updateToggleUI(ViewHolder holder, boolean isEgreso) {
         Context context = holder.itemView.getContext();
         if (isEgreso) {
-            // Modo Egreso (Switch ON, Derecha)
             holder.tvIngreso.setTextColor(ContextCompat.getColor(context, R.color.grey_unselected));
             holder.tvEgreso.setTextColor(ContextCompat.getColor(context, R.color.red));
         } else {
-            // Modo Ingreso (Switch OFF, Izquierda)
             holder.tvIngreso.setTextColor(ContextCompat.getColor(context, R.color.green));
             holder.tvEgreso.setTextColor(ContextCompat.getColor(context, R.color.grey_unselected));
         }
     }
 
-    private void showCategorySelector(Context context, TextView targetView, boolean isIngreso) {
-        // String[] categories = isIngreso ? NotificationItem.INCOME_CATEGORIES :
-        // NotificationItem.OUTCOME_CATEGORIES;
-        List<String> options = categoryRepo
-                .getCategoryNames(isIngreso ? IngresoOEgreso.INGRESO : IngresoOEgreso.EGRESO);
-        // java.util.List<String> options = java.util.Arrays.asList(categories);
+    // *** MODIFICADO: Recibe ViewHolder para actualizar selectedCategory ***
+    private void showCategorySelector(Context context, ViewHolder holder, boolean isIngreso) {
+        List<Category> options = categoryRepo
+                .getCategories(isIngreso ? IngresoOEgreso.INGRESO : IngresoOEgreso.EGRESO);
 
         SelectorBottomSheet sheet = SelectorBottomSheet.newInstance(
                 "Seleccionar Categoría",
                 options,
-                targetView.getText().toString(),
-                categoryColors);
+                holder.tvCategorySelector.getText().toString());
 
         sheet.setOnOptionSelectedListener(option -> {
-            targetView.setText(option);
+            // *** BUSCAR LA CATEGORÍA COMPLETA PARA PRESERVAR EL COLOR ***
+            for (Category cat : options) {
+                if (cat.getName().equals(option)) {
+                    holder.selectedCategory = cat;
+                    break;
+                }
+            }
+            holder.tvCategorySelector.setText(option);
         });
 
         if (context instanceof androidx.fragment.app.FragmentActivity) {
@@ -277,25 +268,20 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         if (context instanceof androidx.fragment.app.FragmentActivity) {
             PaymentMethodBottomSheet bottomSheet = new PaymentMethodBottomSheet();
 
-            // Configure restrictions based on current payment method
             if (item instanceof Credit c) {
-                bottomSheet.setRestrictedMode(true); // Restrict to CREDIT
+                bottomSheet.setRestrictedMode(true);
                 bottomSheet.setInitialInstallments(c.getInstallments());
             } else {
-                bottomSheet.setRestrictedMode(false); // Restrict to CASH/DEBIT
-                // Initial installments irrelevant for Cash/Debit or default to 1
+                bottomSheet.setRestrictedMode(false);
             }
 
             bottomSheet.setListener((method, detail, installments) -> {
-                // Update Item
                 item.setPaymentMethod(method);
-                // item.setPaymentMethodDetail(detail);
 
                 if (item instanceof Credit c) {
                     c.setInstallments(installments);
                 }
 
-                // Update UI text immediately
                 String displayText;
                 if (method == PaymentMethod.EFECTIVO) {
                     displayText = "Efectivo";
@@ -313,7 +299,6 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     }
 
     private String getPaymentMethodText(Transaction item) {
-
         String detail = item.getSourceName();
         if (item instanceof Credit c) {
             int installments = c.getInstallments();
@@ -362,13 +347,15 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         Button btnSave;
         Button btnCancel;
 
+        // *** NUEVO: Campo para mantener la categoría seleccionada ***
+        Category selectedCategory;
+
         ViewHolder(View itemView) {
             super(itemView);
             layoutSummary = itemView.findViewById(R.id.layoutSummary);
             layoutEdit = itemView.findViewById(R.id.layoutEdit);
             viewNotificationBorder = itemView.findViewById(R.id.viewNotificationBorder);
 
-            // Summary Views
             tvAppName = itemView.findViewById(R.id.tvAppName);
             tvCategory = itemView.findViewById(R.id.tvCategory);
             tvTitle = itemView.findViewById(R.id.tvTitle);
@@ -378,7 +365,6 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             tvNotificacion = itemView.findViewById(R.id.tvNotificacion);
             btnDelete = itemView.findViewById(R.id.btnDelete);
 
-            // Edit Views
             etTitle = itemView.findViewById(R.id.etTitle);
             etText = itemView.findViewById(R.id.etText);
             etAmount = itemView.findViewById(R.id.etAmount);
@@ -393,3 +379,6 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         }
     }
 }
+
+// Se puede modularizar y simplificar para quer sea mas legible el "if
+// (item.isExpanded()) { ... }"?

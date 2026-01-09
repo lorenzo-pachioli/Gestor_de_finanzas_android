@@ -9,8 +9,9 @@ public class Cash extends Transaction {
         super(PaymentMethod.EFECTIVO, title, text, timestamp, isNotification);
     }
 
-    public Cash(String title, String text, long timestamp, IngresoOEgreso type, Category category, boolean isNotification) {
-        super(PaymentMethod.EFECTIVO, title, text, timestamp, type, category, isNotification);
+    public Cash(String title, String text, long timestamp, IngresoOEgreso type, String categoryId,
+            boolean isNotification) {
+        super(PaymentMethod.EFECTIVO, title, text, timestamp, type, categoryId, isNotification);
     }
 
     @Override

@@ -21,6 +21,9 @@ public class CategoryRepository implements GsonAccess {
     private SharedPreferences prefs;
     private Gson gson;
 
+    public static final String OTHER_INCOME_ID = "other_income";
+    public static final String OTHER_OUTCOME_ID = "other_outcome";
+
     private static final String[] OUTCOME_CATEGORIES = {
             "Otros", "Comida", "Combustible", "Transporte", "Servicios",
             "Entretenimiento", "Salud", "Educación", "Compras", "Vivienda"
@@ -42,11 +45,19 @@ public class CategoryRepository implements GsonAccess {
             List<Category> defaultCategories = new ArrayList<>();
             // Income Defaults
             for (String name : INCOME_CATEGORIES) {
-                defaultCategories.add(new Category(name, IngresoOEgreso.INGRESO));
+                if (name.equals("Otros")) {
+                    defaultCategories.add(new Category(OTHER_INCOME_ID, name, IngresoOEgreso.INGRESO));
+                } else {
+                    defaultCategories.add(new Category(name, IngresoOEgreso.INGRESO));
+                }
             }
             // Outcome Defaults
             for (String name : OUTCOME_CATEGORIES) {
-                defaultCategories.add(new Category(name, IngresoOEgreso.EGRESO));
+                if (name.equals("Otros")) {
+                    defaultCategories.add(new Category(OTHER_OUTCOME_ID, name, IngresoOEgreso.EGRESO));
+                } else {
+                    defaultCategories.add(new Category(name, IngresoOEgreso.EGRESO));
+                }
             }
             saveCategories(defaultCategories);
         }
@@ -73,28 +84,42 @@ public class CategoryRepository implements GsonAccess {
     }
 
     public void addCategory(Category category) {
+        if (category.getId() == null) {
+            category.setId(java.util.UUID.randomUUID().toString());
+        }
         List<Category> all = getAllCategories();
         all.add(category);
         saveCategories(all);
     }
 
-    public void deleteCategory(String name, IngresoOEgreso type) {
+    public void deleteCategory(String id) {
         List<Category> all = getAllCategories();
         List<Category> toKeep = new ArrayList<>();
         for (Category c : all) {
-            if (!(c.getName().equals(name) && c.getType() == type)) {
+            if (!c.getId().equals(id)) {
                 toKeep.add(c);
             }
         }
         saveCategories(toKeep);
     }
 
-    public void updateCategory(Category oldCat, Category newCat) {
+    public Category getCategoryById(String id) {
+        if (id == null)
+            return null;
+        List<Category> all = getAllCategories();
+        for (Category c : all) {
+            if (c.getId().equals(id)) {
+                return c;
+            }
+        }
+        return null;
+    }
 
+    public void updateCategory(Category newCat) {
         List<Category> all = getAllCategories();
         for (int i = 0; i < all.size(); i++) {
             Category c = all.get(i);
-            if (c.getName().equals(oldCat.getName()) && c.getType() == oldCat.getType()) {
+            if (c.getId().equals(newCat.getId())) {
                 all.set(i, newCat);
                 break;
             }
@@ -109,9 +134,27 @@ public class CategoryRepository implements GsonAccess {
                 return new ArrayList<>();
             Type type = new TypeToken<List<Category>>() {
             }.getType();
-            return gson.fromJson(json, type);
+            List<Category> cats = gson.fromJson(json, type);
+
+            // Migración: asegurar que todos tengan ID
+            boolean needsSave = false;
+            if (cats != null) {
+                for (Category c : cats) {
+                    if (c.getId() == null) {
+                        c.setId(c.getName() + "_" + c.getType());
+                        needsSave = true;
+                    }
+                }
+                if (needsSave) {
+                    saveCategories(cats);
+                }
+            } else {
+                return new ArrayList<>();
+            }
+
+            return cats;
         } catch (Exception e) {
-            Log.e(TAG, "Error adding category: " + e.getMessage(), e);
+            Log.e(TAG, "Error getting categories: " + e.getMessage(), e);
             return new ArrayList<>();
         }
     }

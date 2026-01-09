@@ -16,7 +16,8 @@ public abstract class Transaction implements Serializable {
     private long timestamp;
     private Double amount;
     private IngresoOEgreso type;
-    private Category category;
+    private String categoryId;
+    private Category category; // Mantener para migración de datos viejos
     private boolean expanded = false;
     private boolean isNotification;
 
@@ -28,13 +29,15 @@ public abstract class Transaction implements Serializable {
         this.timestamp = timestamp;
         this.amount = extractAmount(title, text);
         this.type = detectTransactionType(title, text);
-        this.category = new Category("Otros", this.type); // Por defecto
         this.isNotification = isNotification;
+        // Asignar ID por defecto de "Otros" según el tipo detectado
+        this.categoryId = (this.type == IngresoOEgreso.INGRESO) ? "other_income" : "other_outcome";
+        // necesario
     }
 
     // Constructor con tipo y categoría explícitos (para formulario manual)
     public Transaction(PaymentMethod paymentMethod, String title, String text, long timestamp,
-                       IngresoOEgreso type, Category category, boolean isNotification) {
+            IngresoOEgreso type, String categoryId, boolean isNotification) {
         this.id = generateId();
         this.paymentMethod = paymentMethod;
         this.title = title;
@@ -42,7 +45,7 @@ public abstract class Transaction implements Serializable {
         this.timestamp = timestamp;
         this.amount = extractAmount(title, text);
         this.type = type;
-        this.category = category;
+        this.categoryId = categoryId;
         this.isNotification = isNotification;
     }
 
@@ -106,16 +109,17 @@ public abstract class Transaction implements Serializable {
         this.type = type;
     }
 
-    public Category getCategory() {
-        if (category == null) {
-            // Return a safe default to prevent NPEs
-            return new Category("Otros", type != null ? type : IngresoOEgreso.EGRESO);
+    public String getCategoryId() {
+        if (categoryId == null && category != null) {
+            // Migración: si no hay ID pero hay objeto, devolver el ID del objeto
+            return category.getId();
         }
-        return category;
+        return categoryId;
     }
 
-    public void setCategory(Category category) {
-        this.category = category;
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
+        this.category = null; // Limpiar objeto viejo al asignar nuevo ID
     }
 
     public boolean isExpanded() {

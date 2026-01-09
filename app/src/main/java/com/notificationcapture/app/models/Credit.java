@@ -19,9 +19,10 @@ public class Credit extends Transaction {
         this.installmentGroupId = installmentGroupId;
     }
 
-    public Credit(String title, String text, long timestamp, IngresoOEgreso type, Category category,
-                  CreditCard creditCard, int installments, int currentInstallment, String installmentGroupId, boolean isNotification) {
-        super(PaymentMethod.CREDITO, title, text, timestamp, type, category, isNotification);
+    public Credit(String title, String text, long timestamp, IngresoOEgreso type, String categoryId,
+            CreditCard creditCard, int installments, int currentInstallment, String installmentGroupId,
+            boolean isNotification) {
+        super(PaymentMethod.CREDITO, title, text, timestamp, type, categoryId, isNotification);
         this.creditCard = creditCard;
         this.installments = installments;
         this.currentInstallment = currentInstallment;

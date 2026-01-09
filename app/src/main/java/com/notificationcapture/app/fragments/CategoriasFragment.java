@@ -127,7 +127,7 @@ public class CategoriasFragment extends Fragment {
 
         // Ensure TransactionAdapter handles deletions if necessary, though mainly for
         // viewing here
-        detailsAdapter = new TransactionAdapter(new ArrayList<>(), colorMap, item -> {
+        detailsAdapter = new TransactionAdapter(new ArrayList<>(), item -> {
             // Optional: Implement deletion from details view if needed
             repository.deleteTransaction(item.getId());
             refreshData();
@@ -215,8 +215,9 @@ public class CategoriasFragment extends Fragment {
                 // Filter by type
                 if (item.getType() == currentType && item.hasAmount()) {
                     String category = "Sin Categoría";
-                    if (item.getCategory() != null && item.getCategory().getDisplayName() != null) {
-                        category = item.getCategory().getDisplayName();
+                    Category cat = categoryRepository.getCategoryById(item.getCategoryId());
+                    if (cat != null) {
+                        category = cat.getDisplayName();
                     }
 
                     Double amount = item.getAmount();
@@ -254,8 +255,9 @@ public class CategoriasFragment extends Fragment {
             if (itemCal.get(Calendar.MONTH) == month && itemCal.get(Calendar.YEAR) == year) {
                 if (item.getType() == currentType) {
                     String itemCategory = "Sin Categoría";
-                    if (item.getCategory() != null && item.getCategory().getDisplayName() != null) {
-                        itemCategory = item.getCategory().getDisplayName();
+                    Category cat = categoryRepository.getCategoryById(item.getCategoryId());
+                    if (cat != null) {
+                        itemCategory = cat.getDisplayName();
                     }
 
                     if (itemCategory.equals(category)) {
@@ -280,8 +282,7 @@ public class CategoriasFragment extends Fragment {
 
         android.widget.Toast.makeText(getContext(), "Abriendo detalle: " + category, android.widget.Toast.LENGTH_SHORT)
                 .show();
-        MyBottomSheetDialogFragment bottomSheet = MyBottomSheetDialogFragment.newInstance(title, filteredList,
-                colorMap);
+        MyBottomSheetDialogFragment bottomSheet = MyBottomSheetDialogFragment.newInstance(title, filteredList);
         bottomSheet.setOnDismissListener(changed -> {
             if (changed) {
                 refreshData();
@@ -300,12 +301,5 @@ public class CategoriasFragment extends Fragment {
         if (selectedYearStr != null) {
             loadDataForPeriod(selectedMonth, Integer.parseInt(selectedYearStr));
         }
-    }
-
-    private void showTestDialog() {
-        MyBottomSheetDialogFragment bottomSheet = MyBottomSheetDialogFragment.newInstance("Test", new ArrayList<>(),
-                new HashMap<>());
-
-        bottomSheet.show(getParentFragmentManager(), "EtiquetaUnica");
     }
 }

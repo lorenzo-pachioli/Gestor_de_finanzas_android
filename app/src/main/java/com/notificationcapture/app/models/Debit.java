@@ -12,8 +12,9 @@ public class Debit extends Transaction {
         this.wallet = wallet;
     }
 
-    public Debit(String title, String text, long timestamp, IngresoOEgreso type, Category category, Wallets wallet, boolean isNotification) {
-        super(PaymentMethod.DEBITO, title, text, timestamp, type, category, isNotification);
+    public Debit(String title, String text, long timestamp, IngresoOEgreso type, String categoryId, Wallets wallet,
+            boolean isNotification) {
+        super(PaymentMethod.DEBITO, title, text, timestamp, type, categoryId, isNotification);
         this.wallet = wallet;
     }
 

@@ -15,6 +15,7 @@ import java.util.Map;
 
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.interfaces.OnOptionSelectedListener;
+import com.notificationcapture.app.interfaces.SpinnerDisplayable;
 
 public class SelectorBottomSheet extends BottomSheetDialogFragment {
 
@@ -25,25 +26,29 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
 
     private OnOptionSelectedListener listener;
 
-    public static SelectorBottomSheet newInstance(String title, List<String> options, String selectedOption,
-            java.util.Map<String, Integer> colorMap) {
+    public static <T extends java.io.Serializable & SpinnerDisplayable> SelectorBottomSheet newInstance(
+            String title, List<T> options, String selectedOption) {
         SelectorBottomSheet fragment = new SelectorBottomSheet();
         Bundle args = new Bundle();
         args.putString(ARG_TITLE, title);
-        args.putStringArray(ARG_OPTIONS, options.toArray(new String[0]));
+        args.putSerializable(ARG_OPTIONS, (java.io.Serializable) options);
         args.putString(ARG_SELECTED, selectedOption);
-        if (colorMap != null) {
-            // Convert Map to Serializable? HashMap is Serializable.
-            args.putSerializable(ARG_COLORS, (java.io.Serializable) colorMap);
-        }
         fragment.setArguments(args);
         return fragment;
     }
 
-    // Overload for backward compatibility / keeping it simple for wallets
-    public static SelectorBottomSheet newInstance(String title, List<String> options, String selectedOption) {
-        return newInstance(title, options, selectedOption, null);
-    }
+//    public static SelectorBottomSheet newInstance(String title, List<String> options, String selectedOption) {
+//        // Fallback or simple version for non-SpinnerDisplayable lists (like Strings)
+//        // We can just keep it for backward compatibility if needed, or refactor all
+//        // calls.
+//        SelectorBottomSheet fragment = new SelectorBottomSheet();
+//        Bundle args = new Bundle();
+//        args.putString(ARG_TITLE, title);
+//        args.putStringArray(ARG_OPTIONS, options.toArray(new String[0]));
+//        args.putString(ARG_SELECTED, selectedOption);
+//        fragment.setArguments(args);
+//        return fragment;
+//    }
 
     public void setOnOptionSelectedListener(OnOptionSelectedListener listener) {
         this.listener = listener;
@@ -65,23 +70,24 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
 
         if (getArguments() != null) {
             String title = getArguments().getString(ARG_TITLE);
-            String[] optionsArray = getArguments().getStringArray(ARG_OPTIONS);
+            Object optionsObj = getArguments().getSerializable(ARG_OPTIONS);
             String selectedOption = getArguments().getString(ARG_SELECTED);
-            // Safe cast if possible, or just check type
-            Map<String, Integer> colorMap;
-            try {
-                colorMap = (java.util.Map<String, Integer>) getArguments().getSerializable(ARG_COLORS);
-            } catch (Exception e) {
-                colorMap = null;
-            }
 
             if (title != null) {
                 tvTitle.setText(title);
             }
 
-            if (optionsArray != null) {
-                List<String> options = java.util.Arrays.asList(optionsArray);
-                OptionAdapter adapter = new OptionAdapter(options, selectedOption, colorMap, option -> {
+            if (optionsObj != null) {
+                List<?> options;
+                if (optionsObj instanceof List) {
+                    options = (List<?>) optionsObj;
+                } else if (optionsObj instanceof String[]) {
+                    options = java.util.Arrays.asList((String[]) optionsObj);
+                } else {
+                    options = new java.util.ArrayList<>();
+                }
+
+                OptionAdapter adapter = new OptionAdapter(options, selectedOption, option -> {
                     if (listener != null) {
                         listener.onOptionSelected(option);
                     }
@@ -96,9 +102,8 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
 
     // Adapter interno para las opciones
     private static class OptionAdapter extends RecyclerView.Adapter<OptionAdapter.ViewHolder> {
-        private final List<String> options;
+        private final List<?> options;
         private final String selectedOption;
-        private final java.util.Map<String, Integer> colorMap;
         private final OnOptionClickListener clickListener;
 
         private static final int TYPE_SIMPLE = 0;
@@ -108,17 +113,17 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
             void onClick(String option);
         }
 
-        OptionAdapter(List<String> options, String selectedOption, java.util.Map<String, Integer> colorMap,
-                OnOptionClickListener clickListener) {
+        OptionAdapter(List<?> options, String selectedOption, OnOptionClickListener clickListener) {
             this.options = options;
             this.selectedOption = selectedOption;
-            this.colorMap = colorMap;
             this.clickListener = clickListener;
         }
 
         @Override
         public int getItemViewType(int position) {
-            return colorMap != null ? TYPE_CARD : TYPE_SIMPLE;
+            Object option = options.get(position);
+            return (option instanceof com.notificationcapture.app.interfaces.SpinnerDisplayable) ? TYPE_CARD
+                    : TYPE_SIMPLE;
         }
 
         @NonNull
@@ -132,15 +137,25 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            String option = options.get(position);
+            Object item = options.get(position);
             android.content.Context context = holder.itemView.getContext();
+            String optionName;
+            Integer color = null;
 
-            if (colorMap != null) {
+            if (item instanceof com.notificationcapture.app.interfaces.SpinnerDisplayable) {
+                com.notificationcapture.app.interfaces.SpinnerDisplayable sd = (com.notificationcapture.app.interfaces.SpinnerDisplayable) item;
+                optionName = sd.getDisplayName();
+                color = sd.getDisplayColor();
+            } else {
+                optionName = item.toString();
+            }
+
+            if (getItemViewType(position) == TYPE_CARD) {
                 // CARD LAYOUT (Categories)
                 if (holder.tvCategoryName != null) {
-                    holder.tvCategoryName.setText(option);
+                    holder.tvCategoryName.setText(optionName);
 
-                    if (option.equals(selectedOption)) {
+                    if (optionName.equals(selectedOption)) {
                         holder.tvCategoryName.setTypeface(null, android.graphics.Typeface.BOLD);
                         holder.tvCategoryName.setTextColor(androidx.core.content.ContextCompat.getColor(context,
                                 R.color.text_primary));
@@ -155,11 +170,8 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
                     holder.amountContainer.setVisibility(View.GONE);
                 }
 
-                int color = androidx.core.content.ContextCompat.getColor(context, R.color.accent_main); // Default
-                if (colorMap.containsKey(option)) {
-                    Integer c = colorMap.get(option);
-                    if (c != null)
-                        color = c;
+                if (color == null || color == 0) {
+                    color = androidx.core.content.ContextCompat.getColor(context, R.color.accent_main); // Default
                 }
 
                 if (holder.viewLeftBorder != null)
@@ -170,9 +182,9 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
             } else {
                 // SIMPLE LAYOUT (Wallets)
                 if (holder.tvOptionName != null) {
-                    holder.tvOptionName.setText(option);
+                    holder.tvOptionName.setText(optionName);
 
-                    if (option.equals(selectedOption)) {
+                    if (optionName.equals(selectedOption)) {
                         holder.tvOptionName.setTextColor(androidx.core.content.ContextCompat.getColor(context,
                                 R.color.accent_main));
                         holder.tvOptionName.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -184,7 +196,7 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
                 }
             }
 
-            holder.itemView.setOnClickListener(v -> clickListener.onClick(option));
+            holder.itemView.setOnClickListener(v -> clickListener.onClick(optionName));
         }
 
         @Override

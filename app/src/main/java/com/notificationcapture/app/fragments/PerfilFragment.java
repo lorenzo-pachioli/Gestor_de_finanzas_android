@@ -97,10 +97,7 @@ public class PerfilFragment extends Fragment {
         Button btnAddWallet = view.findViewById(R.id.btnAddWallet);
         Button btnAddCreditCard = view.findViewById(R.id.btnAddCreditCard);
 
-
         spinnerCreditCards = view.findViewById(R.id.spinnerCreditCards);
-
-
 
         // Setup Listeners
         btnAddCategory.setOnClickListener(v -> showAddCategoryDialog());
@@ -472,8 +469,8 @@ public class PerfilFragment extends Fragment {
         btnCreate.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             if (!name.isEmpty()) {
-                Category newCat = new Category(name, selectedColor, category.getType());
-                categoryRepository.updateCategory(category, newCat);
+                Category newCat = new Category(category.getId(), name, selectedColor, category.getType());
+                categoryRepository.updateCategory(newCat);
                 loadCategories();
                 Toast.makeText(requireContext(), "Categoría actualizada", Toast.LENGTH_SHORT).show();
             }
@@ -485,7 +482,7 @@ public class PerfilFragment extends Fragment {
                     .setTitle("Eliminar Categoría")
                     .setMessage("¿Estás seguro de eliminar '" + category.getName() + "'?")
                     .setPositiveButton("Eliminar", (d, w) -> {
-                        categoryRepository.deleteCategory(category.getName(), category.getType());
+                        categoryRepository.deleteCategory(category.getId());
                         loadCategories();
                         Toast.makeText(requireContext(), "Categoría eliminada", Toast.LENGTH_SHORT).show();
                     })

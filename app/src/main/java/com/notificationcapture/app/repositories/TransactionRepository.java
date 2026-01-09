@@ -31,6 +31,7 @@ public class TransactionRepository implements GsonAccess {
     private Gson plainGson; // Plain Gson to avoid recursion in adapter
     private Context context;
 
+
     public TransactionRepository(Context context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         this.context = context.getApplicationContext();
@@ -224,7 +225,7 @@ public class TransactionRepository implements GsonAccess {
                 // Update shared fields
                 // c.setTitle(updatedCredit.getTitle());
                 c.setText(updatedCredit.getText());
-                c.setCategory(updatedCredit.getCategory());
+                c.setCategoryId(updatedTransaction.getCategoryId());
                 c.setAmount(updatedCredit.getAmount());
                 c.setType(updatedCredit.getType());
                 c.setPaymentMethod(updatedCredit.getPaymentMethod());

@@ -140,7 +140,7 @@
                 android:layout_marginStart="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_menu_delete"
-                android:tint="#F44336"
+                app:tint="@color/red"
                 android:contentDescription="Eliminar notificación"/>
 
         </LinearLayout>

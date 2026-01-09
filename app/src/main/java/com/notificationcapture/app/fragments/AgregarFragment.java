@@ -138,7 +138,7 @@ public class AgregarFragment extends Fragment {
                 ? IngresoOEgreso.EGRESO
                 : IngresoOEgreso.INGRESO;
 
-        java.util.List<com.notificationcapture.app.models.Category> categories = categoryRepository.getCategories(type);
+        java.util.List<Category> categories = categoryRepository.getCategories(type);
         UniversalSpinnerAdapter<Category> adapterCategories = new UniversalSpinnerAdapter<>(
                 requireContext(), categories);
         spinnerCategory.setAdapter(adapterCategories);
@@ -147,9 +147,17 @@ public class AgregarFragment extends Fragment {
     private void createNotification() {
         String title = etTitle.getText().toString().trim();
         String text = etText.getText().toString().trim();
-        com.notificationcapture.app.models.Category selectedCategoryObj = (com.notificationcapture.app.models.Category) spinnerCategory
-                .getSelectedItem();
-        String category = selectedCategoryObj != null ? selectedCategoryObj.getName() : "Sin Categoría";
+
+        // CAMBIO: Usar el objeto Category completo del spinner en lugar de solo el
+        // nombre
+        Category selectedCategory = (Category) spinnerCategory.getSelectedItem();
+
+        // Validación de categoría
+        if (selectedCategory == null) {
+            Toast.makeText(requireContext(), "Debe seleccionar una categoría", Toast.LENGTH_SHORT).show();
+            spinnerCategory.requestFocus();
+            return;
+        }
 
         // Validaciones
         if (title.isEmpty()) {
@@ -188,33 +196,22 @@ public class AgregarFragment extends Fragment {
                 // Create Credit Transaction
                 CreditCard card = new CreditCard(
                         selectedMethodDetail != null ? selectedMethodDetail : "Tarjeta de Crédito", 1, 0);
+                // CAMBIO: Usar selectedCategory.getId()
                 transaction = new Credit(itemTitle, text, itemTimestamp, type,
-                        new Category(category, type), card, totalInstallments, i, installmentGroupId, false);
+                        selectedCategory.getId(), card, totalInstallments, i, installmentGroupId, false);
             } else if (selectedMethod == PaymentMethod.DEBITO) {
                 // Create Debit Transaction
                 String pkg = getPackageNameFromApp(selectedMethodDetail);
                 Wallets wallet = new Wallets(selectedMethodDetail != null ? selectedMethodDetail : "Wallet", pkg);
+                // CAMBIO: Usar selectedCategory.getId()
                 transaction = new Debit(itemTitle, text, itemTimestamp, type,
-                        new Category(category, type), wallet, false);
+                        selectedCategory.getId(), wallet, false);
             } else {
                 // Create Cash Transaction
+                // CAMBIO: Usar selectedCategory.getId()
                 transaction = new Cash(itemTitle, text, itemTimestamp, type,
-                        new Category(category, type), false);
+                        selectedCategory.getId(), false);
             }
-
-            // Assign Amount ?? Transaction constructor extracts amount from title/text.
-            // NOTE: The previous code didn't assign amount explicitly from logic, it relied
-            // on constructor extraction.
-            // But if user enters generic text, amount might be null.
-            // Does AgregarFragment have Amount field? NO. It seems it relies on parsing
-            // title/text for amount?
-            // Wait, looking at AgregarFragment UI... NO visible Amount field in
-            // `onViewCreated` or imports!
-            // Wait, `etText` might contain "$100".
-            // However, NotificationItem constructor `extractAmount(title, text)` does the
-            // job.
-            // Transaction constructor does `this.amount = extractAmount(title, text);`.
-            // So if user puts amount in title/text, it works.
 
             repository.saveTransaction(transaction);
 
