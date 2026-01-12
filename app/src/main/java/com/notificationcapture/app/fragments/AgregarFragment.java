@@ -78,6 +78,21 @@ public class AgregarFragment extends Fragment {
         tvPaymentMethod = view.findViewById(R.id.tvPaymentMethod);
         etTitle = view.findViewById(R.id.etTitle);
         etAmount = view.findViewById(R.id.etAmount);
+        etAmount.addTextChangedListener(new com.notificationcapture.app.utils.MoneyTextWatcher(etAmount));
+        etAmount.setHint("0");
+        etAmount.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
+                // Hide Keyboard
+                android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) requireContext()
+                        .getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
+                etAmount.clearFocus();
+                return true;
+            }
+            return false;
+        });
         swType = view.findViewById(R.id.swType);
         tvIngreso = view.findViewById(R.id.tvIngreso);
         tvEgreso = view.findViewById(R.id.tvEgreso);
@@ -178,7 +193,11 @@ public class AgregarFragment extends Fragment {
 
         double amountValue = 0;
         try {
-            amountValue = parseAmount(amountStr);
+            // Remove thousands separators (dots) and replace decimal separator (comma) with
+            // dot for parsing
+            String cleanAmount = amountStr.replace(".", "").replace(",", ".");
+            amountValue = Double.parseDouble(cleanAmount);
+
             if (amountValue <= 0) {
                 Toast.makeText(requireContext(), "El monto debe ser mayor a 0", Toast.LENGTH_SHORT).show();
                 etAmount.requestFocus();
@@ -304,38 +323,5 @@ public class AgregarFragment extends Fragment {
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String formattedDate = sdf.format(new Date(timestamp));
         etDate.setText(formattedDate);
-    }
-
-    private double parseAmount(String amountStr) throws NumberFormatException {
-        String clean = amountStr.trim().replace(" ", "");
-
-        // Count separators
-        int dotCount = clean.length() - clean.replace(".", "").length();
-        int commaCount = clean.length() - clean.replace(",", "").length();
-
-        if (dotCount > 0 && commaCount > 0) {
-            // Mixed. Last one is decimal.
-            int lastDot = clean.lastIndexOf('.');
-            int lastComma = clean.lastIndexOf(',');
-            if (lastDot > lastComma) { // 1,000.00
-                clean = clean.replace(",", "");
-            } else { // 1.000,00
-                clean = clean.replace(".", "").replace(",", ".");
-            }
-        } else if (dotCount > 1) {
-            // 1.000.000 -> 1000000 (Thousands separators)
-            clean = clean.replace(".", "");
-        } else if (commaCount > 1) {
-            // 1,000,000 -> 1000000 (Thousands separators)
-            clean = clean.replace(",", "");
-        } else {
-            // 0 or 1 separator.
-            // If just comma: 1000,50 -> 1000.50
-            clean = clean.replace(",", ".");
-            // If just dot: 1000.50 -> 1000.50.
-            // Note: 1.000 becomes 1.0 (Standard behavior).
-        }
-
-        return Double.parseDouble(clean);
     }
 }

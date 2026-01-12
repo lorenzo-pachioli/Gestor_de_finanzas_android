@@ -78,10 +78,22 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             holder.etText.setText(item.getText());
 
             if (item.getAmount() != null) {
-                holder.etAmount.setText(String.valueOf(item.getAmount()));
+                // Format initially to EU style so it looks correct immediately
+                java.text.DecimalFormat formatter = (java.text.DecimalFormat) java.text.DecimalFormat
+                        .getInstance(java.util.Locale.GERMANY);
+                formatter.applyPattern("#,###.##");
+                String initialAmount = formatter.format(item.getAmount());
+                holder.etAmount.setText(initialAmount);
             } else {
                 holder.etAmount.setText("");
             }
+
+            // Remove previous watcher if exists to avoid stacking
+            if (holder.currentWatcher != null) {
+                holder.etAmount.removeTextChangedListener(holder.currentWatcher);
+            }
+            holder.currentWatcher = new com.notificationcapture.app.utils.MoneyTextWatcher(holder.etAmount);
+            holder.etAmount.addTextChangedListener(holder.currentWatcher);
 
             // Configurar Switch de Tipo
             boolean isIngreso = item.getType() == IngresoOEgreso.INGRESO;
@@ -156,7 +168,8 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 String amountStr = holder.etAmount.getText().toString();
                 if (!amountStr.isEmpty()) {
                     try {
-                        item.setAmount(Double.parseDouble(amountStr));
+                        String clean = amountStr.replace(".", "").replace(",", ".");
+                        item.setAmount(Double.parseDouble(clean));
                     } catch (NumberFormatException e) {
                         // Ignorar formato inválido
                     }
@@ -174,7 +187,9 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 notifyItemChanged(holder.getAdapterPosition());
             });
 
-        } else {
+        } else
+
+        {
             holder.layoutSummary.setVisibility(View.VISIBLE);
             holder.layoutEdit.setVisibility(View.GONE);
 
@@ -347,6 +362,8 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         TextView tvTimestamp;
         TextView tvNotificacion;
         View btnDelete;
+
+        public android.text.TextWatcher currentWatcher;
 
         EditText etTitle;
         EditText etText;

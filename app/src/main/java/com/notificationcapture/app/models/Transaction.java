@@ -143,10 +143,7 @@ public abstract class Transaction implements Serializable {
             return null;
         }
 
-        return String.format("$%.2f", amount)
-                .replace(",", "#")
-                .replace(".", ",")
-                .replace("#", ".");
+        return "$" + com.notificationcapture.app.utils.MoneyTextWatcher.format(amount);
     }
 
     public boolean hasAmount() {

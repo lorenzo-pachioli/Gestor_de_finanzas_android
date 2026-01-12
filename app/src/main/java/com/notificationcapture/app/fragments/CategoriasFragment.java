@@ -274,10 +274,7 @@ public class CategoriasFragment extends Fragment {
             colorMap.put(c.getName(), c.getDisplayColor());
         }
 
-        String formattedAmount = String.format("$%.2f", totalAmount)
-                .replace(",", "#")
-                .replace(".", ",")
-                .replace("#", ".");
+        String formattedAmount = "$" + com.notificationcapture.app.utils.MoneyTextWatcher.format(totalAmount);
         String title = category + " - Total: " + formattedAmount;
 
         android.widget.Toast.makeText(getContext(), "Abriendo detalle: " + category, android.widget.Toast.LENGTH_SHORT)

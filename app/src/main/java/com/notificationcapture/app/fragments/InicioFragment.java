@@ -193,9 +193,6 @@ public class InicioFragment extends Fragment {
     }
 
     private String formatAmount(double amount) {
-        return String.format("$%.2f", amount)
-                .replace(",", "#")
-                .replace(".", ",")
-                .replace("#", ".");
+        return "$" + com.notificationcapture.app.utils.MoneyTextWatcher.format(amount);
     }
 }

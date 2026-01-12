@@ -20,7 +20,7 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
     private Map<String, Integer> categoryColors;
     private OnCategoryClickListener listener;
 
-    private  int totalPeriodAmount;
+    private int totalPeriodAmount;
 
     public CategorySummaryAdapter(Map<String, Double> categoryData, Map<String, Integer> categoryColors,
             OnCategoryClickListener listener) {
@@ -55,10 +55,7 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
 
         holder.tvCategoryName.setText(category);
 
-        String formattedAmount = String.format("$%.2f", total)
-                .replace(",", "#")
-                .replace(".", ",")
-                .replace("#", ".");
+        String formattedAmount = "$" + com.notificationcapture.app.utils.MoneyTextWatcher.format(total);
         holder.tvTotalAmount.setText(formattedAmount);
 
         // Percentage Calculation
