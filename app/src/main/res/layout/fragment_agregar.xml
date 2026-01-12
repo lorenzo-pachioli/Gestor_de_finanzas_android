@@ -157,27 +157,24 @@
             android:maxLines="1"
             android:layout_marginBottom="20dp"/>
 
-        <!-- Campo Texto -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/descripcion_monto"
+            android:text="@string/monto"
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
             android:layout_marginBottom="8dp"/>
 
         <EditText
-            android:id="@+id/etText"
+            android:id="@+id/etAmount"
             android:layout_width="match_parent"
-            android:layout_height="45dp"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="20dp"
             android:background="@drawable/bg_card_rounded"
-            android:gravity="top|start"
-            android:hint="@string/hint_descripcion"
-            android:inputType="textMultiLine"
-            android:maxLines="5"
-            android:minHeight="100dp"
+            android:hint="0.00"
+            android:inputType="numberDecimal"
+            android:minHeight="48dp"
             android:padding="12dp"
             android:textColor="@color/text_secondary"
             android:textColorHint="@color/text_secondary" />

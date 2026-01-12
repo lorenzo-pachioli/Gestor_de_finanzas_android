@@ -39,7 +39,7 @@ import com.notificationcapture.app.models.Category;
 public class AgregarFragment extends Fragment {
 
     private EditText etTitle;
-    private EditText etText;
+    private EditText etAmount;
     private SwitchCompat swType;
     private TextView tvIngreso;
     private TextView tvEgreso;
@@ -77,7 +77,7 @@ public class AgregarFragment extends Fragment {
 
         tvPaymentMethod = view.findViewById(R.id.tvPaymentMethod);
         etTitle = view.findViewById(R.id.etTitle);
-        etText = view.findViewById(R.id.etText);
+        etAmount = view.findViewById(R.id.etAmount);
         swType = view.findViewById(R.id.swType);
         tvIngreso = view.findViewById(R.id.tvIngreso);
         tvEgreso = view.findViewById(R.id.tvEgreso);
@@ -150,7 +150,7 @@ public class AgregarFragment extends Fragment {
 
     private void createNotification() {
         String title = etTitle.getText().toString().trim();
-        String text = etText.getText().toString().trim();
+        String amountStr = etAmount.getText().toString().trim();
 
         // CAMBIO: Usar el objeto Category completo del spinner en lugar de solo el
         // nombre
@@ -170,9 +170,23 @@ public class AgregarFragment extends Fragment {
             return;
         }
 
-        if (text.isEmpty()) {
-            Toast.makeText(requireContext(), "El texto es obligatorio", Toast.LENGTH_SHORT).show();
-            etText.requestFocus();
+        if (amountStr.isEmpty()) {
+            Toast.makeText(requireContext(), "El monto es obligatorio", Toast.LENGTH_SHORT).show();
+            etAmount.requestFocus();
+            return;
+        }
+
+        double amountValue = 0;
+        try {
+            amountValue = parseAmount(amountStr);
+            if (amountValue <= 0) {
+                Toast.makeText(requireContext(), "El monto debe ser mayor a 0", Toast.LENGTH_SHORT).show();
+                etAmount.requestFocus();
+                return;
+            }
+        } catch (NumberFormatException e) {
+            Toast.makeText(requireContext(), "Formato de monto inválido", Toast.LENGTH_SHORT).show();
+            etAmount.requestFocus();
             return;
         }
 
@@ -193,27 +207,26 @@ public class AgregarFragment extends Fragment {
         for (int i = 1; i <= totalInstallments; i++) {
             long itemTimestamp = calendar.getTimeInMillis();
             String itemTitle = title + (totalInstallments > 1 ? " (" + i + "/" + totalInstallments + ")" : "");
+            String itemDescription = getString(R.string.sin_descripcion);
 
             Transaction transaction = null;
 
             if (selectedMethod == PaymentMethod.CREDITO) {
                 // Create Credit Transaction
-                // CAMBIO: Usar selectedMethodDetailId
-                transaction = new Credit(itemTitle, text, itemTimestamp, type,
+                transaction = new Credit(itemTitle, itemDescription, itemTimestamp, type,
                         selectedCategory.getId(), selectedMethodDetailId, totalInstallments, i, installmentGroupId,
                         false);
             } else if (selectedMethod == PaymentMethod.DEBITO) {
                 // Create Debit Transaction
-                // CAMBIO: Usar selectedMethodDetailId
-                transaction = new Debit(itemTitle, text, itemTimestamp, type,
+                transaction = new Debit(itemTitle, itemDescription, itemTimestamp, type,
                         selectedCategory.getId(), selectedMethodDetailId, false);
             } else {
                 // Create Cash Transaction
-                // CAMBIO: Usar selectedCategory.getId()
-                transaction = new Cash(itemTitle, text, itemTimestamp, type,
+                transaction = new Cash(itemTitle, itemDescription, itemTimestamp, type,
                         selectedCategory.getId(), false);
             }
 
+            transaction.setAmount(amountValue);
             repository.saveTransaction(transaction);
 
             // Add 1 month for next installment
@@ -226,7 +239,7 @@ public class AgregarFragment extends Fragment {
 
         // Limpiar formulario
         etTitle.setText("");
-        etText.setText("");
+        etAmount.setText("");
 
         // Reset Payment Method
         selectedMethod = PaymentMethod.EFECTIVO;
@@ -271,47 +284,6 @@ public class AgregarFragment extends Fragment {
         bottomSheet.show(getParentFragmentManager(), "PaymentMethodBottomSheet");
     }
 
-    private String getPackageNameFromApp(String appName) {
-        switch (appName) {
-            case "Mercado Pago":
-                return "com.mercadopago.wallet";
-            case "Ualá":
-                return "com.uala.app";
-            case "Brubank":
-                return "brubank.app";
-            case "Naranja X":
-                return "com.naranja.app";
-            case "Modo":
-                return "com.reba.contactless";
-            case "Personal Pay":
-                return "personal.pay";
-            case "Bimo":
-                return "bimo.app";
-            case "BIND":
-                return "ar.com.bind";
-            case "Prex":
-                return "ar.com.prex";
-            case "Wilobank":
-                return "ar.wilobank";
-            case "Santander Río":
-                return "ar.com.santander.rio";
-            case "BBVA":
-                return "com.bbva.nxt_argentina";
-            case "Galicia":
-                return "ar.com.bancogalicia";
-            case "Macro":
-                return "com.macro";
-            case "Banco Nación":
-                return "ar.com.bna";
-            case "Mi Argentina":
-                return "ar.gov.anses.mi";
-            case "Claro Pay":
-                return "com.claro.pay";
-            default:
-                return "com.wallet.custom";
-        }
-    }
-
     private void showDatePicker() {
         // Crear el MaterialDatePicker con la fecha seleccionada actual
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
@@ -332,5 +304,38 @@ public class AgregarFragment extends Fragment {
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         String formattedDate = sdf.format(new Date(timestamp));
         etDate.setText(formattedDate);
+    }
+
+    private double parseAmount(String amountStr) throws NumberFormatException {
+        String clean = amountStr.trim().replace(" ", "");
+
+        // Count separators
+        int dotCount = clean.length() - clean.replace(".", "").length();
+        int commaCount = clean.length() - clean.replace(",", "").length();
+
+        if (dotCount > 0 && commaCount > 0) {
+            // Mixed. Last one is decimal.
+            int lastDot = clean.lastIndexOf('.');
+            int lastComma = clean.lastIndexOf(',');
+            if (lastDot > lastComma) { // 1,000.00
+                clean = clean.replace(",", "");
+            } else { // 1.000,00
+                clean = clean.replace(".", "").replace(",", ".");
+            }
+        } else if (dotCount > 1) {
+            // 1.000.000 -> 1000000 (Thousands separators)
+            clean = clean.replace(".", "");
+        } else if (commaCount > 1) {
+            // 1,000,000 -> 1000000 (Thousands separators)
+            clean = clean.replace(",", "");
+        } else {
+            // 0 or 1 separator.
+            // If just comma: 1000,50 -> 1000.50
+            clean = clean.replace(",", ".");
+            // If just dot: 1000.50 -> 1000.50.
+            // Note: 1.000 becomes 1.0 (Standard behavior).
+        }
+
+        return Double.parseDouble(clean);
     }
 }

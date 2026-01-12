@@ -28,6 +28,7 @@
     <string name="no_notificaciones">No notifications captured</string>
     <string name="notificacion">notification</string>
     <string name="default_amount">$0.00</string>
+    <string name="sin_descripcion">(No description)</string>
     
     <!-- Fragment Agregar -->
     <string name="agregar_movimiento">Add transaction</string>

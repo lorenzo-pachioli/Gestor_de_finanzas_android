@@ -15,12 +15,11 @@
         android:textColor="@color/text_primary"
         android:layout_marginBottom="16dp"/>
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnConfirmCash"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_button_rounded"
-
         android:minHeight="50dp"
         android:padding="5dp"
         android:text="@string/confirmar"

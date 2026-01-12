@@ -209,33 +209,30 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
 
         void bind() {
             List<CreditCard> cards = creditCardRepository.getCreditCards();
+            boolean noCards = cards.isEmpty();
 
-            // Need a displayable list for UniversalSpinnerAdapter or just manual
-            // To keep it simple, let's use UniversalSpinnerAdapter logic or create a list
+            if (noCards) {
+                // Add a placeholder card if none exist
+                CreditCard placeholder = new CreditCard("No hay tarjetas", 0, 0);
+                placeholder.setId("PLACEHOLDER");
+                cards.add(placeholder);
+            }
 
-            // Assuming we reuse Universal but might need a context.
-            // Better to just use a simple ArrayAdapter for now or reuse Universal if
-            // possible.
-            // UniversalSpinnerAdapter usage:
             UniversalSpinnerAdapter<CreditCard> adapter = new UniversalSpinnerAdapter<>(requireContext(), cards);
             spinnerCards.setAdapter(adapter);
 
             // Pre-fill installments
             etInstallments.setText(String.valueOf(initialInstallments));
 
-            // Disable installments if restricted (Edit Mode for Credit)
-            // Wait, logic says: "si es credito, que solo se pueda cambiar la tarjeta de
-            // credito (las cantidad de cuotas no)"
             if (restrictedToCredit) {
                 etInstallments.setEnabled(false);
                 etInstallments.setAlpha(0.5f);
-                // Maybe set a hint explaining why
             }
 
             btnConfirm.setOnClickListener(v -> {
                 CreditCard selectedCard = (CreditCard) spinnerCards.getSelectedItem();
-                if (selectedCard == null) {
-                    Toast.makeText(requireContext(), "Selecciona una tarjeta", Toast.LENGTH_SHORT).show();
+                if (selectedCard == null || "PLACEHOLDER".equals(selectedCard.getId())) {
+                    Toast.makeText(requireContext(), "No hay tarjetas disponibles", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -247,23 +244,6 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
                         cuotas = 1;
                 } catch (NumberFormatException e) {
                 }
-
-                // If restricted, we might want to preserve original installments,
-                // but the bottom sheet doesn't know original.
-                // The caller (TransactionAdapter) handles updating the item.
-                // The BottomSheet returns the value from EditText.
-                // If disabled, user can't change it, so it returns default (1) or whatever is
-                // there.
-                // We should probably pass existing installments to the sheet if possible to
-                // pre-fill?
-                // The user request is specifically that they CANNOT change it.
-                // So returning 0 or -1 to indicate "no change" might be better, or just return
-                // existing if we had it.
-                // For now, if disabled, returning what's in box (default 1 or user needs to see
-                // original).
-                // Let's settle for returning the value, trusting it wasn't changed if disabled.
-                // Ideally we should pre-fill it. For now, let's assume the user doesn't see the
-                // original value here yet.
 
                 if (listener != null) {
                     listener.onPaymentMethodSelected(PaymentMethod.CREDITO, selectedCard.getId(),
