@@ -145,6 +145,17 @@
 
 
                 <ImageButton
+                    android:id="@+id/btnAdd"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_input_add"
+                    app:tint="@color/accent_main"
+                    android:contentDescription="@string/agregar_transaccion"/>
+
+                <ImageButton
                     android:id="@+id/btnDelete"
                     android:layout_width="48dp"
                     android:layout_height="48dp"

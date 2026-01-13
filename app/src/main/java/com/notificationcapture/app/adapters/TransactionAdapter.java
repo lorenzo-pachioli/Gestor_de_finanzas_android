@@ -32,6 +32,7 @@ import com.notificationcapture.app.R;
 import com.notificationcapture.app.fragments.SelectorBottomSheet;
 import com.notificationcapture.app.enums.PaymentMethod;
 import com.notificationcapture.app.interfaces.OnDeleteClickListener;
+import com.notificationcapture.app.interfaces.OnAddClickListener;
 import com.notificationcapture.app.utils.Dialog;
 import com.notificationcapture.app.enums.DialogType;
 
@@ -44,10 +45,13 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     private TransactionRepository repository;
     private SimpleDateFormat dateFormat;
     private OnDeleteClickListener deleteListener;
+    private OnAddClickListener addListener;
 
-    public TransactionAdapter(List<Transaction> transactions, OnDeleteClickListener deleteListener) {
+    public TransactionAdapter(List<Transaction> transactions, OnDeleteClickListener deleteListener,
+            OnAddClickListener addListener) {
         this.transactions = transactions;
         this.deleteListener = deleteListener;
+        this.addListener = addListener;
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
         categoryRepo = RepositoryProvider.getInstance().getCategoryRepository();
         walletRepo = RepositoryProvider.getInstance().getWalletRepository();
@@ -219,6 +223,12 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 holder.tvAmount.setVisibility(View.GONE);
             }
 
+            holder.btnAdd.setOnClickListener(v -> {
+                if (addListener != null) {
+                    addListener.onAddClick(item);
+                }
+            });
+
             holder.btnDelete.setOnClickListener(v -> {
                 Dialog.show(
                         "¿Estás seguro de que deseas eliminar esta transacción?",
@@ -361,6 +371,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         TextView tvAmount;
         TextView tvTimestamp;
         TextView tvNotificacion;
+        View btnAdd;
         View btnDelete;
 
         public android.text.TextWatcher currentWatcher;
@@ -393,6 +404,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             tvAmount = itemView.findViewById(R.id.tvAmount);
             tvTimestamp = itemView.findViewById(R.id.tvTimestamp);
             tvNotificacion = itemView.findViewById(R.id.tvNotificacion);
+            btnAdd = itemView.findViewById(R.id.btnAdd);
             btnDelete = itemView.findViewById(R.id.btnDelete);
 
             etTitle = itemView.findViewById(R.id.etTitle);

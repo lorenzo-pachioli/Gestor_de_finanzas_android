@@ -31,7 +31,6 @@ public class TransactionRepository implements GsonAccess {
     private Gson plainGson; // Plain Gson to avoid recursion in adapter
     private Context context;
 
-
     public TransactionRepository(Context context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         this.context = context.getApplicationContext();
@@ -252,6 +251,58 @@ public class TransactionRepository implements GsonAccess {
 
     public void clearAllTransaction() {
         prefs.edit().remove(KEY_NOTIFICATIONS).apply();
+    }
+
+    public void moveTransactionToApproved(String id) {
+        List<Transaction> notFilteredList = getAllTransactionNotFiltered();
+        List<Transaction> approvedList = getAllTransactions();
+
+        // Find the transaction and check for group ID
+        String groupId = null;
+        for (Transaction transaction : notFilteredList) {
+            if (transaction.getId().equals(id)) {
+                if (transaction instanceof Credit c)
+                    groupId = c.getInstallmentGroupId();
+                break;
+            }
+        }
+
+        // Move transaction(s) from not filtered to approved
+        List<Transaction> remainingNotFiltered = new ArrayList<>();
+        for (Transaction transaction : notFilteredList) {
+            boolean shouldMove = false;
+
+            if (groupId != null) {
+                // If it's a credit with group, move all in the group
+                if (transaction instanceof Credit c) {
+                    if (c.getInstallmentGroupId() != null && groupId.equals(c.getInstallmentGroupId())) {
+                        shouldMove = true;
+                    }
+                }
+            } else if (transaction.getId().equals(id)) {
+                // Standard single move
+                shouldMove = true;
+            }
+
+            if (shouldMove) {
+                // Set isNotification to true before adding to approved list
+                transaction.setNotification(true);
+                approvedList.add(0, transaction); // Add to approved list
+            } else {
+                remainingNotFiltered.add(transaction); // Keep in not filtered
+            }
+        }
+
+        // Save both lists
+        String notFilteredJson = gson.toJson(remainingNotFiltered);
+        prefs.edit().putString(KEY_NOTIFICATIONS_NOT_FILTERED, notFilteredJson).apply();
+
+        String approvedJson = gson.toJson(approvedList);
+        prefs.edit().putString(KEY_NOTIFICATIONS, approvedJson).apply();
+    }
+
+    public void clearAllTransactionNotFiltered() {
+        prefs.edit().remove(KEY_NOTIFICATIONS_NOT_FILTERED).apply();
     }
 
     // Custom Adapter for Polymorphic Transaction

@@ -78,6 +78,7 @@
     <string name="cancelar">Cancelar</string>
     <string name="guardar">Guardar</string>
     <string name="es_notificacion">Es notificación</string>
+    <string name="agregar_transaccion">Agregar transacción</string>
     
     <!-- Dialog Add Category -->
     <string name="nombre_categoria">Nombre de la Categoría</string>
@@ -115,4 +116,10 @@
     <string name="confirmar">Confirmar</string>
     <string name="seleccionar_billetera">Seleccionar Billetera</string>
     <string name="seleccionar_tarjeta">Seleccionar Tarjeta</string>
+
+    <!-- Historial Fragment -->
+    <string name="historial_pendiente">Pendiente de Revisión</string>
+    <string name="borrar_todo">Borrar Todo</string>
+    <string name="historial_descripcion">Revisa y aprueba las notificaciones de pago antes de agregarlas a tus transacciones.</string>
 </resources>
+

@@ -104,10 +104,17 @@ public class NotificationListener extends NotificationListenerService {
                 ? extras.getCharSequence(Notification.EXTRA_TEXT).toString()
                 : "";
 
+        // Filtrar solo notificaciones de wallets/pagos
+        if (!isPaymentRelatedNotification(packageName, title, text)) {
+            return; // Ignorar completamente las notificaciones que no son transacciones
+        }
+
         long timestamp = sbn.getPostTime();
         // Crear el objeto Transaction (Debit por defecto)
-        Wallets wallet = walletsRepository.getWalletByPackageName(title,packageName); // Usamos packageName temporalmente como nombre si no hay
-                                                          // mapping
+        Wallets wallet = walletsRepository.getWalletByPackageName(title, packageName); // Usamos packageName
+                                                                                       // temporalmente como nombre si
+                                                                                       // no hay
+        // mapping
         Debit item = new Debit(
                 title != null ? title : "Sin título",
                 text,
@@ -115,15 +122,8 @@ public class NotificationListener extends NotificationListenerService {
                 wallet.getId(),
                 true);
 
+        // Guardar en la lista de notificaciones pendientes de revisión
         repository.saveTransactionNotFiltered(item);
-
-        // Filtrar solo notificaciones de wallets/pagos
-        if (!isPaymentRelatedNotification(packageName, title, text)) {
-            return;
-        }
-
-        // Guardar la notificación
-        repository.saveTransaction(item);
 
         // Notificar a la actividad para actualizar la UI
         Intent intent = new Intent("com.notificationcapture.NEW_NOTIFICATION");

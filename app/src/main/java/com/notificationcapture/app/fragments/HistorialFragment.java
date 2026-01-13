@@ -71,7 +71,11 @@ public class HistorialFragment extends Fragment {
 
         adapter = new TransactionAdapter(new ArrayList<>(), (item) -> {
             // Callback para eliminar notificación
-            repository.deleteTransaction(item.getId());
+            repository.deleteTransactionNotFiltered(item.getId());
+            loadNotifications();
+        }, (item) -> {
+            // Callback para agregar transacción a la lista aprobada
+            repository.moveTransactionToApproved(item.getId());
             loadNotifications();
         });
 
@@ -79,6 +83,18 @@ public class HistorialFragment extends Fragment {
 
         recyclerView.setAdapter(adapter);
         btnEnableAccess.setOnClickListener(v -> showPermissionDialog());
+
+        Button btnClearAll = view.findViewById(R.id.btnClearAll);
+        btnClearAll.setOnClickListener(v -> {
+            com.notificationcapture.app.utils.Dialog.show(
+                    "¿Estás seguro de que deseas eliminar todas las notificaciones pendientes?",
+                    com.notificationcapture.app.enums.DialogType.CONFIRMATION,
+                    () -> {
+                        repository.clearAllTransactionNotFiltered();
+                        loadNotifications();
+                    });
+        });
+
         loadNotifications();
     }
 
