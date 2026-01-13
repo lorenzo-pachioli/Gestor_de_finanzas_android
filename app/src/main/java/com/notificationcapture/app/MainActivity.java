@@ -11,24 +11,22 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
+import androidx.fragment.app.FragmentActivity;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.notificationcapture.app.fragments.AgregarFragment;
 import com.notificationcapture.app.fragments.CategoriasFragment;
 import com.notificationcapture.app.fragments.HistorialFragment;
 import com.notificationcapture.app.fragments.InicioFragment;
 import com.notificationcapture.app.fragments.PerfilFragment;
 import com.notificationcapture.app.repositories.RepositoryProvider;
-import com.notificationcapture.app.utils.Dialog;
 
 public class MainActivity extends AppCompatActivity {
 
     private BottomNavigationView bottomNavigation;
     private CardView fabAdd;
-    private FragmentManager fragmentManager;
-    private boolean isNavigatingProgrammatically = false;
+    private ViewPager2 viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,43 +45,39 @@ public class MainActivity extends AppCompatActivity {
 
         bottomNavigation = findViewById(R.id.bottomNavigationView);
         fabAdd = findViewById(R.id.fabAdd);
-        fragmentManager = getSupportFragmentManager();
+        viewPager = findViewById(R.id.viewPager);
 
-        // Agregar listener para detectar cambios en el back stack
-        fragmentManager.addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+        // Configurar ViewPager2 con el adaptador
+        ViewPagerAdapter adapter = new ViewPagerAdapter(this);
+        viewPager.setAdapter(adapter);
+        viewPager.setUserInputEnabled(true); // Habilitar swipe
+
+        // Sincronizar ViewPager → BottomNavigation
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
-            public void onBackStackChanged() {
-                syncBottomNavigationWithCurrentFragment();
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+
+                // Actualizar item seleccionado en el menú según la posición
+                int menuItemId = getMenuItemIdFromPosition(position);
+                bottomNavigation.setSelectedItemId(menuItemId);
+
+                // Actualizar visibilidad del FAB
+                if (position == 2) { // AgregarFragment
+                    changeFabAddView(View.INVISIBLE, getApplicationContext());
+                } else {
+                    changeFabAddView(View.VISIBLE, getApplicationContext());
+                }
             }
         });
 
-        // Configurar el listener de la navegación
+        // Sincronizar BottomNavigation → ViewPager
         bottomNavigation.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Fragment selectedFragment = null;
-
-                int itemId = item.getItemId();
-                if (itemId == R.id.nav_home) {
-                    selectedFragment = new InicioFragment();
-                    changeFabAddView(View.VISIBLE, getApplicationContext());
-                } else if (itemId == R.id.nav_history) {
-                    selectedFragment = new HistorialFragment();
-                    changeFabAddView(View.VISIBLE, getApplicationContext());
-                } else if (itemId == R.id.fabAddInvisible) {
-                    selectedFragment = new AgregarFragment();
-                    changeFabAddView(View.INVISIBLE, getApplicationContext());
-                } else if (itemId == R.id.nav_categories) {
-                    selectedFragment = new CategoriasFragment();
-                    changeFabAddView(View.VISIBLE, getApplicationContext());
-                } else if (itemId == R.id.nav_profile) {
-                    selectedFragment = new PerfilFragment();
-                    changeFabAddView(View.VISIBLE, getApplicationContext());
-                }
-
-                if (selectedFragment != null) {
-                    isNavigatingProgrammatically = true;
-                    loadFragment(selectedFragment);
+                int position = getPositionFromMenuItemId(item.getItemId());
+                if (position != -1) {
+                    viewPager.setCurrentItem(position, true); // true = animación suave
                     return true;
                 }
                 return false;
@@ -94,18 +88,13 @@ public class MainActivity extends AppCompatActivity {
         fabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                isNavigatingProgrammatically = true;
-                loadFragment(new AgregarFragment());
-                bottomNavigation.setSelectedItemId(R.id.fabAddInvisible);
-                changeFabAddView(View.INVISIBLE, getApplicationContext());
+                viewPager.setCurrentItem(2, true); // Navegar a AgregarFragment (posición 2)
             }
         });
 
         // Cargar el fragmento inicial (Home)
         if (savedInstanceState == null) {
-            fragmentManager.beginTransaction()
-                    .replace(R.id.frameLayout, new InicioFragment())
-                    .commit();
+            viewPager.setCurrentItem(0, false); // InicioFragment, sin animación
             bottomNavigation.setSelectedItemId(R.id.nav_home);
         }
 
@@ -113,67 +102,86 @@ public class MainActivity extends AppCompatActivity {
         RepositoryProvider.initialize(this);
     }
 
-    private void loadFragment(Fragment fragment) {
-        try {
-            // Obtener el fragmento actual
-            Fragment currentFragment = fragmentManager.findFragmentById(R.id.frameLayout);
+    /**
+     * Adaptador para ViewPager2 que gestiona los 5 fragments
+     */
+    private class ViewPagerAdapter extends FragmentStateAdapter {
 
-            // Si es el mismo tipo de fragmento, no hacer nada
-            if (currentFragment != null && currentFragment.getClass().equals(fragment.getClass())) {
-                return;
+        public ViewPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
+            super(fragmentActivity);
+        }
+
+        @NonNull
+        @Override
+        public Fragment createFragment(int position) {
+            // Retornar fragment según posición
+            switch (position) {
+                case 0:
+                    return new InicioFragment();
+                case 1:
+                    return new HistorialFragment();
+                case 2:
+                    return new AgregarFragment();
+                case 3:
+                    return new CategoriasFragment();
+                case 4:
+                    return new PerfilFragment();
+                default:
+                    return new InicioFragment();
             }
+        }
 
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
-            transaction.replace(R.id.frameLayout, fragment);
-
-            // Solo agregar al back stack si no es el fragmento inicial (Inicio)
-            if (!(fragment instanceof InicioFragment)) {
-                transaction.addToBackStack(fragment.getClass().getSimpleName());
-            }
-
-            transaction.commit();
-        } catch (Exception e) {
-            // Toast.makeText(context, "Error: " + e.getMessage(), 5);
-            Dialog.show("Error: " + e.getMessage());
+        @Override
+        public int getItemCount() {
+            return 5; // Total de fragments
         }
     }
 
-    private void syncBottomNavigationWithCurrentFragment() {
-
-        Fragment currentFragment = fragmentManager.findFragmentById(R.id.frameLayout);
-        if (currentFragment == null)
-            return;
-
-        int selectedItemId = R.id.nav_home; // Default
-
-        if (currentFragment instanceof InicioFragment) {
-            selectedItemId = R.id.nav_home;
-            changeFabAddView(View.VISIBLE, getApplicationContext());
-        } else if (currentFragment instanceof HistorialFragment) {
-            selectedItemId = R.id.nav_history;
-            changeFabAddView(View.VISIBLE, getApplicationContext());
-        } else if (currentFragment instanceof AgregarFragment) {
-            selectedItemId = R.id.fabAddInvisible;
-            changeFabAddView(View.INVISIBLE, getApplicationContext());
-        } else if (currentFragment instanceof CategoriasFragment) {
-            selectedItemId = R.id.nav_categories;
-            changeFabAddView(View.VISIBLE, getApplicationContext());
-        } else if (currentFragment instanceof PerfilFragment) {
-            selectedItemId = R.id.nav_profile;
-            changeFabAddView(View.VISIBLE, getApplicationContext());
+    /**
+     * Convierte un ID de menu item a posición en el ViewPager
+     */
+    private int getPositionFromMenuItemId(int menuItemId) {
+        if (menuItemId == R.id.nav_home) {
+            return 0;
+        } else if (menuItemId == R.id.nav_history) {
+            return 1;
+        } else if (menuItemId == R.id.fabAddInvisible) {
+            return 2;
+        } else if (menuItemId == R.id.nav_categories) {
+            return 3;
+        } else if (menuItemId == R.id.nav_profile) {
+            return 4;
         }
+        return -1;
+    }
 
-        // Actualizar el item seleccionado sin disparar el listener
-        bottomNavigation.setSelectedItemId(selectedItemId);
+    /**
+     * Convierte una posición del ViewPager a ID de menu item
+     */
+    private int getMenuItemIdFromPosition(int position) {
+        switch (position) {
+            case 0:
+                return R.id.nav_home;
+            case 1:
+                return R.id.nav_history;
+            case 2:
+                return R.id.fabAddInvisible;
+            case 3:
+                return R.id.nav_categories;
+            case 4:
+                return R.id.nav_profile;
+            default:
+                return R.id.nav_home;
+        }
     }
 
     @Override
     public void onBackPressed() {
-        // Si hay fragmentos en el back stack, dejar que el sistema maneje el back
-        if (fragmentManager.getBackStackEntryCount() > 0) {
-            fragmentManager.popBackStack();
+        // Si no estamos en la página inicial, volver a ella
+        if (viewPager.getCurrentItem() != 0) {
+            viewPager.setCurrentItem(0, true);
         } else {
-            // Si no hay más en el stack, cerrar la app
+            // Si ya estamos en inicio, cerrar la app
             super.onBackPressed();
         }
     }
