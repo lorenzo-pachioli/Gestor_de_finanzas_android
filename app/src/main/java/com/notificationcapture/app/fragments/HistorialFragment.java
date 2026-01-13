@@ -77,7 +77,7 @@ public class HistorialFragment extends Fragment {
             // Callback para agregar transacción a la lista aprobada
             repository.moveTransactionToApproved(item.getId());
             loadNotifications();
-        });
+        }, true); // showAddButton = true para notificaciones pendientes
 
         checkNotificationPermission();
 

@@ -46,12 +46,14 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     private SimpleDateFormat dateFormat;
     private OnDeleteClickListener deleteListener;
     private OnAddClickListener addListener;
+    private boolean showAddButton;
 
     public TransactionAdapter(List<Transaction> transactions, OnDeleteClickListener deleteListener,
-            OnAddClickListener addListener) {
+            OnAddClickListener addListener, boolean showAddButton) {
         this.transactions = transactions;
         this.deleteListener = deleteListener;
         this.addListener = addListener;
+        this.showAddButton = showAddButton;
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
         categoryRepo = RepositoryProvider.getInstance().getCategoryRepository();
         walletRepo = RepositoryProvider.getInstance().getWalletRepository();
@@ -223,11 +225,17 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 holder.tvAmount.setVisibility(View.GONE);
             }
 
-            holder.btnAdd.setOnClickListener(v -> {
-                if (addListener != null) {
-                    addListener.onAddClick(item);
-                }
-            });
+            // Show/hide add button based on context
+            if (showAddButton) {
+                holder.btnAdd.setVisibility(View.VISIBLE);
+                holder.btnAdd.setOnClickListener(v -> {
+                    if (addListener != null) {
+                        addListener.onAddClick(item);
+                    }
+                });
+            } else {
+                holder.btnAdd.setVisibility(View.GONE);
+            }
 
             holder.btnDelete.setOnClickListener(v -> {
                 Dialog.show(

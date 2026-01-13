@@ -90,7 +90,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                         tvTitle.setText(tvTitle.getText().toString().replaceFirst("\\d+ items?",
                                 notifications.size() + " items"));
                     }
-                });
+                }, null, false); // showAddButton = false para transacciones aprobadas
                 recyclerDetails.setLayoutManager(new LinearLayoutManager(getContext()));
                 recyclerDetails.setAdapter(adapter);
                 recyclerDetails.setVisibility(View.VISIBLE);

@@ -131,7 +131,7 @@ public class CategoriasFragment extends Fragment {
             // Optional: Implement deletion from details view if needed
             repository.deleteTransaction(item.getId());
             refreshData();
-        });
+        }, null, false); // showAddButton = false para transacciones aprobadas
         // recyclerDetails.setAdapter(detailsAdapter);
     }
 
