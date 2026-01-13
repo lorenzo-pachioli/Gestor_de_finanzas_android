@@ -26,6 +26,7 @@ import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.models.Category;
 
 import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -78,6 +79,12 @@ public class CategoriasFragment extends Fragment {
         initViews(view);
         setupAdapters();
         setupPeriodSpinner();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshData();
     }
 
     private void initViews(View view) {
@@ -165,7 +172,9 @@ public class CategoriasFragment extends Fragment {
         }
 
         if (years.isEmpty()) {
-            years.add("2025");
+            Calendar fechaActual = Calendar.getInstance();
+            int year = fechaActual.get(Calendar.YEAR);
+            years.add(String.valueOf(year));
         }
         Collections.sort(years, Collections.reverseOrder());
 
