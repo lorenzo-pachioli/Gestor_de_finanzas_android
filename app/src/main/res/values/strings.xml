@@ -122,4 +122,10 @@
     <string name="historial_pendiente">Pending Review</string>
     <string name="borrar_todo">Clear All</string>
     <string name="historial_descripcion">Review and approve payment notifications before adding them to your transactions.</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_title_home">Home</string>
+    <string name="nav_title_pending">Pending</string>
+    <string name="nav_title_categories">Summary</string>
+    <string name="nav_title_settings">Settings</string>
 </resources>

@@ -4,13 +4,13 @@
 
     <item
         android:id="@+id/nav_home"
-        android:icon="@android:drawable/ic_menu_view"
-        android:title="Inicio" />
+        android:icon="@drawable/ic_nav_home"
+        android:title="@string/nav_title_home" />
 
     <item
         android:id="@+id/nav_history"
-        android:icon="@android:drawable/ic_menu_recent_history"
-        android:title="Historial" />
+        android:icon="@drawable/ic_nav_pending"
+        android:title="@string/nav_title_pending" />
 
     <item
         android:id="@+id/fabAddInvisible"
@@ -21,12 +21,12 @@
 
     <item
         android:id="@+id/nav_categories"
-        android:icon="@android:drawable/ic_menu_sort_by_size"
-        android:title="Resumen" />
+        android:icon="@drawable/ic_nav_categories"
+        android:title="@string/nav_title_categories" />
 
     <item
         android:id="@+id/nav_profile"
-        android:icon="@android:drawable/ic_menu_myplaces"
-        android:title="Configuración" />
+        android:icon="@drawable/ic_nav_settings"
+        android:title="@string/nav_title_settings" />
 
 </menu>

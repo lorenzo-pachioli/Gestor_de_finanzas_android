@@ -121,5 +121,11 @@
     <string name="historial_pendiente">Pendiente de Revisión</string>
     <string name="borrar_todo">Borrar Todo</string>
     <string name="historial_descripcion">Revisa y aprueba las notificaciones de pago antes de agregarlas a tus transacciones.</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_title_home">Inicio</string>
+    <string name="nav_title_pending">Pendientes</string>
+    <string name="nav_title_categories">Resumen</string>
+    <string name="nav_title_settings">Configuración</string>
 </resources>
 
