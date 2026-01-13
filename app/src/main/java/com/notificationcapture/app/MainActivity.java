@@ -70,8 +70,9 @@ public class MainActivity extends AppCompatActivity {
                 } else if (itemId == R.id.nav_history) {
                     selectedFragment = new HistorialFragment();
                     changeFabAddView(View.VISIBLE, getApplicationContext());
-                } else if (itemId == R.id.fabAdd) {
+                } else if (itemId == R.id.fabAddInvisible) {
                     selectedFragment = new AgregarFragment();
+                    changeFabAddView(View.INVISIBLE, getApplicationContext());
                 } else if (itemId == R.id.nav_categories) {
                     selectedFragment = new CategoriasFragment();
                     changeFabAddView(View.VISIBLE, getApplicationContext());
@@ -95,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 isNavigatingProgrammatically = true;
                 loadFragment(new AgregarFragment());
-                bottomNavigation.setSelectedItemId(R.id.fabAdd);
+                bottomNavigation.setSelectedItemId(R.id.fabAddInvisible);
                 changeFabAddView(View.INVISIBLE, getApplicationContext());
             }
         });
@@ -114,23 +115,23 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadFragment(Fragment fragment) {
         try {
-        // Obtener el fragmento actual
-        Fragment currentFragment = fragmentManager.findFragmentById(R.id.frameLayout);
+            // Obtener el fragmento actual
+            Fragment currentFragment = fragmentManager.findFragmentById(R.id.frameLayout);
 
-        // Si es el mismo tipo de fragmento, no hacer nada
-        if (currentFragment != null && currentFragment.getClass().equals(fragment.getClass())) {
-            return;
-        }
+            // Si es el mismo tipo de fragmento, no hacer nada
+            if (currentFragment != null && currentFragment.getClass().equals(fragment.getClass())) {
+                return;
+            }
 
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.frameLayout, fragment);
+            FragmentTransaction transaction = fragmentManager.beginTransaction();
+            transaction.replace(R.id.frameLayout, fragment);
 
-        // Solo agregar al back stack si no es el fragmento inicial (Inicio)
-        if (!(fragment instanceof InicioFragment)) {
-            transaction.addToBackStack(fragment.getClass().getSimpleName());
-        }
+            // Solo agregar al back stack si no es el fragmento inicial (Inicio)
+            if (!(fragment instanceof InicioFragment)) {
+                transaction.addToBackStack(fragment.getClass().getSimpleName());
+            }
 
-        transaction.commit();
+            transaction.commit();
         } catch (Exception e) {
             // Toast.makeText(context, "Error: " + e.getMessage(), 5);
             Dialog.show("Error: " + e.getMessage());
@@ -140,7 +141,8 @@ public class MainActivity extends AppCompatActivity {
     private void syncBottomNavigationWithCurrentFragment() {
 
         Fragment currentFragment = fragmentManager.findFragmentById(R.id.frameLayout);
-        if (currentFragment == null) return;
+        if (currentFragment == null)
+            return;
 
         int selectedItemId = R.id.nav_home; // Default
 
@@ -151,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
             selectedItemId = R.id.nav_history;
             changeFabAddView(View.VISIBLE, getApplicationContext());
         } else if (currentFragment instanceof AgregarFragment) {
-            selectedItemId = R.id.fabAdd;
+            selectedItemId = R.id.fabAddInvisible;
             changeFabAddView(View.INVISIBLE, getApplicationContext());
         } else if (currentFragment instanceof CategoriasFragment) {
             selectedItemId = R.id.nav_categories;

@@ -12,6 +12,12 @@
         android:icon="@android:drawable/ic_menu_recent_history"
         android:title="Historial" />
 
+    <item
+        android:id="@+id/fabAddInvisible"
+        android:visible="false"
+        android:icon="@android:color/transparent"
+        android:title="" />
+
 
     <item
         android:id="@+id/nav_categories"
