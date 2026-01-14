@@ -76,10 +76,9 @@ public class CustomLanguageSwitch extends ConstraintLayout {
             animateToggle(isRightSelected);
         } else {
             updateUI(isRightSelected);
-        }
-
-        if (listener != null) {
-            listener.onCheckedChanged(isRightSelected);
+            if (listener != null) {
+                listener.onCheckedChanged(isRightSelected);
+            }
         }
     }
 
@@ -98,6 +97,30 @@ public class CustomLanguageSwitch extends ConstraintLayout {
         androidx.transition.AutoTransition transition = new androidx.transition.AutoTransition();
         transition.setDuration(250);
         transition.setInterpolator(new AccelerateDecelerateInterpolator());
+        transition.addListener(new androidx.transition.Transition.TransitionListener() {
+            @Override
+            public void onTransitionStart(@NonNull androidx.transition.Transition transition) {
+            }
+
+            @Override
+            public void onTransitionEnd(@NonNull androidx.transition.Transition transition) {
+                if (listener != null) {
+                    listener.onCheckedChanged(isRightSelected);
+                }
+            }
+
+            @Override
+            public void onTransitionCancel(@NonNull androidx.transition.Transition transition) {
+            }
+
+            @Override
+            public void onTransitionPause(@NonNull androidx.transition.Transition transition) {
+            }
+
+            @Override
+            public void onTransitionResume(@NonNull androidx.transition.Transition transition) {
+            }
+        });
         TransitionManager.beginDelayedTransition(this, transition);
         constraintSet.applyTo(this);
 

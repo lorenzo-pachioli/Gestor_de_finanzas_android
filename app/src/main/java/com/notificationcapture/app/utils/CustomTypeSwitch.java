@@ -116,13 +116,15 @@ public class CustomTypeSwitch extends ConstraintLayout {
         colorAnimation.setDuration(250);
         colorAnimation.addUpdateListener(animator -> {
             int color = (int) animator.getAnimatedValue();
-            switchTrack.setBackgroundTintList(ColorStateList.valueOf(color));
+            switchThumb.setBackgroundTintList(ColorStateList.valueOf(color));
+            int unselectedColor = ContextCompat.getColor(getContext(), R.color.grey);
+            int whiteColor = ContextCompat.getColor(getContext(), R.color.white);
             if (isEgreso) {
-                tvEgreso.setTextColor(color);
-                tvIngreso.setTextColor(ContextCompat.getColor(getContext(), R.color.grey));
+                tvEgreso.setTextColor(whiteColor);
+                tvIngreso.setTextColor(unselectedColor);
             } else {
-                tvIngreso.setTextColor(color);
-                tvEgreso.setTextColor(ContextCompat.getColor(getContext(), R.color.grey));
+                tvIngreso.setTextColor(whiteColor);
+                tvEgreso.setTextColor(unselectedColor);
             }
         });
         colorAnimation.start();
@@ -132,22 +134,25 @@ public class CustomTypeSwitch extends ConstraintLayout {
         ConstraintSet constraintSet = new ConstraintSet();
         constraintSet.clone(this);
 
+        int unselectedColor = ContextCompat.getColor(getContext(), R.color.grey);
+        int whiteColor = ContextCompat.getColor(getContext(), R.color.white);
+
         if (isEgreso) {
             constraintSet.connect(R.id.switch_thumb, ConstraintSet.START, ConstraintSet.GONE, ConstraintSet.START);
             constraintSet.connect(R.id.switch_thumb, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
 
             int red = ContextCompat.getColor(getContext(), R.color.red);
-            switchTrack.setBackgroundTintList(ColorStateList.valueOf(red));
-            tvEgreso.setTextColor(red);
-            tvIngreso.setTextColor(ContextCompat.getColor(getContext(), R.color.grey));
+            switchThumb.setBackgroundTintList(ColorStateList.valueOf(red));
+            tvEgreso.setTextColor(whiteColor);
+            tvIngreso.setTextColor(unselectedColor);
         } else {
             constraintSet.connect(R.id.switch_thumb, ConstraintSet.END, ConstraintSet.GONE, ConstraintSet.END);
             constraintSet.connect(R.id.switch_thumb, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
 
             int green = ContextCompat.getColor(getContext(), R.color.green);
-            switchTrack.setBackgroundTintList(ColorStateList.valueOf(green));
-            tvIngreso.setTextColor(green);
-            tvEgreso.setTextColor(ContextCompat.getColor(getContext(), R.color.grey));
+            switchThumb.setBackgroundTintList(ColorStateList.valueOf(green));
+            tvIngreso.setTextColor(whiteColor);
+            tvEgreso.setTextColor(unselectedColor);
         }
         constraintSet.applyTo(this);
     }
