@@ -19,6 +19,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.notificationcapture.app.utils.CustomTypeSwitch;
+import com.notificationcapture.app.utils.CustomLanguageSwitch;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
@@ -54,9 +55,7 @@ public class PerfilFragment extends Fragment {
     private ArrayAdapter<String> walletAdapter;
     private CustomTypeSwitch swCatType;
     private SwitchCompat swDarkMode;
-    private SwitchCompat swLanguage;
-    private TextView tvEspanol;
-    private TextView tvEnglish;
+    private CustomLanguageSwitch swLanguage;
 
     // Listas para mantener referencia a los objetos actuales
     private List<Category> currentCategories;
@@ -89,8 +88,6 @@ public class PerfilFragment extends Fragment {
         swCatType = view.findViewById(R.id.swCatType);
         swDarkMode = view.findViewById(R.id.switchDarkMode);
         swLanguage = view.findViewById(R.id.swLanguage);
-        tvEspanol = view.findViewById(R.id.tvEspanol);
-        tvEnglish = view.findViewById(R.id.tvEnglish);
         Button btnAddCategory = view.findViewById(R.id.btnAddCategory);
         // Button btnAddWallet = view.findViewById(R.id.btnAddWallet);
         Button btnAddCreditCard = view.findViewById(R.id.btnAddCreditCard);
@@ -121,12 +118,12 @@ public class PerfilFragment extends Fragment {
 
         // Setup Language Switch - Load saved language
         String savedLanguage = prefs.getString("app_language", "es"); // Default to Spanish
-        swLanguage.setChecked(savedLanguage.equals("en"));
+        swLanguage.setChecked(savedLanguage.equals("en"), false);
 
         swCatType.setOnCheckedChangeListener(this::updateCategoryTypeUI);
 
         // Setup Language Switch
-        swLanguage.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        swLanguage.setOnCheckedChangeListener(isChecked -> {
             String newLanguage = isChecked ? "en" : "es";
             String currentLanguage = prefs.getString("app_language", "es");
 
@@ -142,9 +139,10 @@ public class PerfilFragment extends Fragment {
             updateLanguageUI(isChecked);
         });
 
-        // Listeners para etiquetas del switch de idioma
-        tvEspanol.setOnClickListener(v -> swLanguage.setChecked(false));
-        tvEnglish.setOnClickListener(v -> swLanguage.setChecked(true));
+        // Initial state for language switch
+        String currentLang = prefs.getString("app_language", "es");
+        swLanguage.setChecked(currentLang.equals("en"), false);
+        updateLanguageUI(currentLang.equals("en"));
 
         // Setup Spinner Listeners
         setupSpinnerListeners();
@@ -158,15 +156,7 @@ public class PerfilFragment extends Fragment {
     }
 
     private void updateLanguageUI(boolean isEnglish) {
-        if (isEnglish) {
-            // English selected (Switch ON, Right)
-            tvEspanol.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_unselected));
-            tvEnglish.setTextColor(ContextCompat.getColor(requireContext(), R.color.end_color));
-        } else {
-            // Español selected (Switch OFF, Left)
-            tvEspanol.setTextColor(ContextCompat.getColor(requireContext(), R.color.start_color));
-            tvEnglish.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_unselected));
-        }
+        // Switch handles its own UI
     }
 
     private void setLocale(String languageCode) {

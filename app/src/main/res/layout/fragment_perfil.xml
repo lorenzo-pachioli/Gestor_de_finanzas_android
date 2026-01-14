@@ -89,57 +89,11 @@
 
         </LinearLayout>
 
-        <!-- Switch Español/English -->
-        <LinearLayout
+        <com.notificationcapture.app.utils.CustomLanguageSwitch
+            android:id="@+id/swLanguage"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginBottom="20dp"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/tvEspanol"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingEnd="16dp"
-                android:text="@string/espanol"
-                android:textColor="@color/start_color"
-                android:textSize="25sp"
-                android:textStyle="bold" />
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                tools:context=".MainActivity">
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/swLanguage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:thumb="@drawable/selector_switch_thumb_accent"
-                    app:thumbTint="@null"
-                    app:trackTint="@null"
-                    app:track="@drawable/track"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintRight_toRightOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintVertical_bias="0.466" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <TextView
-                android:id="@+id/tvEnglish"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingStart="16dp"
-                android:text="@string/english"
-                android:textColor="@color/grey_unselected"
-                android:textSize="25sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
+            android:layout_marginBottom="20dp" />
 
         <View
             android:layout_width="match_parent"
