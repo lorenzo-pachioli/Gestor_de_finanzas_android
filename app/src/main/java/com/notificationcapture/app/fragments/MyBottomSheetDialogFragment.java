@@ -55,8 +55,21 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
-        // Infla el layout que creaste
         return inflater.inflate(R.layout.bottom_sheet_layout, container, false);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (getDialog() != null) {
+            View bottomSheet = getDialog().findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                com.google.android.material.bottomsheet.BottomSheetBehavior<View> behavior = com.google.android.material.bottomsheet.BottomSheetBehavior
+                        .from(bottomSheet);
+                behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+                behavior.setSkipCollapsed(true);
+            }
+        }
     }
 
     @Override
@@ -76,7 +89,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 android.widget.Toast.makeText(getContext(), "Mostrando " + notifications.size() + " items",
                         android.widget.Toast.LENGTH_SHORT).show();
 
-                adapter = new TransactionAdapter(notifications, item -> {
+                adapter = new TransactionAdapter(notifications, getChildFragmentManager(), item -> {
                     TransactionRepository repository = RepositoryProvider.getInstance().getTransactionRepository();
                     repository.deleteTransaction(item.getId());
                     notifications.remove(item);

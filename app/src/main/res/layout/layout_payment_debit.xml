@@ -16,6 +16,20 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerWallets"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnConfirmDebit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_button_rounded"
+        android:minHeight="50dp"
+        android:padding="5dp"
+        android:text="@string/confirmar"
+        android:textColor="@color/primary_main"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginTop="12dp" />
 
 </LinearLayout>

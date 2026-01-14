@@ -69,7 +69,7 @@ public class HistorialFragment extends Fragment {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        adapter = new TransactionAdapter(new ArrayList<>(), (item) -> {
+        adapter = new TransactionAdapter(new ArrayList<>(), getChildFragmentManager(), (item) -> {
             // Callback para eliminar notificación
             repository.deleteTransactionNotFiltered(item.getId());
             loadNotifications();

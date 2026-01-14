@@ -134,7 +134,7 @@ public class CategoriasFragment extends Fragment {
 
         // Ensure TransactionAdapter handles deletions if necessary, though mainly for
         // viewing here
-        detailsAdapter = new TransactionAdapter(new ArrayList<>(), item -> {
+        detailsAdapter = new TransactionAdapter(new ArrayList<>(), getChildFragmentManager(), item -> {
             // Optional: Implement deletion from details view if needed
             repository.deleteTransaction(item.getId());
             refreshData();

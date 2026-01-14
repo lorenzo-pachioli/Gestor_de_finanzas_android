@@ -1,5 +1,6 @@
 package com.notificationcapture.app.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +10,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.TextView;
+import android.graphics.Typeface;
+import androidx.core.content.ContextCompat;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -102,6 +105,20 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
         }).attach();
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (getDialog() != null) {
+            View bottomSheet = getDialog().findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                com.google.android.material.bottomsheet.BottomSheetBehavior<View> behavior = com.google.android.material.bottomsheet.BottomSheetBehavior
+                        .from(bottomSheet);
+                behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+                behavior.setSkipCollapsed(true);
+            }
+        }
+    }
+
     private class PaymentMethodAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         @NonNull
@@ -175,23 +192,35 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
 
     private class DebitViewHolder extends RecyclerView.ViewHolder {
         RecyclerView recyclerWallets;
+        Button btnConfirm;
+        com.notificationcapture.app.models.Wallets selectedWallet;
 
         DebitViewHolder(@NonNull View itemView) {
             super(itemView);
             recyclerWallets = itemView.findViewById(R.id.recyclerWallets);
+            btnConfirm = itemView.findViewById(R.id.btnConfirmDebit);
             recyclerWallets.setLayoutManager(new LinearLayoutManager(requireContext()));
         }
 
         void bind() {
             List<com.notificationcapture.app.models.Wallets> wallets = walletRepository.getAllWallets();
-            // Using a simple adapter for wallets directly here
             SimpleWalletAdapter adapter = new SimpleWalletAdapter(wallets, wallet -> {
+                selectedWallet = wallet;
+                // notify adapter to refresh colors? or just rely on the adapter's internal
+                // state
+            });
+            recyclerWallets.setAdapter(adapter);
+
+            btnConfirm.setOnClickListener(v -> {
+                if (selectedWallet == null) {
+                    Toast.makeText(requireContext(), "Por favor, selecciona una billetera", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if (listener != null) {
-                    listener.onPaymentMethodSelected(PaymentMethod.DEBITO, wallet.getId(), 1);
+                    listener.onPaymentMethodSelected(PaymentMethod.DEBITO, selectedWallet.getId(), 1);
                 }
                 dismiss();
             });
-            recyclerWallets.setAdapter(adapter);
         }
     }
 
@@ -258,6 +287,7 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
     private static class SimpleWalletAdapter extends RecyclerView.Adapter<SimpleWalletAdapter.ViewHolder> {
         private final List<com.notificationcapture.app.models.Wallets> items;
         private final OnItemClickListener listener;
+        private int selectedPosition = -1;
 
         interface OnItemClickListener {
             void onItemClick(com.notificationcapture.app.models.Wallets item);
@@ -271,7 +301,6 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            // Using simple list item
             View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent,
                     false);
             return new ViewHolder(view);
@@ -281,7 +310,25 @@ public class PaymentMethodBottomSheet extends BottomSheetDialogFragment {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             com.notificationcapture.app.models.Wallets item = items.get(position);
             holder.textView.setText(item.getAppName());
-            holder.itemView.setOnClickListener(v -> listener.onItemClick(item));
+
+            Context context = holder.itemView.getContext();
+            if (position == selectedPosition) {
+                holder.textView
+                        .setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.accent_main));
+                holder.textView.setTypeface(null, android.graphics.Typeface.BOLD);
+            } else {
+                holder.textView
+                        .setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.text_primary));
+                holder.textView.setTypeface(null, android.graphics.Typeface.NORMAL);
+            }
+
+            holder.itemView.setOnClickListener(v -> {
+                int previousSelected = selectedPosition;
+                selectedPosition = holder.getAdapterPosition();
+                notifyItemChanged(previousSelected);
+                notifyItemChanged(selectedPosition);
+                listener.onItemClick(item);
+            });
         }
 
         @Override

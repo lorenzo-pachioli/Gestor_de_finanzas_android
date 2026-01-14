@@ -25,11 +25,23 @@ public class WalletRepository implements GsonAccess {
     }
 
     private void initWalletDefaults(Context context) {
-        // Initialize Wallets if empty
-        if (!prefs.contains(KEY_WALLETS)) {
+        // Initialize Wallets if empty or not present
+        List<Wallets> existingWallets = getAllWallets();
+        if (existingWallets == null || existingWallets.isEmpty()) {
             try {
-                java.io.InputStream is = context.getResources().openRawResource(
-                        context.getResources().getIdentifier("wallets", "raw", context.getPackageName()));
+                // Try to get resource ID directly or via identifier
+                int resId = context.getResources().getIdentifier("wallets", "raw", context.getPackageName());
+
+                if (resId == 0) {
+                    // Fallback to direct reference if identifier fails
+                    // This assumes the R class is accessible, which it might not be in a generic
+                    // repo if not imported
+                    // But we can try to find it via reflection or just log the failure.
+                    android.util.Log.e("WalletRepository", "Could not find raw resource 'wallets'");
+                    return;
+                }
+
+                java.io.InputStream is = context.getResources().openRawResource(resId);
                 java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(is));
                 StringBuilder jsonBuilder = new StringBuilder();
                 String line;
@@ -42,11 +54,12 @@ public class WalletRepository implements GsonAccess {
                 }.getType();
                 List<Wallets> defaultWallets = gson.fromJson(jsonBuilder.toString(), type);
 
-                if (defaultWallets != null) {
+                if (defaultWallets != null && !defaultWallets.isEmpty()) {
                     saveWallets(defaultWallets);
+                    android.util.Log.d("WalletRepository", "Loaded " + defaultWallets.size() + " default wallets.");
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                android.util.Log.e("WalletRepository", "Error loading default wallets", e);
             }
         }
     }
@@ -118,10 +131,11 @@ public class WalletRepository implements GsonAccess {
         prefs.edit().putString(KEY_WALLETS, gson.toJson(wallets)).apply();
     }
 
-    public Wallets getWalletByPackageName(String title, String packageName){
+    public Wallets getWalletByPackageName(String title, String packageName) {
         List<Wallets> walletsList = getAllWallets();
-        for(Wallets wallet : walletsList){
-            if(wallet.getPackageName().equals(packageName)) return wallet;
+        for (Wallets wallet : walletsList) {
+            if (wallet.getPackageName().equals(packageName))
+                return wallet;
         }
         Wallets newWallet = new Wallets(title, packageName);
         walletsList.add(newWallet);

@@ -11,6 +11,7 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -47,10 +48,13 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     private OnDeleteClickListener deleteListener;
     private OnAddClickListener addListener;
     private boolean showAddButton;
+    private FragmentManager fragmentManager;
 
-    public TransactionAdapter(List<Transaction> transactions, OnDeleteClickListener deleteListener,
+    public TransactionAdapter(List<Transaction> transactions, FragmentManager fragmentManager,
+            OnDeleteClickListener deleteListener,
             OnAddClickListener addListener, boolean showAddButton) {
         this.transactions = transactions;
+        this.fragmentManager = fragmentManager;
         this.deleteListener = deleteListener;
         this.addListener = addListener;
         this.showAddButton = showAddButton;
@@ -131,7 +135,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             });
 
             holder.tvPaymentMethod.setOnClickListener(v -> {
-                showPaymentMethodSelector(context, holder.tvPaymentMethod, item);
+                showPaymentMethodSelector(context, holder, item);
             });
 
             // *** MODIFICADO: Resetear categoría cuando cambia el tipo ***
@@ -293,37 +297,68 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             holder.tvCategorySelector.setText(option);
         });
 
-        if (context instanceof androidx.fragment.app.FragmentActivity) {
-            sheet.show(((androidx.fragment.app.FragmentActivity) context).getSupportFragmentManager(),
-                    "CategorySelector");
+        if (fragmentManager != null) {
+            sheet.show(fragmentManager, "CategorySelector");
         }
     }
 
-    private void showPaymentMethodSelector(Context context, TextView targetView, Transaction item) {
-        if (context instanceof androidx.fragment.app.FragmentActivity) {
-            PaymentMethodBottomSheet bottomSheet = new PaymentMethodBottomSheet();
+    private void showPaymentMethodSelector(Context context, ViewHolder holder, Transaction item) {
+        PaymentMethodBottomSheet bottomSheet = new PaymentMethodBottomSheet();
 
-            if (item instanceof Credit c) {
-                bottomSheet.setRestrictedMode(true);
-                bottomSheet.setInitialInstallments(c.getInstallments());
-            } else {
-                bottomSheet.setRestrictedMode(false);
+        if (item instanceof Credit c) {
+            bottomSheet.setRestrictedMode(true);
+            bottomSheet.setInitialInstallments(c.getInstallments());
+        }
+
+        bottomSheet.setListener((method, detailId, installments) -> {
+            // Leer valores actuales de la UI para no perder cambios no guardados
+            String currentTitle = holder.etTitle.getText().toString();
+            String currentText = holder.etText.getText().toString();
+            boolean currentIsEgreso = holder.switchType.isChecked();
+            IngresoOEgreso currentType = currentIsEgreso ? IngresoOEgreso.EGRESO : IngresoOEgreso.INGRESO;
+            boolean currentIsNotification = holder.switchIsNotification.isChecked();
+
+            String amountStr = holder.etAmount.getText().toString();
+            Double currentAmount = null;
+            if (!amountStr.isEmpty()) {
+                try {
+                    String clean = amountStr.replace(".", "").replace(",", ".");
+                    currentAmount = Double.parseDouble(clean);
+                } catch (Exception e) {
+                }
             }
 
-            bottomSheet.setListener((method, detailId, installments) -> {
-                item.setPaymentMethod(method);
+            Transaction newItem;
+            if (method == PaymentMethod.EFECTIVO) {
+                newItem = new Cash(currentTitle, currentText, item.getTimestamp(), currentType,
+                        holder.selectedCategory.getId(), currentIsNotification);
+            } else if (method == PaymentMethod.DEBITO) {
+                newItem = new Debit(currentTitle, currentText, item.getTimestamp(), currentType,
+                        holder.selectedCategory.getId(), detailId, currentIsNotification);
+            } else {
+                // CREDITO
+                String groupId = (item instanceof Credit) ? ((Credit) item).getInstallmentGroupId() : null;
+                int currentInstallment = (item instanceof Credit) ? ((Credit) item).getCurrentInstallment() : 1;
+                newItem = new Credit(currentTitle, currentText, item.getTimestamp(), currentType,
+                        holder.selectedCategory.getId(), detailId, installments, currentInstallment, groupId,
+                        currentIsNotification);
+            }
 
-                if (item instanceof Credit c) {
-                    c.setCreditCardId(detailId);
-                    c.setInstallments(installments);
-                } else if (item instanceof Debit d) {
-                    d.setWalletId(detailId);
-                }
+            // Preservar ID y monto procesado
+            newItem.setId(item.getId());
+            newItem.setAmount(currentAmount);
+            newItem.setExpanded(true);
 
-                targetView.setText(getPaymentMethodText(item));
-            });
-            bottomSheet.show(((androidx.fragment.app.FragmentActivity) context).getSupportFragmentManager(),
-                    "PaymentMethodSelector");
+            // Reemplazar en la lista
+            int index = transactions.indexOf(item);
+            if (index != -1) {
+                transactions.set(index, newItem);
+                notifyItemChanged(index);
+            }
+        });
+
+        if (fragmentManager != null) {
+            bottomSheet.show(fragmentManager, "PaymentMethodSelector");
         }
     }
 

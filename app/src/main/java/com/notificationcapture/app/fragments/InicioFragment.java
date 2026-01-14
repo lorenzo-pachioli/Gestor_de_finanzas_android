@@ -70,7 +70,7 @@ public class InicioFragment extends Fragment {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        adapter = new TransactionAdapter(new ArrayList<>(), item -> {
+        adapter = new TransactionAdapter(new ArrayList<>(), getChildFragmentManager(), item -> {
             repository.deleteTransaction(item.getId());
             loadNotifications();
         }, null, false); // showAddButton = false para transacciones aprobadas
