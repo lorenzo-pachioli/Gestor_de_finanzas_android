@@ -199,7 +199,7 @@ public class AgregarFragment extends Fragment {
         for (int i = 1; i <= totalInstallments; i++) {
             long itemTimestamp = calendar.getTimeInMillis();
             String itemTitle = title + (totalInstallments > 1 ? " (" + i + "/" + totalInstallments + ")" : "");
-            String itemDescription = getString(R.string.sin_descripcion);
+            String itemDescription = "";
 
             Transaction transaction = null;
 

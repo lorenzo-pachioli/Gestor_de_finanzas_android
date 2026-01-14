@@ -208,7 +208,12 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             }
             holder.tvCategory.setText(displayCat.getName());
             holder.tvTitle.setText(item.getTitle());
-            holder.tvText.setText(item.getText());
+            if (item.getText() == null || item.getText().trim().isEmpty()) {
+                holder.tvText.setVisibility(View.GONE);
+            } else {
+                holder.tvText.setVisibility(View.VISIBLE);
+                holder.tvText.setText(item.getText());
+            }
 
             // Mostrar/Ocultar tag de notificación
             holder.tvNotificacion.setVisibility(item.isNotification() ? View.VISIBLE : View.GONE);

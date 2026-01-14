@@ -297,10 +297,6 @@ public class CategoriasFragment extends Fragment {
         bottomSheet.show(getParentFragmentManager(), "CategoryDetails");
     }
 
-    private void hideDetails() {
-        // Legacy views tvDetailsHeader and tvSelectedCategory were removed from layout
-    }
-
     private void refreshData() {
         int selectedMonth = spinnerMonth.getSelectedItemPosition();
         String selectedYearStr = (String) spinnerYear.getSelectedItem();

@@ -69,8 +69,8 @@
     <string name="app_name_placeholder">App Name</string>
     <string name="categoria_placeholder">Category</string>
     <string name="slash">/</string>
-    <string name="notification_title_placeholder">Notification Title</string>
-    <string name="notification_text_placeholder">Notification text content</string>
+    <string name="notification_title_placeholder">Title</string>
+    <string name="notification_text_placeholder">Description</string>
     <string name="amount_placeholder">$1,000.00</string>
     <string name="date_placeholder">01/01/2024 12:00:00</string>
     <string name="editar_notificacion">Edit Notification</string>
