@@ -20,13 +20,59 @@
             android:textSize="24sp"
             android:textStyle="bold" />
 
-        <TextView
+<!--        <TextView-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="@string/descripcion_agregar"-->
+<!--            android:textSize="14sp"-->
+<!--            android:textColor="@color/text_secondary"-->
+<!--            android:layout_marginBottom="24dp"/>-->
+
+<!--        Monto-->
+
+<!--        <TextView-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="@string/monto"-->
+<!--            android:textSize="14sp"-->
+<!--            android:textStyle="bold"-->
+<!--            android:textColor="@color/text_primary"-->
+<!--            android:layout_marginBottom="8dp"/>-->
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/descripcion_agregar"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="24dp"/>
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="30dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:text="$"
+                android:textColor="@color/text_secondary"
+                android:textSize="46sp"
+                android:textStyle="normal" />
+
+            <EditText
+                android:id="@+id/etAmount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:digits="0123456789.,"
+                android:hint="0"
+                android:imeOptions="actionDone"
+                android:inputType="phone"
+                android:minHeight="48dp"
+                android:padding="4dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/grey_unselected"
+                android:textSize="56sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
         <!-- Tipo de Transacción -->
         <TextView
@@ -157,30 +203,6 @@
             android:maxLines="1"
             android:layout_marginBottom="20dp"/>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/monto"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp"/>
-
-        <EditText
-            android:id="@+id/etAmount"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:background="@drawable/bg_card_rounded"
-            android:hint="0.00"
-            android:inputType="phone"
-            android:digits="0123456789.,"
-            android:imeOptions="actionDone"
-            android:minHeight="48dp"
-            android:padding="12dp"
-            android:textColor="@color/text_secondary"
-            android:textColorHint="@color/text_secondary" />
-
         <!-- Selector de Fecha -->
         <TextView
             android:layout_width="match_parent"
@@ -229,15 +251,15 @@
             android:minHeight="50dp" />
 
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/campos_obligatorios"
-            android:textSize="12sp"
-            android:textColor="@color/text_secondary"
-            android:textStyle="italic"
-            android:layout_marginTop="12dp"
-            android:gravity="center"/>
+<!--        <TextView-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="@string/campos_obligatorios"-->
+<!--            android:textSize="12sp"-->
+<!--            android:textColor="@color/text_secondary"-->
+<!--            android:textStyle="italic"-->
+<!--            android:layout_marginTop="12dp"-->
+<!--            android:gravity="center"/>-->
 
     </LinearLayout>
 
