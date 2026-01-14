@@ -11,7 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SwitchCompat;
+import com.notificationcapture.app.utils.CustomTypeSwitch;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.datepicker.MaterialDatePicker;
@@ -40,9 +40,7 @@ public class AgregarFragment extends Fragment {
 
     private EditText etTitle;
     private EditText etAmount;
-    private SwitchCompat swType;
-    private TextView tvIngreso;
-    private TextView tvEgreso;
+    private CustomTypeSwitch swType;
     private Spinner spinnerCategory;
     private Button btnCreate;
     private TextInputEditText etDate;
@@ -94,8 +92,6 @@ public class AgregarFragment extends Fragment {
             return false;
         });
         swType = view.findViewById(R.id.swType);
-        tvIngreso = view.findViewById(R.id.tvIngreso);
-        tvEgreso = view.findViewById(R.id.tvEgreso);
         spinnerCategory = view.findViewById(R.id.spinnerCategory);
         btnCreate = view.findViewById(R.id.btnCreate);
         etDate = view.findViewById(R.id.etDate);
@@ -108,23 +104,11 @@ public class AgregarFragment extends Fragment {
         tvPaymentMethod.setOnClickListener(v -> showPaymentMethodBottomSheet());
 
         // Configurar listener del switch
-        swType.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            updateToggleUI(isChecked);
-        });
+        swType.setOnCheckedChangeListener(this::updateToggleUI);
 
-        // Listeners para los textos
-        tvIngreso.setOnClickListener(v -> swType.setChecked(false));
-        tvEgreso.setOnClickListener(v -> swType.setChecked(true));
-
-        // Estado inicial (Egreso = true/checked, Ingreso = false/unchecked)
-        // Por defecto queremos que inicie en Egreso si así estaba antes, o lo que
-        // definamos.
-        // El xml tiene checked="false" (Ingreso). Si queremos Egreso por defecto:
-        swType.setChecked(true); // Inicia en Egreso
+        // Estado inicial (Egreso = true/checked)
+        swType.setChecked(true, false); // Inicia en Egreso sin animación
         updateToggleUI(true);
-
-        // Configurar spinner de categorías
-        // updateToggleUI ya llama a configurarSpinnerCat
 
         // Configurar selector de fecha
         etDate.setOnClickListener(v -> showDatePicker());
@@ -133,17 +117,6 @@ public class AgregarFragment extends Fragment {
     }
 
     private void updateToggleUI(boolean isEgreso) {
-        if (isEgreso) {
-            // Modo Egreso (Switch ON, Derecha)
-            tvIngreso.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_unselected));
-            tvEgreso.setTextColor(ContextCompat.getColor(requireContext(), R.color.red)); // Usar color definido si
-                                                                                          // existe, o hardcodeado
-                                                                                          // temporalmente si no carga
-        } else {
-            // Modo Ingreso (Switch OFF, Izquierda)
-            tvIngreso.setTextColor(ContextCompat.getColor(requireContext(), R.color.green));
-            tvEgreso.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_unselected));
-        }
         configurarSpinnerCat();
     }
 
@@ -267,7 +240,7 @@ public class AgregarFragment extends Fragment {
         tvPaymentMethod.setText("Efectivo");
 
         spinnerCategory.setSelection(0);
-        swType.setChecked(true); // Reset to Egreso
+        swType.setChecked(true, true); // Reset to Egreso with animation
         updateToggleUI(true);
         // Resetear fecha a hoy
         selectedDateTimestamp = System.currentTimeMillis();

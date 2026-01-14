@@ -18,8 +18,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SwitchCompat;
+import com.notificationcapture.app.utils.CustomTypeSwitch;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import static android.content.Context.MODE_PRIVATE;
@@ -51,11 +52,9 @@ public class PerfilFragment extends Fragment {
     private Spinner spinnerCreditCards;
     private ArrayAdapter<String> categoryAdapter;
     private ArrayAdapter<String> walletAdapter;
-    private SwitchCompat swCatType;
+    private CustomTypeSwitch swCatType;
     private SwitchCompat swDarkMode;
     private SwitchCompat swLanguage;
-    private TextView tvCatIngreso;
-    private TextView tvCatEgreso;
     private TextView tvEspanol;
     private TextView tvEnglish;
 
@@ -90,8 +89,6 @@ public class PerfilFragment extends Fragment {
         swCatType = view.findViewById(R.id.swCatType);
         swDarkMode = view.findViewById(R.id.switchDarkMode);
         swLanguage = view.findViewById(R.id.swLanguage);
-        tvCatIngreso = view.findViewById(R.id.tvCatIngreso);
-        tvCatEgreso = view.findViewById(R.id.tvCatEgreso);
         tvEspanol = view.findViewById(R.id.tvEspanol);
         tvEnglish = view.findViewById(R.id.tvEnglish);
         Button btnAddCategory = view.findViewById(R.id.btnAddCategory);
@@ -126,13 +123,7 @@ public class PerfilFragment extends Fragment {
         String savedLanguage = prefs.getString("app_language", "es"); // Default to Spanish
         swLanguage.setChecked(savedLanguage.equals("en"));
 
-        swCatType.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            updateCategoryTypeUI(isChecked);
-        });
-
-        // Listeners para etiquetas del switch de categorías
-        tvCatIngreso.setOnClickListener(v -> swCatType.setChecked(false));
-        tvCatEgreso.setOnClickListener(v -> swCatType.setChecked(true));
+        swCatType.setOnCheckedChangeListener(this::updateCategoryTypeUI);
 
         // Setup Language Switch
         swLanguage.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -246,17 +237,6 @@ public class PerfilFragment extends Fragment {
     }
 
     private void updateCategoryTypeUI(boolean isEgreso) {
-
-        if (isEgreso) {
-            // Modo Egreso (Switch ON, Derecha)
-            tvCatIngreso.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_unselected));
-            tvCatEgreso.setTextColor(ContextCompat.getColor(requireContext(), R.color.red));
-        } else {
-            // Modo Ingreso (Switch OFF, Izquierda)
-            tvCatIngreso.setTextColor(ContextCompat.getColor(requireContext(), R.color.green));
-            tvCatEgreso.setTextColor(ContextCompat.getColor(requireContext(), R.color.grey_unselected));
-        }
-
         loadCategories();
     }
 

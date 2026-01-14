@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.notificationcapture.app.utils.CustomTypeSwitch;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import android.widget.TextView;
@@ -107,7 +108,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
 
             // Configurar Switch de Tipo
             boolean isIngreso = item.getType() == IngresoOEgreso.INGRESO;
-            holder.switchType.setChecked(!isIngreso); // checked = Egreso, unchecked = Ingreso
+            holder.switchType.setChecked(!isIngreso, true); // checked = Egreso, unchecked = Ingreso
 
             // *** NUEVO: Inicializar la categoría seleccionada ***
             Category currentCat = categoryRepo.getCategoryById(item.getCategoryId());
@@ -139,7 +140,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             });
 
             // *** MODIFICADO: Resetear categoría cuando cambia el tipo ***
-            holder.switchType.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            holder.switchType.setOnCheckedChangeListener(isChecked -> {
                 updateToggleUI(holder, isChecked);
 
                 // Resetear a "Otros" del tipo correspondiente cuando cambia el tipo
@@ -148,10 +149,6 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 holder.selectedCategory = new Category("Otros", newType);
                 holder.tvCategorySelector.setText("Otros");
             });
-
-            // Listeners para los textos
-            holder.tvIngreso.setOnClickListener(v -> holder.switchType.setChecked(false));
-            holder.tvEgreso.setOnClickListener(v -> holder.switchType.setChecked(true));
 
             // *** MODIFICADO: Usar selectedCategory en lugar de crear nueva ***
             holder.btnSave.setOnClickListener(v -> {
@@ -266,14 +263,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     }
 
     private void updateToggleUI(ViewHolder holder, boolean isEgreso) {
-        Context context = holder.itemView.getContext();
-        if (isEgreso) {
-            holder.tvIngreso.setTextColor(ContextCompat.getColor(context, R.color.grey_unselected));
-            holder.tvEgreso.setTextColor(ContextCompat.getColor(context, R.color.red));
-        } else {
-            holder.tvIngreso.setTextColor(ContextCompat.getColor(context, R.color.green));
-            holder.tvEgreso.setTextColor(ContextCompat.getColor(context, R.color.grey_unselected));
-        }
+        // Switch handles its own UI now
     }
 
     // *** MODIFICADO: Recibe ViewHolder para actualizar selectedCategory ***
@@ -422,9 +412,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         EditText etTitle;
         EditText etText;
         EditText etAmount;
-        SwitchCompat switchType;
-        TextView tvIngreso;
-        TextView tvEgreso;
+        CustomTypeSwitch switchType;
         TextView tvCategorySelector;
         TextView tvPaymentMethod;
         SwitchCompat switchIsNotification;
@@ -454,8 +442,6 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             etText = itemView.findViewById(R.id.etText);
             etAmount = itemView.findViewById(R.id.etAmount);
             switchType = itemView.findViewById(R.id.switchType);
-            tvIngreso = itemView.findViewById(R.id.tvIngreso);
-            tvEgreso = itemView.findViewById(R.id.tvEgreso);
             tvCategorySelector = itemView.findViewById(R.id.tvCategorySelector);
             tvPaymentMethod = itemView.findViewById(R.id.tvPaymentMethod);
             switchIsNotification = itemView.findViewById(R.id.switchIsNotification);
