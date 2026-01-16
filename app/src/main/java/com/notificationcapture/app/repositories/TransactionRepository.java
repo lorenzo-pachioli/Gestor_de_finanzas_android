@@ -210,10 +210,26 @@ public class TransactionRepository implements GsonAccess {
     }
 
     public void updateTransaction(Transaction updatedTransaction) {
-        List<Transaction> transactionList = getAllTransactions();
-        String groupId = updatedTransaction instanceof Credit c ? c.getInstallmentGroupId() : null;
+        boolean updatedInApproved = updateTransactionInSpecificList(KEY_NOTIFICATIONS, updatedTransaction);
+        boolean updatedInNotFiltered = updateTransactionInSpecificList(KEY_NOTIFICATIONS_NOT_FILTERED,
+                updatedTransaction);
 
+        if (!updatedInApproved && !updatedInNotFiltered) {
+            // Optional: Log or handle case where transaction wasn't found in either list
+        }
+    }
+
+    private boolean updateTransactionInSpecificList(String key, Transaction updatedTransaction) {
+        List<Transaction> transactionList;
+        if (KEY_NOTIFICATIONS.equals(key)) {
+            transactionList = getAllTransactions();
+        } else {
+            transactionList = getAllTransactionNotFiltered();
+        }
+
+        String groupId = updatedTransaction instanceof Credit c ? c.getInstallmentGroupId() : null;
         boolean found = false;
+
         for (int i = 0; i < transactionList.size(); i++) {
             Transaction current = transactionList.get(i);
 
@@ -222,7 +238,6 @@ public class TransactionRepository implements GsonAccess {
                 Credit updatedCredit = (Credit) updatedTransaction;
 
                 // Update shared fields
-                // c.setTitle(updatedCredit.getTitle());
                 c.setText(updatedCredit.getText());
                 c.setCategoryId(updatedTransaction.getCategoryId());
                 c.setAmount(updatedCredit.getAmount());
@@ -240,13 +255,13 @@ public class TransactionRepository implements GsonAccess {
                 found = true;
                 break; // Unique ID match, we can stop if not updating a group
             }
-            // If it IS a group update, we don't break, we continue to find all siblings
         }
 
         if (found) {
             String json = gson.toJson(transactionList);
-            prefs.edit().putString(KEY_NOTIFICATIONS, json).apply();
+            prefs.edit().putString(key, json).apply();
         }
+        return found;
     }
 
     public void clearAllTransaction() {
