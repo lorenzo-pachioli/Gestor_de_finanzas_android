@@ -37,21 +37,28 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
         return fragment;
     }
 
-//    public static SelectorBottomSheet newInstance(String title, List<String> options, String selectedOption) {
-//        // Fallback or simple version for non-SpinnerDisplayable lists (like Strings)
-//        // We can just keep it for backward compatibility if needed, or refactor all
-//        // calls.
-//        SelectorBottomSheet fragment = new SelectorBottomSheet();
-//        Bundle args = new Bundle();
-//        args.putString(ARG_TITLE, title);
-//        args.putStringArray(ARG_OPTIONS, options.toArray(new String[0]));
-//        args.putString(ARG_SELECTED, selectedOption);
-//        fragment.setArguments(args);
-//        return fragment;
-//    }
+    // public static SelectorBottomSheet newInstance(String title, List<String>
+    // options, String selectedOption) {
+    // // Fallback or simple version for non-SpinnerDisplayable lists (like Strings)
+    // // We can just keep it for backward compatibility if needed, or refactor all
+    // // calls.
+    // SelectorBottomSheet fragment = new SelectorBottomSheet();
+    // Bundle args = new Bundle();
+    // args.putString(ARG_TITLE, title);
+    // args.putStringArray(ARG_OPTIONS, options.toArray(new String[0]));
+    // args.putString(ARG_SELECTED, selectedOption);
+    // fragment.setArguments(args);
+    // return fragment;
+    // }
 
     public void setOnOptionSelectedListener(OnOptionSelectedListener listener) {
         this.listener = listener;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setStyle(BottomSheetDialogFragment.STYLE_NORMAL, R.style.FullScreenBottomSheetDialog);
     }
 
     @Nullable
@@ -59,6 +66,22 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.bottom_sheet_layout, container, false);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (getDialog() != null) {
+            View bottomSheet = getDialog().findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                bottomSheet.getLayoutParams().width = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+                com.google.android.material.bottomsheet.BottomSheetBehavior<View> behavior = com.google.android.material.bottomsheet.BottomSheetBehavior
+                        .from(bottomSheet);
+                behavior.setMaxWidth(android.view.ViewGroup.LayoutParams.MATCH_PARENT);
+                behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+                behavior.setSkipCollapsed(true);
+            }
+        }
     }
 
     @Override

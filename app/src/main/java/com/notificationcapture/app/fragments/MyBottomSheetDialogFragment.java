@@ -51,6 +51,12 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         return fragment;
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setStyle(BottomSheetDialogFragment.STYLE_NORMAL, R.style.FullScreenBottomSheetDialog);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -64,8 +70,10 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         if (getDialog() != null) {
             View bottomSheet = getDialog().findViewById(com.google.android.material.R.id.design_bottom_sheet);
             if (bottomSheet != null) {
+                bottomSheet.getLayoutParams().width = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
                 com.google.android.material.bottomsheet.BottomSheetBehavior<View> behavior = com.google.android.material.bottomsheet.BottomSheetBehavior
                         .from(bottomSheet);
+                behavior.setMaxWidth(android.view.ViewGroup.LayoutParams.MATCH_PARENT);
                 behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
                 behavior.setSkipCollapsed(true);
             }

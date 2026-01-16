@@ -46,6 +46,10 @@
 
     <style name="Theme.NotificationCapture" parent="Base.Theme.NotificationCapture" />
 
+    <style name="FullScreenBottomSheetDialog" parent="Theme.Material3.DayNight.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+    </style>
+
     <!-- Buttons styles -->
     <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/background_card</item>
