@@ -17,69 +17,21 @@ public class NotificationListener extends NotificationListenerService {
     private TransactionRepository repository;
     private WalletRepository walletsRepository;
 
-    // Lista de apps de wallet/bancos conocidas (añade las que uses)
-    private String[] walletApps = {
-            "mercadopago",
-            "mercado pago",
-            "ualá",
-            "uala",
-            "brubank",
-            "naranja",
-            "galicia",
-            "santander",
-            "bbva",
-            "hsbc",
-            "macro",
-            "nacion",
-            "ciudad",
-            "patagonia",
-            "icbc",
-            "supervielle",
-            "bind",
-            "modo",
-            "personal.pay",
-            "prex",
-            "lemon",
-            "belo",
-            "flow",
-            "wallet",
-    };
-
-    // Palabras clave que indican pago exitoso o transferencia recibida
-    private String[] paymentKeywords = {
-            "pago exitoso",
-            "pago realizado",
-            "pago aprobado",
-            "pagaste",
-            "pago acreditado",
-            "transferencia exitosa",
-            "transferencia realizada",
-            "transferiste",
-            "recibiste",
-            "recibiste dinero",
-            "ingreso de dinero",
-            "ingresó dinero",
-            "ingresaste",
-            "te enviaron",
-            "te enviaron dinero",
-            "cobro exitoso",
-            "cobraste",
-            "acreditación exitosa",
-            "dinero acreditado",
-            "saldo acreditado",
-            "successful payment",
-            "payment successful",
-            "payment approved",
-            "transfer successful",
-            "money received",
-            "you received"
-    };
+    // Listas cargadas desde JSON vía ConfigManager
+    private java.util.List<String> walletApps;
+    private java.util.List<String> paymentKeywords;
 
     @Override
     public void onCreate() {
         super.onCreate();
         repository = RepositoryProvider.getInstance().getTransactionRepository();
         walletsRepository = RepositoryProvider.getInstance().getWalletRepository();
+
+        // Cargar configuraciones
+        com.notificationcapture.app.utils.ConfigManager config = com.notificationcapture.app.utils.ConfigManager
+                .getInstance();
+        walletApps = config.getWalletApps();
+        paymentKeywords = config.getPaymentKeywords();
     }
 
     @Override

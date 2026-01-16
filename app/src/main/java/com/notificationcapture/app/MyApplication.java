@@ -13,6 +13,7 @@ public class MyApplication extends Application implements Application.ActivityLi
     @Override
     public void onCreate() {
         super.onCreate();
+        com.notificationcapture.app.utils.ConfigManager.init(this);
         registerActivityLifecycleCallbacks(this);
     }
 

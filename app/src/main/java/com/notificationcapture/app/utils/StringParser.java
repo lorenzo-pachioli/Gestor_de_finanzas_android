@@ -13,26 +13,9 @@ public class StringParser {
     public static IngresoOEgreso detectTransactionType(String title, String text) {
         String combinedText = (title + " " + text).toLowerCase();
 
-        // Palabras clave de INGRESO
-        String[] ingresoKeywords = {
-                "recibiste", "recibiste dinero", "recibiste una transferencia",
-                "transferencia recibida", "dinero recibido", "ingreso de dinero",
-                "te enviaron", "te transfirieron", "ingresó dinero", "te envio",
-                "received money", "money received", "transfer received",
-                "nuevo ingreso", "acreditación recibida", "depósito recibido",
-                "se acreditó", "acreditación exitosa", "cobro recibido",
-                "ingreso acreditado", "fondos recibidos"
-        };
-
-        // Palabras clave de EGRESO
-        String[] egresoKeywords = {
-                "pago exitoso", "pago realizado", "pago aprobado", "pago acreditado",
-                "compra exitosa", "compra aprobada", "compraste",
-                "débito exitoso", "cargo realizado", "pagaste",
-                "payment successful", "payment approved", "purchase successful",
-                "transferencia realizada", "enviaste", "transferiste",
-                "retiro", "extracción"
-        };
+        ConfigManager config = ConfigManager.getInstance();
+        java.util.List<String> ingresoKeywords = config.getIngresoKeywords();
+        java.util.List<String> egresoKeywords = config.getEgresoKeywords();
 
         // Verificar ingresos primero
         for (String keyword : ingresoKeywords) {
