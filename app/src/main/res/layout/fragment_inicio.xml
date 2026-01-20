@@ -11,9 +11,9 @@
         android:id="@+id/cardSummary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
         android:elevation="4dp"
         app:cardCornerRadius="12dp"
         app:cardBackgroundColor="@color/background_card">
@@ -143,6 +143,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/cardSummary"
+        android:layout_marginHorizontal="8dp"
         android:visibility="gone"/>
 
 </RelativeLayout>
