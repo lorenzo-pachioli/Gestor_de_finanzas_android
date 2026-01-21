@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="30dp"
         android:background="@drawable/bg_top_bar"
-        android:elevation="8dp">
+        >
 
         <ImageView
             android:id="@+id/ivLogo"
@@ -32,13 +32,15 @@
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/bottomNavigationView"
+        android:layout_alignParentBottom="true"
         android:layout_below="@id/topBar"/>
+        
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:alpha="0.9"
         android:background="@drawable/bg_bottom_nav"
         app:menu="@menu/bottom_nav_menu"
         app:labelVisibilityMode="labeled"
@@ -48,7 +50,8 @@
         app:itemRippleColor="@android:color/transparent"
         app:itemActiveIndicatorStyle="@null"
         app:itemIconSize="28dp"
-        app:elevation="8dp"/>
+        app:elevation="8dp"
+        app:cardElevation="15dp"/>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/fabAdd"

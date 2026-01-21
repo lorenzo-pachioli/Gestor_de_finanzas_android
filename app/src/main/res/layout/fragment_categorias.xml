@@ -6,9 +6,8 @@
     android:orientation="vertical"
     android:padding="0dp"
     tools:context=".fragments.CategoriasFragment"
-    android:background="@color/background_main">
+    android:background="@color/background_card">
 
-    <!-- Chrome-like TabLayout -->
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
         android:layout_width="match_parent"
@@ -27,6 +26,7 @@
         app:tabTextColor="@color/text_secondary"
         app:tabRippleColor="@null"
         android:elevation="0dp"
+        android:layout_marginTop="8dp"
         xmlns:app="http://schemas.android.com/apk/res-auto">
         
         <com.google.android.material.tabs.TabItem
@@ -45,58 +45,64 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:background="@color/background_main"
+        >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/periodo"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_primary"
-        android:layout_marginBottom="8dp" />
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/periodo"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:paddingHorizontal="16dp"
+            android:layout_marginBottom="8dp" />
 
-        <Spinner
-            android:id="@+id/spinnerMonth"
-            android:layout_width="0dp"
-            android:layout_height="60dp"
-            android:layout_weight="2"
-            android:padding="5dp"
-            android:background="@drawable/bg_spinner_field"
-            android:textColor="@color/text_secondary"
-            android:layout_marginEnd="8dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:layout_marginBottom="16dp">
 
-        <Spinner
-            android:id="@+id/spinnerYear"
-            android:layout_width="0dp"
-            android:layout_height="60dp"
+            <Spinner
+                android:id="@+id/spinnerMonth"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="2"
+                android:paddingHorizontal="5dp"
+                android:background="@drawable/bg_spinner_field"
+                android:textColor="@color/text_secondary"
+                android:layout_marginEnd="8dp" />
+
+            <Spinner
+                android:id="@+id/spinnerYear"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:paddingHorizontal="5dp"
+                android:background="@drawable/bg_spinner_field"
+                android:textColor="@color/text_secondary" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/resumen_categoria"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:paddingHorizontal="16dp"
+            android:layout_marginBottom="8dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerCategories"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:padding="5dp"
-            android:background="@drawable/bg_spinner_field"
-            android:textColor="@color/text_secondary" />
-    </LinearLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/resumen_categoria"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_primary"
-        android:layout_marginBottom="8dp" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerCategories"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginBottom="16dp"
-        tools:listitem="@layout/item_category_summary" />
+            android:layout_marginBottom="16dp"
+            android:paddingHorizontal="8dp"
+            tools:listitem="@layout/item_category_summary" />
 
     </LinearLayout>
 

@@ -11,6 +11,7 @@
     <!-- Semantic Colors (Night) -->
     <color name="background_main">@color/primary_main</color>
     <color name="background_card">#1E293B</color>
+    <color name="background_bottom_nav">#331E293B</color>
     <color name="text_primary">#DBEDFE</color>
     <color name="text_secondary">@color/secondary_main</color>
     
