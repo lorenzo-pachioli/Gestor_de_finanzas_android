@@ -20,6 +20,7 @@ public class NotificationListener extends NotificationListenerService {
     // Listas cargadas desde JSON vía ConfigManager
     private java.util.List<String> walletApps;
     private java.util.List<String> paymentKeywords;
+    private java.util.List<com.notificationcapture.app.models.Wallets> globalWallets;
 
     @Override
     public void onCreate() {
@@ -32,6 +33,7 @@ public class NotificationListener extends NotificationListenerService {
                 .getInstance();
         walletApps = config.getWalletApps();
         paymentKeywords = config.getPaymentKeywords();
+        globalWallets = config.getGlobalWallets();
     }
 
     @Override
@@ -84,12 +86,24 @@ public class NotificationListener extends NotificationListenerService {
 
     boolean isPaymentRelatedNotification(String packageName, String title, String text) {
 
-        // Verificar si es una app de wallet
+        // Verificar si es una app de wallet (prioridad: lista global)
         boolean isWalletApp = false;
-        for (String wallet : walletApps) {
-            if (packageName.toLowerCase().contains(wallet)) {
+
+        // 1. Verificar contra el packagename exacto en la lista global
+        for (com.notificationcapture.app.models.Wallets wallet : globalWallets) {
+            if (wallet.getPackageName().equals(packageName)) {
                 isWalletApp = true;
                 break;
+            }
+        }
+
+        // 2. Fallback: Verificar si contiene palabras clave en el packagename (compatibilidad lista anterior)
+        if (!isWalletApp) {
+            for (String wallet : walletApps) {
+                if (packageName.toLowerCase().contains(wallet)) {
+                    isWalletApp = true;
+                    break;
+                }
             }
         }
 

@@ -55,31 +55,6 @@
     "packageName": "ar.com.bna"
   },
   {
-    "id": "wal_cash",
-    "name": "Efectivo",
-    "packageName": "com.wallet.custom"
-  },
-  {
-    "id": "wal_bimo",
-    "name": "Bimo",
-    "packageName": "bimo.app"
-  },
-  {
-    "id": "wal_bind",
-    "name": "BIND",
-    "packageName": "ar.com.bind"
-  },
-  {
-    "id": "wal_prex",
-    "name": "Prex",
-    "packageName": "ar.com.prex"
-  },
-  {
-    "id": "wal_wilobank",
-    "name": "Wilobank",
-    "packageName": "ar.wilobank"
-  },
-  {
     "id": "wal_miarg",
     "name": "Mi Argentina",
     "packageName": "ar.gov.anses.mi"
@@ -88,5 +63,10 @@
     "id": "wal_claro",
     "name": "Claro Pay",
     "packageName": "com.claro.pay"
+  },
+  {
+    "id":"wal_dni", 
+    "name": "Cuenta DNI", 
+    "packageName": "ar.com.bancoprovincia.CuentaDNI"
   }
 ]

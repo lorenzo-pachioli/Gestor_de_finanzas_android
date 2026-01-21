@@ -89,14 +89,14 @@ public class PerfilFragment extends Fragment {
         swDarkMode = view.findViewById(R.id.switchDarkMode);
         swLanguage = view.findViewById(R.id.swLanguage);
         Button btnAddCategory = view.findViewById(R.id.btnAddCategory);
-        // Button btnAddWallet = view.findViewById(R.id.btnAddWallet);
+        Button btnAddWallet = view.findViewById(R.id.btnAddWallet);
         Button btnAddCreditCard = view.findViewById(R.id.btnAddCreditCard);
 
         spinnerCreditCards = view.findViewById(R.id.spinnerCreditCards);
 
         // Setup Listeners
         btnAddCategory.setOnClickListener(v -> showAddCategoryDialog());
-        // btnAddWallet.setOnClickListener(v -> showAddWalletDialog());
+        btnAddWallet.setOnClickListener(v -> showGlobalWalletSelectionDialog());
         btnAddCreditCard.setOnClickListener(v -> showAddCreditCardDialog());
 
         // Setup Dark Mode Switch
@@ -320,6 +320,57 @@ public class PerfilFragment extends Fragment {
         dialog.show();
     }
 
+    private void showGlobalWalletSelectionDialog() {
+        List<com.notificationcapture.app.models.Wallets> globalWallets = com.notificationcapture.app.utils.ConfigManager.getInstance().getGlobalWallets();
+        List<com.notificationcapture.app.models.Wallets> userWallets = walletRepository.getAllWallets();
+        
+        List<String> userWalletPackages = new ArrayList<>();
+        for (com.notificationcapture.app.models.Wallets w : userWallets) {
+            userWalletPackages.add(w.getPackageName());
+        }
+
+        SelectorBottomSheet bottomSheet = SelectorBottomSheet.newInstance(
+                "Seleccionar Billetera",
+                globalWallets,
+                "",
+                userWalletPackages
+        );
+
+        bottomSheet.setOnOptionSelectedListener(optionName -> {
+            // Find the selected wallet in the global list
+            for (com.notificationcapture.app.models.Wallets globalWallet : globalWallets) {
+                if (globalWallet.getName().equals(optionName)) {
+                    // Check if already exists to avoid duplicates
+                    boolean exists = false;
+                    for (com.notificationcapture.app.models.Wallets uw : userWallets) {
+                        if (uw.getPackageName().equals(globalWallet.getPackageName())) {
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!exists) {
+                        // Create a NEW object to ensure a unique ID if needed, 
+                        // but here we might want to preserve the global ID prefix or just create new
+                        com.notificationcapture.app.models.Wallets newWallet = new com.notificationcapture.app.models.Wallets(
+                                globalWallet.getId(),
+                                globalWallet.getName(),
+                                globalWallet.getPackageName()
+                        );
+                        walletRepository.addWallet(newWallet);
+                        loadWallets();
+                        Toast.makeText(requireContext(), "Billetera '" + optionName + "' agregada", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(requireContext(), "La billetera '" + optionName + "' ya está agregada", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                }
+            }
+        });
+
+        bottomSheet.show(getChildFragmentManager(), "WalletSelection");
+    }
+
     private void showAddWalletDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_wallet, null);
@@ -459,6 +510,7 @@ public class PerfilFragment extends Fragment {
                         categoryRepository.deleteCategory(category.getId());
                         loadCategories();
                         Toast.makeText(requireContext(), "Categoría eliminada", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
                     })
                     .setNegativeButton("Cancelar", null)
                     .show();
@@ -514,6 +566,7 @@ public class PerfilFragment extends Fragment {
                         walletRepository.deleteWallet(wallet.getId());
                         loadWallets();
                         Toast.makeText(requireContext(), "Billetera eliminada", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
                     })
                     .setNegativeButton("Cancelar", null)
                     .show();
@@ -586,6 +639,7 @@ public class PerfilFragment extends Fragment {
                         creditCardRepository.deleteCreditCard(card.getId());
                         loadCreditCards();
                         Toast.makeText(requireContext(), "Tarjeta eliminada", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
                     })
                     .setNegativeButton("Cancelar", null)
                     .show();

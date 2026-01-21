@@ -25,9 +25,8 @@ public class WalletRepository implements GsonAccess {
     }
 
     private void initWalletDefaults(Context context) {
-        // Initialize Wallets if empty or not present
-        List<Wallets> existingWallets = getAllWallets();
-        if (existingWallets == null || existingWallets.isEmpty()) {
+        // Initialize Wallets only if the preference doesn't exist yet
+        if (!prefs.contains(KEY_WALLETS)) {
             try {
                 // Try to get resource ID directly or via identifier
                 int resId = context.getResources().getIdentifier("wallets", "raw", context.getPackageName());
@@ -144,43 +143,10 @@ public class WalletRepository implements GsonAccess {
     }
 
     public static String getPackageNameFromApp(String appName) {
-        switch (appName) {
-            case "Mercado Pago":
-                return "com.mercadopago.wallet";
-            case "Ualá":
-                return "com.uala.app";
-            case "Brubank":
-                return "brubank.app";
-            case "Naranja X":
-                return "com.naranja.app";
-            case "Modo":
-                return "com.reba.contactless";
-            case "Personal Pay":
-                return "personal.pay";
-            case "Bimo":
-                return "bimo.app";
-            case "BIND":
-                return "ar.com.bind";
-            case "Prex":
-                return "ar.com.prex";
-            case "Wilobank":
-                return "ar.wilobank";
-            case "Santander Río":
-                return "ar.com.santander.rio";
-            case "BBVA":
-                return "com.bbva.nxt_argentina";
-            case "Galicia":
-                return "ar.com.bancogalicia";
-            case "Macro":
-                return "com.macro";
-            case "Banco Nación":
-                return "ar.com.bna";
-            case "Mi Argentina":
-                return "ar.gov.anses.mi";
-            case "Claro Pay":
-                return "com.claro.pay";
-            default:
-                return "com.wallet.custom";
+        String globalPackage = com.notificationcapture.app.utils.ConfigManager.getInstance().getPackageByName(appName);
+        if (globalPackage != null) {
+            return globalPackage;
         }
+        return "com.wallet.custom";
     }
 }

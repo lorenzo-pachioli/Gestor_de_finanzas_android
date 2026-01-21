@@ -22,17 +22,24 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
     private static final String ARG_TITLE = "title";
     private static final String ARG_OPTIONS = "options";
     private static final String ARG_SELECTED = "selected";
+    private static final String ARG_HIGHLIGHTED = "highlighted"; // NEW
     private static final String ARG_COLORS = "colors"; // NEW
 
     private OnOptionSelectedListener listener;
 
     public static <T extends java.io.Serializable & SpinnerDisplayable> SelectorBottomSheet newInstance(
             String title, List<T> options, String selectedOption) {
+        return newInstance(title, options, selectedOption, null);
+    }
+
+    public static <T extends java.io.Serializable & SpinnerDisplayable> SelectorBottomSheet newInstance(
+            String title, List<T> options, String selectedOption, List<String> highlightedIds) {
         SelectorBottomSheet fragment = new SelectorBottomSheet();
         Bundle args = new Bundle();
         args.putString(ARG_TITLE, title);
         args.putSerializable(ARG_OPTIONS, (java.io.Serializable) options);
         args.putString(ARG_SELECTED, selectedOption);
+        args.putStringArrayList(ARG_HIGHLIGHTED, highlightedIds != null ? new java.util.ArrayList<>(highlightedIds) : null);
         fragment.setArguments(args);
         return fragment;
     }
@@ -102,6 +109,8 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
 
             if (optionsObj != null) {
                 List<?> options;
+                List<String> highlightedIds = getArguments().getStringArrayList(ARG_HIGHLIGHTED);
+
                 if (optionsObj instanceof List) {
                     options = (List<?>) optionsObj;
                 } else if (optionsObj instanceof String[]) {
@@ -110,9 +119,15 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
                     options = new java.util.ArrayList<>();
                 }
 
-                OptionAdapter adapter = new OptionAdapter(options, selectedOption, option -> {
+                OptionAdapter adapter = new OptionAdapter(options, selectedOption, highlightedIds, item -> {
                     if (listener != null) {
-                        listener.onOptionSelected(option);
+                        // For SpinnerDisplayable items, we might want to pass the object or ID
+                        // But existing listener uses a String. We'll handle this in the adapter call.
+                        if (item instanceof com.notificationcapture.app.interfaces.SpinnerDisplayable) {
+                             listener.onOptionSelected(((com.notificationcapture.app.interfaces.SpinnerDisplayable) item).getDisplayName());
+                        } else {
+                             listener.onOptionSelected(item.toString());
+                        }
                     }
                     dismiss();
                 });
@@ -125,26 +140,32 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
 
     // Adapter interno para las opciones
     private static class OptionAdapter extends RecyclerView.Adapter<OptionAdapter.ViewHolder> {
+        interface OnOptionClickListener {
+            void onClick(Object item);
+        }
+
         private final List<?> options;
         private final String selectedOption;
+        private final List<String> highlightedIds;
         private final OnOptionClickListener clickListener;
 
         private static final int TYPE_SIMPLE = 0;
         private static final int TYPE_CARD = 1;
 
-        interface OnOptionClickListener {
-            void onClick(String option);
-        }
-
-        OptionAdapter(List<?> options, String selectedOption, OnOptionClickListener clickListener) {
+        OptionAdapter(List<?> options, String selectedOption, List<String> highlightedIds, OnOptionClickListener clickListener) {
             this.options = options;
             this.selectedOption = selectedOption;
+            this.highlightedIds = highlightedIds;
             this.clickListener = clickListener;
         }
 
         @Override
         public int getItemViewType(int position) {
             Object option = options.get(position);
+            // Wallets should always use the simple layout as per user request
+            if (option instanceof com.notificationcapture.app.models.Wallets) {
+                return TYPE_SIMPLE;
+            }
             return (option instanceof com.notificationcapture.app.interfaces.SpinnerDisplayable) ? TYPE_CARD
                     : TYPE_SIMPLE;
         }
@@ -173,8 +194,17 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
                 optionName = item.toString();
             }
 
+            // Set color for highlighting (selection or global list status)
+            boolean isHighlighted = false;
+            if (item instanceof com.notificationcapture.app.models.Wallets && highlightedIds != null) {
+                com.notificationcapture.app.models.Wallets wallet = (com.notificationcapture.app.models.Wallets) item;
+                if (highlightedIds.contains(wallet.getPackageName())) {
+                    isHighlighted = true;
+                }
+            }
+
             if (getItemViewType(position) == TYPE_CARD) {
-                // CARD LAYOUT (Categories)
+                // CARD LAYOUT (Categories / Wallets)
                 if (holder.tvCategoryName != null) {
                     holder.tvCategoryName.setText(optionName);
 
@@ -194,7 +224,7 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
                 }
 
                 if (color == null || color == 0) {
-                    color = androidx.core.content.ContextCompat.getColor(context, R.color.accent_main); // Default
+                    color = androidx.core.content.ContextCompat.getColor(context, R.color.accent_main); // Default for categories
                 }
 
                 if (holder.viewLeftBorder != null)
@@ -203,11 +233,11 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
                     holder.viewBackgroundTint.setBackgroundColor(color);
 
             } else {
-                // SIMPLE LAYOUT (Wallets)
+                // SIMPLE LAYOUT
                 if (holder.tvOptionName != null) {
                     holder.tvOptionName.setText(optionName);
 
-                    if (optionName.equals(selectedOption)) {
+                    if (optionName.equals(selectedOption) || isHighlighted) {
                         holder.tvOptionName.setTextColor(androidx.core.content.ContextCompat.getColor(context,
                                 R.color.accent_main));
                         holder.tvOptionName.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -219,7 +249,7 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
                 }
             }
 
-            holder.itemView.setOnClickListener(v -> clickListener.onClick(optionName));
+            holder.itemView.setOnClickListener(v -> clickListener.onClick(item));
         }
 
         @Override

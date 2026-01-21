@@ -6,12 +6,18 @@ import java.io.Serializable;
 
 public class Wallets implements Serializable, SpinnerDisplayable {
 
-    private final String id;
+    private String id;
     private String name;
     private String packageName;
 
     public Wallets(String name, String packageName) {
         this.id = generateId();
+        this.name = name;
+        this.packageName = packageName;
+    }
+
+    public Wallets(String id, String name, String packageName) {
+        this.id = id;
         this.name = name;
         this.packageName = packageName;
     }
@@ -44,51 +50,19 @@ public class Wallets implements Serializable, SpinnerDisplayable {
         if (name != null && !name.isEmpty()) {
             return name;
         }
-        // Map package names to friendly app names
-        switch (packageName) {
-            case "com.mercadopago.wallet":
-                return "Mercado Pago";
-            case "com.uala.app":
-                return "Ualá";
-            case "brubank.app":
-                return "Brubank";
-            case "com.naranja.app":
-                return "Naranja X";
-            case "com.reba.contactless":
-                return "Modo";
-            case "personal.pay":
-                return "Personal Pay";
-            case "bimo.app":
-                return "Bimo";
-            case "ar.com.bind":
-                return "BIND";
-            case "ar.com.prex":
-                return "Prex";
-            case "ar.wilobank":
-                return "Wilobank";
-            case "ar.com.santander.rio":
-                return "Santander Río";
-            case "com.bbva.nxt_argentina":
-                return "BBVA";
-            case "ar.com.bancogalicia":
-                return "Galicia";
-            case "com.macro":
-                return "Macro";
-            case "ar.com.bna":
-                return "Banco Nación";
-            case "ar.gov.anses.mi":
-                return "Mi Argentina";
-            case "com.claro.pay":
-                return "Claro Pay";
-            default:
-                // Fallback: capitalize first letter of last part
-                String[] parts = packageName.split("\\.");
-                if (parts.length > 0) {
-                    String lastPart = parts[parts.length - 1];
-                    return lastPart.substring(0, 1).toUpperCase() + lastPart.substring(1);
-                }
-                return packageName;
+        // Lookup in global config if name is missing
+        String globalName = com.notificationcapture.app.utils.ConfigManager.getInstance().getDefaultNameForPackage(packageName);
+        if (globalName != null) {
+            return globalName;
         }
+
+        // Fallback: capitalize first letter of last part
+        String[] parts = packageName.split("\\.");
+        if (parts.length > 0) {
+            String lastPart = parts[parts.length - 1];
+            return lastPart.substring(0, 1).toUpperCase() + lastPart.substring(1);
+        }
+        return packageName;
     }
 
     @Override
