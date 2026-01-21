@@ -6,6 +6,13 @@
     android:background="@color/background_main"
     tools:context=".MainActivity">
 
+    <com.notificationcapture.app.views.DancingLightsView
+        android:id="@+id/dancingLightsBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="false"
+        android:focusable="false" />
+
     <!-- Top Bar -->
     <RelativeLayout
         android:id="@+id/topBar"
