@@ -68,9 +68,8 @@
             <Spinner
                 android:id="@+id/spinnerMonth"
                 android:layout_width="0dp"
-                android:layout_height="60dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="2"
-                android:paddingHorizontal="5dp"
                 android:background="@drawable/bg_spinner_field"
                 android:textColor="@color/text_secondary"
                 android:layout_marginEnd="8dp" />
@@ -78,9 +77,8 @@
             <Spinner
                 android:id="@+id/spinnerYear"
                 android:layout_width="0dp"
-                android:layout_height="60dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:paddingHorizontal="5dp"
                 android:background="@drawable/bg_spinner_field"
                 android:textColor="@color/text_secondary" />
         </LinearLayout>

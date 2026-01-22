@@ -8,7 +8,7 @@
     <color name="grey_unselected">#C7C7C7</color>
 
     <!-- Semantic Colors (Light) -->
-    <color name="background_main">@color/background_card_90</color>
+    <color name="background_main">@color/primary_main</color>
     <color name="background_card">#FFFFFF</color>
     <color name="background_card_90">#E6FFFFFF</color>
     <color name="background_bottom_nav">#33FFFFFF</color>
