@@ -43,6 +43,10 @@
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Corner.Full</item>
         <item name="android:spinnerStyle">@style/Widget.App.Spinner</item>
 
+        <!-- Global Typography -->
+        <item name="android:fontFamily">@font/sf_pro</item>
+        <item name="fontFamily">@font/sf_pro</item>
+
     </style>
 
     <style name="Theme.NotificationCapture" parent="Base.Theme.NotificationCapture" />
