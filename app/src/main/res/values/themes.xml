@@ -2,8 +2,8 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.NotificationCapture" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
-        <item name="android:windowBackground">@color/background_main</item>
-        <item name="android:colorBackground">@color/background_main</item>
+        <item name="android:windowBackground">@color/background_card_90</item>
+        <item name="android:colorBackground">@color/background_card_90</item>
         <item name="android:statusBarColor">@color/background_card</item>
         
         <!-- Material3 Color System - Mapped to custom palette -->
@@ -41,6 +41,7 @@
         <item name="android:windowLightStatusBar">true</item>
         <item name="floatingActionButtonStyle">@style/Widget.Material3.FloatingActionButton.Primary</item>
         <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.Corner.Full</item>
+        <item name="android:spinnerStyle">@style/Widget.App.Spinner</item>
 
     </style>
 
@@ -52,6 +53,7 @@
 
     <!-- Buttons styles -->
     <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/background_card</item>"
         <item name="backgroundTint">@color/background_card</item>
         <item name="tint">@color/secondary_main</item>
         <item name="android:textColor">@color/text_primary</item>
@@ -59,5 +61,8 @@
         <item name="rippleColor">@color/accent_main</item>
         <!--<item name="strokeColor">@color/text_secondary</item>
         <item name="strokeWidth">2dp</item>-->
+    </style>
+    <style name="Widget.App.Spinner" parent="Widget.AppCompat.Spinner">
+        <item name="android:popupBackground">@drawable/bg_spinner_field</item>
     </style>
 </resources>
