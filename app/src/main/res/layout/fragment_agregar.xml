@@ -68,7 +68,7 @@
                 android:minHeight="48dp"
                 android:padding="4dp"
                 android:textColor="@color/text_primary"
-                android:textColorHint="@color/grey_unselected"
+                android:textColorHint="@color/text_secondary"
                 android:textSize="56sp"
                 android:textStyle="bold" />
 
@@ -109,7 +109,7 @@
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="20dp"/>
 
-        <!-- Selector de Método de Pago -->
+        <!-- Selector de Metodo de Pago -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
