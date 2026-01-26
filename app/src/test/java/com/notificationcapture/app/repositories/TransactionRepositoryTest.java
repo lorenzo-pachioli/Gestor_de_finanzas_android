@@ -23,6 +23,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.robolectric.shadows.ShadowLooper;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28)
@@ -34,7 +35,15 @@ public class TransactionRepositoryTest {
     @Before
     public void setup() {
         context = ApplicationProvider.getApplicationContext();
+        context.getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE).edit().clear().apply();
+        com.notificationcapture.app.database.AppDatabase.destroyInstance();
         repository = new TransactionRepository(context);
+    }
+
+    @org.junit.After
+    public void teardown() {
+        if (repository != null) repository.shutdown();
+        com.notificationcapture.app.database.AppDatabase.destroyInstance();
     }
 
     @Test
@@ -45,10 +54,17 @@ public class TransactionRepositoryTest {
         prefs.edit().putString("notifications", legacyJson).putBoolean("sqlite_migrated", false).apply();
 
         // 2. Re-initialize repository to trigger migration
+        com.notificationcapture.app.database.AppDatabase.destroyInstance();
         repository = new TransactionRepository(context);
 
-        // 3. Wait for migration (async)
-        Thread.sleep(1000); 
+        // 3. Wait for migration flag to be set (poll with ShadowLooper)
+        long start = System.currentTimeMillis();
+        while (!prefs.getBoolean("sqlite_migrated", false) && (System.currentTimeMillis() - start) < 10000) {
+            ShadowLooper.idleMainLooper();
+            Thread.sleep(100);
+        }
+
+        assertTrue("Migration never completed", prefs.getBoolean("sqlite_migrated", false));
 
         // 4. Verify
         CountDownLatch latch = new CountDownLatch(1);
@@ -66,7 +82,12 @@ public class TransactionRepositoryTest {
             }
         });
 
-        latch.await(5, TimeUnit.SECONDS);
+        while (latch.getCount() > 0) {
+            ShadowLooper.idleMainLooper();
+            Thread.sleep(100);
+        }
+        
+        assertFalse("Result list should not be null", result[0] == null);
         assertEquals("Should have 1 migrated transaction", 1, result[0].size());
         assertEquals("legacy_1", result[0].get(0).getId());
         assertFalse("Old pref should be removed", prefs.contains("notifications"));
@@ -74,33 +95,54 @@ public class TransactionRepositoryTest {
 
     @Test
     public void testPerformanceAndCleanup() throws InterruptedException {
-        int totalToInsert = 5005; // Force cleanup
-        long startTime = System.currentTimeMillis();
+        int totalToInsert = 5005;
+        final List<Transaction> toInsert = new ArrayList<>();
 
-        // 1. Insert 5000 records from this month
+        // 1. Prepare 5000 records from this month
         Calendar currentMonth = Calendar.getInstance();
         for (int i = 0; i < 5000; i++) {
             Debit t = new Debit("Title " + i, "Text", currentMonth.getTimeInMillis(), "wallet", true);
             t.setId("id_" + i);
-            repository.saveTransaction(t);
+            toInsert.add(t);
         }
 
-        // 2. Insert 5 records from 2 months ago (to be deleted)
+        // 2. Prepare 5 records from 2 months ago (to be deleted)
         Calendar oldMonth = Calendar.getInstance();
         oldMonth.add(Calendar.MONTH, -2);
         for (int i = 5000; i < 5005; i++) {
             Debit t = new Debit("Old " + i, "Text", oldMonth.getTimeInMillis(), "wallet", true);
             t.setId("id_" + i);
-            repository.saveTransaction(t);
+            toInsert.add(t);
         }
 
-        // Wait for all async tasks to finish
-        Thread.sleep(3000);
+        // 3. Bulk insert and wait
+        long startTime = System.currentTimeMillis();
+        final CountDownLatch insertLatch = new CountDownLatch(1);
+        final Exception[] error = new Exception[1];
+        
+        repository.saveTransactions(toInsert, new TransactionRepository.RepositoryCallback<Void>() {
+            @Override
+            public void onResult(Void res) { insertLatch.countDown(); }
+            @Override
+            public void onError(Exception e) { error[0] = e; insertLatch.countDown(); }
+        });
+
+        while (insertLatch.getCount() > 0) {
+            ShadowLooper.idleMainLooper();
+            Thread.sleep(100);
+        }
+        
+        if (error[0] != null) throw new RuntimeException("Insert failed", error[0]);
 
         long duration = System.currentTimeMillis() - startTime;
         System.out.println("Inserted 5005 records in: " + duration + "ms");
+        System.out.println("The 5005 records weight: " + repository.getDatabaseSizeMb() + " MB");
 
-        // 3. Verify total count doesn't exceed 5000 (roughly, since cleanup deletes a whole month)
+        // Ultimo test dio los siguientes resultados:
+        //   - Inserted 5005 records in: 1203ms
+        //   - The 5005 records weight: 0.72265625 MB
+
+        // 4. Verify total count doesn't exceed 5000
         CountDownLatch latch = new CountDownLatch(1);
         final List<Transaction>[] result = new List[1];
         repository.getAllTransactions(new TransactionRepository.RepositoryCallback<List<Transaction>>() {
@@ -112,19 +154,23 @@ public class TransactionRepositoryTest {
 
             @Override
             public void onError(Exception e) {
+                error[0] = e;
                 latch.countDown();
             }
         });
 
-        latch.await(5, TimeUnit.SECONDS);
+        while (latch.getCount() > 0) {
+            ShadowLooper.idleMainLooper();
+            Thread.sleep(100);
+        }
         
-        // After cleanup of the oldest month, we should have 5000 records (the current ones)
-        // and 0 from the old month.
-        assertTrue("Count should be <= 5000 after cleanup", result[0].size() <= 5000);
+        if (error[0] != null) throw new RuntimeException("Fetch failed", error[0]);
+        
+        assertTrue("Count should be <= 5000 after cleanup, but was " + result[0].size(), result[0].size() <= 5000);
         
         // Verify no "Old" transaction exists
         for (Transaction t : result[0]) {
-            assertFalse("Old month data should be deleted", t.getTitle().startsWith("Old"));
+            assertFalse("Old month data should be deleted: " + t.getTitle(), t.getTitle().startsWith("Old"));
         }
     }
 }
