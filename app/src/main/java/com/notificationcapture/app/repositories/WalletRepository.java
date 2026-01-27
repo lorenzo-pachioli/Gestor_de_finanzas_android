@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.notificationcapture.app.interfaces.GsonAccess;
 import com.notificationcapture.app.models.Wallets;
+import com.notificationcapture.app.utils.AppLogger;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ public class WalletRepository implements GsonAccess {
                     // This assumes the R class is accessible, which it might not be in a generic
                     // repo if not imported
                     // But we can try to find it via reflection or just log the failure.
-                    android.util.Log.e("WalletRepository", "Could not find raw resource 'wallets'");
+                    AppLogger.e("WalletRepository", "Could not find raw resource 'wallets'");
                     return;
                 }
 
@@ -55,10 +56,10 @@ public class WalletRepository implements GsonAccess {
 
                 if (defaultWallets != null && !defaultWallets.isEmpty()) {
                     saveWallets(defaultWallets);
-                    android.util.Log.d("WalletRepository", "Loaded " + defaultWallets.size() + " default wallets.");
+                    AppLogger.d("WalletRepository", "Loaded " + defaultWallets.size() + " default wallets.");
                 }
             } catch (Exception e) {
-                android.util.Log.e("WalletRepository", "Error loading default wallets", e);
+                AppLogger.e("WalletRepository", "Error loading default wallets", e);
             }
         }
     }
@@ -89,6 +90,7 @@ public class WalletRepository implements GsonAccess {
 
             return list != null ? list : new ArrayList<>();
         } catch (Exception e) {
+            AppLogger.e("WalletRepository", "Error getting all wallets", e);
             return new ArrayList<>();
         }
     }

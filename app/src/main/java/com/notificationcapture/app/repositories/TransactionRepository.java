@@ -21,6 +21,9 @@ import com.notificationcapture.app.models.Cash;
 import com.notificationcapture.app.models.Credit;
 import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.mappers.TransactionMapper;
+import com.notificationcapture.app.utils.AppExceptions;
+import com.notificationcapture.app.utils.AppLogger;
+import com.notificationcapture.app.utils.AppResult;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -43,8 +46,7 @@ public class TransactionRepository implements GsonAccess {
     private static final String PREF_LAST_MAINTENANCE_MONTH = "last_maintenance_month";
 
     public interface RepositoryCallback<T> {
-        void onResult(T result);
-        void onError(Exception e);
+        void onResult(AppResult<T> result);
     }
 
     public TransactionRepository(Context context) {
@@ -78,7 +80,9 @@ public class TransactionRepository implements GsonAccess {
                     
                     prefs.edit().putInt(PREF_LAST_MAINTENANCE_MONTH, currentMonthYear).apply();
                 }
-            } catch (Exception ignored) {} // Handle DB closed during shutdown
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error in monthly maintenance", e);
+            }
         });
     }
 
@@ -91,6 +95,7 @@ public class TransactionRepository implements GsonAccess {
                     migrateLegacyList(KEY_NOTIFICATIONS_NOT_FILTERED);
                     prefs.edit().putBoolean(PREF_MIGRATED, true).remove(PREF_MIGRATION_IN_PROGRESS).apply();
                 } catch (Exception e) {
+                    AppLogger.e("TransactionRepository", "Migration failed", e);
                     prefs.edit().putBoolean(PREF_MIGRATION_IN_PROGRESS, false).apply();
                 }
             });
@@ -135,23 +140,33 @@ public class TransactionRepository implements GsonAccess {
                     }
                     prefs.edit().remove(key).apply();
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error migrating legacy list: " + key, e);
+            }
         }
     }
 
     public void saveTransactionNotFiltered(Transaction transaction) {
         executor.execute(() -> {
-            TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_PENDING);
-            dao.insert(entity);
-            checkCleanup();
+            try {
+                TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_PENDING);
+                dao.insert(entity);
+                checkCleanup();
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error saving non-filtered transaction", e);
+            }
         });
     }
 
     public void saveTransaction(Transaction transaction) {
         executor.execute(() -> {
-            TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_APPROVED);
-            dao.insert(entity);
-            checkCleanup();
+            try {
+                TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_APPROVED);
+                dao.insert(entity);
+                checkCleanup();
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error saving transaction", e);
+            }
         });
     }
 
@@ -166,17 +181,22 @@ public class TransactionRepository implements GsonAccess {
                 }
                 dao.insertAll(entities);
                 checkCleanup();
-                if (callback != null) mainHandler.post(() -> callback.onResult(null));
+                if (callback != null) mainHandler.post(() -> callback.onResult(AppResult.success(null)));
             } catch (Exception e) {
-                if (callback != null) mainHandler.post(() -> callback.onError(e));
+                AppLogger.e("TransactionRepository", "Error saving transactions", e);
+                if (callback != null) mainHandler.post(() -> callback.onResult(AppResult.failure(new AppExceptions.DatabaseException("Fallo al guardar transacciones", e))));
             }
         });
     }
 
     public void updateTransaction(Transaction transaction) {
         executor.execute(() -> {
-            TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_APPROVED);
-            dao.update(entity);
+            try {
+                TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_APPROVED);
+                dao.update(entity);
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error updating transaction", e);
+            }
         });
     }
 
@@ -226,6 +246,7 @@ public class TransactionRepository implements GsonAccess {
                 return TransactionMapper.fromEntityList(entities);
             }).get();
         } catch (Exception e) {
+            AppLogger.e("TransactionRepository", "Error in blocking getByStatus", e);
             return new ArrayList<>();
         }
     }
@@ -235,9 +256,10 @@ public class TransactionRepository implements GsonAccess {
             try {
                 List<TransactionEntity> entities = dao.getByMonthAndStatus(0, Long.MAX_VALUE, TransactionEntity.STATUS_APPROVED);
                 List<Transaction> result = TransactionMapper.fromEntityList(entities);
-                mainHandler.post(() -> callback.onResult(result));
+                mainHandler.post(() -> callback.onResult(AppResult.success(result)));
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError(e));
+                AppLogger.e("TransactionRepository", "Error getting all transactions", e);
+                mainHandler.post(() -> callback.onResult(AppResult.failure(new AppExceptions.DatabaseException("Error al obtener transacciones", e))));
             }
         });
     }
@@ -259,9 +281,10 @@ public class TransactionRepository implements GsonAccess {
             try {
                 List<TransactionEntity> entities = dao.getByMonth(start, end);
                 List<Transaction> result = TransactionMapper.fromEntityList(entities);
-                mainHandler.post(() -> callback.onResult(result));
+                mainHandler.post(() -> callback.onResult(AppResult.success(result)));
             } catch (Exception e) {
-                mainHandler.post(() -> callback.onError(e));
+                AppLogger.e("TransactionRepository", "Error getting transactions by month", e);
+                mainHandler.post(() -> callback.onResult(AppResult.failure(new AppExceptions.DatabaseException("Error al obtener transacciones del mes", e))));
             }
         });
     }
@@ -280,6 +303,7 @@ public class TransactionRepository implements GsonAccess {
                 return (pageCount * pageSize) / (1024.0 * 1024.0);
             }).get();
         } catch (Exception e) {
+            AppLogger.e("TransactionRepository", "Error getting database size", e);
             return 0.0;
         }
     }

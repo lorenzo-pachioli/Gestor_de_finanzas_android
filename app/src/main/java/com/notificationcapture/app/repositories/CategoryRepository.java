@@ -5,6 +5,7 @@ import static android.content.ContentValues.TAG;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import com.notificationcapture.app.utils.AppLogger;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -154,7 +155,7 @@ public class CategoryRepository implements GsonAccess {
 
             return cats;
         } catch (Exception e) {
-            Log.e(TAG, "Error getting categories: " + e.getMessage(), e);
+            AppLogger.e("CategoryRepository", "Error getting categories: " + e.getMessage(), e);
             return new ArrayList<>();
         }
     }
@@ -163,7 +164,7 @@ public class CategoryRepository implements GsonAccess {
         try {
             prefs.edit().putString(KEY_CATEGORIES, gson.toJson(categories)).apply();
         } catch (Exception e) {
-            Log.e(TAG, "Error adding category: " + e.getMessage(), e);
+            AppLogger.e("CategoryRepository", "Error saving categories: " + e.getMessage(), e);
         }
     }
 }

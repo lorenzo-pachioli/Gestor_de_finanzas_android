@@ -11,6 +11,8 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.notificationcapture.app.models.Debit;
 import com.notificationcapture.app.models.Transaction;
+import com.notificationcapture.app.utils.AppResult;
+import com.notificationcapture.app.utils.AppExceptions;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -69,17 +71,11 @@ public class TransactionRepositoryTest {
         // 4. Verify
         CountDownLatch latch = new CountDownLatch(1);
         final List<Transaction>[] result = new List[1];
-        repository.getAllTransactions(new TransactionRepository.RepositoryCallback<List<Transaction>>() {
-            @Override
-            public void onResult(List<Transaction> res) {
-                result[0] = res;
-                latch.countDown();
+        repository.getAllTransactions(res -> {
+            if (res.isSuccess()) {
+                result[0] = res.getData();
             }
-
-            @Override
-            public void onError(Exception e) {
-                latch.countDown();
-            }
+            latch.countDown();
         });
 
         while (latch.getCount() > 0) {
@@ -120,11 +116,11 @@ public class TransactionRepositoryTest {
         final CountDownLatch insertLatch = new CountDownLatch(1);
         final Exception[] error = new Exception[1];
         
-        repository.saveTransactions(toInsert, new TransactionRepository.RepositoryCallback<Void>() {
-            @Override
-            public void onResult(Void res) { insertLatch.countDown(); }
-            @Override
-            public void onError(Exception e) { error[0] = e; insertLatch.countDown(); }
+        repository.saveTransactions(toInsert, res -> {
+            if (!res.isSuccess()) {
+                error[0] = res.getError();
+            }
+            insertLatch.countDown();
         });
 
         while (insertLatch.getCount() > 0) {
@@ -145,18 +141,13 @@ public class TransactionRepositoryTest {
         // 4. Verify total count doesn't exceed 5000
         CountDownLatch latch = new CountDownLatch(1);
         final List<Transaction>[] result = new List[1];
-        repository.getAllTransactions(new TransactionRepository.RepositoryCallback<List<Transaction>>() {
-            @Override
-            public void onResult(List<Transaction> res) {
-                result[0] = res;
-                latch.countDown();
+        repository.getAllTransactions(res -> {
+            if (res.isSuccess()) {
+                result[0] = res.getData();
+            } else {
+                error[0] = res.getError();
             }
-
-            @Override
-            public void onError(Exception e) {
-                error[0] = e;
-                latch.countDown();
-            }
+            latch.countDown();
         });
 
         while (latch.getCount() > 0) {
