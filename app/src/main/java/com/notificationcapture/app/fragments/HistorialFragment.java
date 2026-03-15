@@ -24,20 +24,17 @@ import java.util.HashMap;
 
 import com.notificationcapture.app.adapters.TransactionAdapter;
 import com.notificationcapture.app.models.Transaction;
-import com.notificationcapture.app.repositories.CategoryRepository;
-import com.notificationcapture.app.repositories.RepositoryProvider;
-import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.R;
-import com.notificationcapture.app.models.Category;
+import androidx.lifecycle.ViewModelProvider;
+import com.notificationcapture.app.viewmodels.HistorialViewModel;
 
 public class HistorialFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private TextView emptyView;
-    private TransactionRepository repository;
-    private CategoryRepository categoryRepository;
     private TransactionAdapter adapter;
     private Button btnEnableAccess;
+    private HistorialViewModel viewModel;
 
     public HistorialFragment() {
         // Required empty public constructor
@@ -60,8 +57,7 @@ public class HistorialFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        repository = RepositoryProvider.getInstance().getTransactionRepository();
-        categoryRepository = RepositoryProvider.getInstance().getCategoryRepository();
+        viewModel = new ViewModelProvider(this).get(HistorialViewModel.class);
 
         emptyView = view.findViewById(R.id.emptyViewHistorial);
         recyclerView = view.findViewById(R.id.recyclerViewHistorial);
@@ -71,12 +67,10 @@ public class HistorialFragment extends Fragment {
 
         adapter = new TransactionAdapter(new ArrayList<>(), getChildFragmentManager(), (item) -> {
             // Callback para eliminar notificación
-            repository.deleteTransactionNotFiltered(item.getId());
-            loadNotifications();
+            viewModel.deleteTransaction(item.getId());
         }, (item) -> {
             // Callback para agregar transacción a la lista aprobada
-            repository.moveTransactionToApproved(item.getId());
-            loadNotifications();
+            viewModel.moveTransactionToApproved(item.getId());
         }, true); // showAddButton = true para notificaciones pendientes
 
         checkNotificationPermission();
@@ -90,32 +84,28 @@ public class HistorialFragment extends Fragment {
                     "¿Estás seguro de que deseas eliminar todas las notificaciones pendientes?",
                     com.notificationcapture.app.enums.DialogType.CONFIRMATION,
                     () -> {
-                        repository.clearAllTransactionNotFiltered();
-                        loadNotifications();
+                        viewModel.clearAllTransactions();
                     });
         });
 
-        loadNotifications();
+        // Setup LiveData Observation
+        viewModel.getPendingTransactions().observe(getViewLifecycleOwner(), notifications -> {
+            adapter.updateData(notifications);
+
+            if (notifications.isEmpty()) {
+                emptyView.setVisibility(View.VISIBLE);
+                recyclerView.setVisibility(View.GONE);
+            } else {
+                emptyView.setVisibility(View.GONE);
+                recyclerView.setVisibility(View.VISIBLE);
+            }
+        });
     }
 
     @Override
     public void onResume() {
         super.onResume();
         checkNotificationPermission();
-        loadNotifications();
-    }
-
-    private void loadNotifications() {
-        List<Transaction> notifications = repository.getAllTransactionNotFiltered();
-        adapter.updateData(notifications);
-
-        if (notifications.isEmpty()) {
-            emptyView.setVisibility(View.VISIBLE);
-            recyclerView.setVisibility(View.GONE);
-        } else {
-            emptyView.setVisibility(View.GONE);
-            recyclerView.setVisibility(View.VISIBLE);
-        }
     }
 
     private void checkNotificationPermission() {

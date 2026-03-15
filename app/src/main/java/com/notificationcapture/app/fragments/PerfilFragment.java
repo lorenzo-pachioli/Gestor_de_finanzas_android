@@ -24,7 +24,9 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import static android.content.Context.MODE_PRIVATE;
+import androidx.lifecycle.ViewModelProvider;
+import com.notificationcapture.app.utils.SecurityPreferencesManager;
+import com.notificationcapture.app.viewmodels.SettingsViewModel;
 import static android.view.View.VISIBLE;
 
 import com.notificationcapture.app.enums.CatColors;
@@ -99,9 +101,11 @@ public class PerfilFragment extends Fragment {
         btnAddWallet.setOnClickListener(v -> showGlobalWalletSelectionDialog());
         btnAddCreditCard.setOnClickListener(v -> showAddCreditCardDialog());
 
+        SecurityPreferencesManager prefsManager = new SecurityPreferencesManager(requireContext());
+        SettingsViewModel settingsViewModel = new ViewModelProvider(requireActivity()).get(SettingsViewModel.class);
+
         // Setup Dark Mode Switch
-        android.content.SharedPreferences prefs = requireContext().getSharedPreferences("app_settings", MODE_PRIVATE);
-        int nightMode = prefs.getInt("night_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        int nightMode = prefsManager.getNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         if (nightMode == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
             int currentNightMode = getResources().getConfiguration().uiMode
                     & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
@@ -112,37 +116,34 @@ public class PerfilFragment extends Fragment {
 
         swDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
             int mode = isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
-            AppCompatDelegate.setDefaultNightMode(mode);
-            prefs.edit().putInt("night_mode", mode).apply();
+            settingsViewModel.setNightMode(mode);
+            prefsManager.saveNightMode(mode);
         });
 
         // Setup Language Switch - Load saved language
-        String savedLanguage = prefs.getString("app_language", "es"); // Default to Spanish
+        String savedLanguage = prefsManager.getLanguage("es"); // Default to Spanish
         swLanguage.setChecked(savedLanguage.equals("en"), false);
 
-        swCatType.setOnCheckedChangeListener(this::updateCategoryTypeUI);
+        swCatType.setOnCheckedChangeListener(isChecked -> updateCategoryTypeUI(isChecked));
 
         // Setup Language Switch
         swLanguage.setOnCheckedChangeListener(isChecked -> {
             String newLanguage = isChecked ? "en" : "es";
-            String currentLanguage = prefs.getString("app_language", "es");
+            String currentLanguage = prefsManager.getLanguage("es");
 
             if (!newLanguage.equals(currentLanguage)) {
-                // Save new language preference
-                prefs.edit().putString("app_language", newLanguage).apply();
+                // Save new language preference securely
+                prefsManager.saveLanguage(newLanguage);
+                // Report to activity for localized context propagation
+                settingsViewModel.setLanguage(newLanguage);
 
-                // Change locale and recreate activity
-                setLocale(newLanguage);
                 requireActivity().recreate();
             }
 
             updateLanguageUI(isChecked);
         });
 
-        // Initial state for language switch
-        String currentLang = prefs.getString("app_language", "es");
-        swLanguage.setChecked(currentLang.equals("en"), false);
-        updateLanguageUI(currentLang.equals("en"));
+        updateLanguageUI(savedLanguage.equals("en"));
 
         // Setup Spinner Listeners
         setupSpinnerListeners();
@@ -159,22 +160,6 @@ public class PerfilFragment extends Fragment {
         // Switch handles its own UI
     }
 
-    private void setLocale(String languageCode) {
-        java.util.Locale locale = new java.util.Locale(languageCode);
-        java.util.Locale.setDefault(locale);
-
-        android.content.res.Resources resources = requireContext().getResources();
-        android.content.res.Configuration config = new android.content.res.Configuration(resources.getConfiguration());
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            config.setLocale(locale);
-            requireContext().createConfigurationContext(config);
-        } else {
-            config.locale = locale;
-        }
-
-        resources.updateConfiguration(config, resources.getDisplayMetrics());
-    }
 
     private void setupSpinnerListeners() {
         spinnerCategories.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {

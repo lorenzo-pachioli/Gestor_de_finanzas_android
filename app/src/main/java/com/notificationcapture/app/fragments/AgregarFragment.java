@@ -229,9 +229,7 @@ public class AgregarFragment extends Fragment {
 
         repository.saveTransactions(transactionsToSave, result -> {
             if (result.isSuccess()) {
-                // Notificar actualización
-                android.content.Intent intent = new android.content.Intent("com.notificationcapture.NEW_NOTIFICATION");
-                requireContext().sendBroadcast(intent);
+                // Notificar actualización omitida (auto por LiveData)
 
                 // Limpiar formulario
                 etTitle.setText("");

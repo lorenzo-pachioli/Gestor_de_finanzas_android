@@ -12,15 +12,20 @@ import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.repositories.WalletRepository;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class NotificationListener extends NotificationListenerService {
 
     private TransactionRepository repository;
     private WalletRepository walletsRepository;
+    private final java.util.concurrent.ExecutorService ioExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
 
-    // Listas cargadas desde JSON vía ConfigManager
-    private java.util.List<String> walletApps;
-    private java.util.List<String> paymentKeywords;
-    private java.util.List<com.notificationcapture.app.models.Wallets> globalWallets;
+    // Listas cacheadas para O(1) matching
+    private Set<String> globalWalletPackagesSet;
+    private Set<String> keywordSet;
+    private List<String> walletAppsSubstring;
 
     @Override
     public void onCreate() {
@@ -31,9 +36,19 @@ public class NotificationListener extends NotificationListenerService {
         // Cargar configuraciones
         com.notificationcapture.app.utils.ConfigManager config = com.notificationcapture.app.utils.ConfigManager
                 .getInstance();
-        walletApps = config.getWalletApps();
-        paymentKeywords = config.getPaymentKeywords();
-        globalWallets = config.getGlobalWallets();
+                
+        // Optimización algorítmica: Cachear en HashSets para matching O(1)
+        globalWalletPackagesSet = new HashSet<>();
+        for (com.notificationcapture.app.models.Wallets w : config.getGlobalWallets()) {
+            globalWalletPackagesSet.add(w.getPackageName());
+        }
+        
+        keywordSet = new HashSet<>();
+        for (String kw : config.getPaymentKeywords()) {
+            keywordSet.add(kw.toLowerCase());
+        }
+        
+        walletAppsSubstring = config.getWalletApps();
     }
 
     @Override
@@ -64,56 +79,55 @@ public class NotificationListener extends NotificationListenerService {
         }
 
         long timestamp = sbn.getPostTime();
-        // Crear el objeto Transaction (Debit por defecto)
-        Wallets wallet = walletsRepository.getWalletByPackageName(title, packageName); // Usamos packageName
-                                                                                       // temporalmente como nombre si
-                                                                                       // no hay
-        // mapping
-        Debit item = new Debit(
-                title != null ? title : "Sin título",
-                text,
-                timestamp,
-                wallet.getId(),
-                true);
-
-        // Guardar en la lista de notificaciones pendientes de revisión
-        repository.saveTransactionNotFiltered(item);
-
-        // Notificar a la actividad para actualizar la UI
-        Intent intent = new Intent("com.notificationcapture.NEW_NOTIFICATION");
-        sendBroadcast(intent);
+        
+        ioExecutor.execute(() -> {
+            // Crear el objeto Transaction (Debit por defecto)
+            Wallets wallet = walletsRepository.getWalletByPackageName(title, packageName); // Usamos packageName
+                                                                                           // temporalmente como nombre si
+                                                                                           // no hay
+            // mapping
+            Debit item = new Debit(
+                    title != null ? title : "Sin título",
+                    text,
+                    timestamp,
+                    wallet != null ? wallet.getId() : "1",
+                    true);
+    
+            // Guardar en la lista de notificaciones pendientes de revisión
+            repository.saveTransactionNotFiltered(item);
+    
+            // Notificar a la actividad para actualizar la UI
+            Intent intent = new Intent("com.notificationcapture.NEW_NOTIFICATION");
+            sendBroadcast(intent);
+        });
     }
 
     boolean isPaymentRelatedNotification(String packageName, String title, String text) {
 
-        // Verificar si es una app de wallet (prioridad: lista global)
-        boolean isWalletApp = false;
+        // 1. Verificar contra el packagename exacto en la lista global O(1)
+        if (globalWalletPackagesSet.contains(packageName)) {
+            return true;
+        }
 
-        // 1. Verificar contra el packagename exacto en la lista global
-        for (com.notificationcapture.app.models.Wallets wallet : globalWallets) {
-            if (wallet.getPackageName().equals(packageName)) {
-                isWalletApp = true;
-                break;
+        // 2. Verificar contra wallets personalizadas del usuario
+        List<com.notificationcapture.app.models.Wallets> userWallets = walletsRepository.getAllWallets();
+        for (com.notificationcapture.app.models.Wallets userWallet : userWallets) {
+            if (userWallet.getPackageName().equals(packageName)) {
+                return true;
             }
         }
 
-        // 2. Fallback: Verificar si contiene palabras clave en el packagename (compatibilidad lista anterior)
-        if (!isWalletApp) {
-            for (String wallet : walletApps) {
-                if (packageName.toLowerCase().contains(wallet)) {
-                    isWalletApp = true;
-                    break;
-                }
+        // 3. Fallback: Verificar si contiene palabras clave en el packagename
+        String packageNameLower = packageName.toLowerCase();
+        for (String wallet : walletAppsSubstring) {
+            if (packageNameLower.contains(wallet)) {
+                return true;
             }
         }
 
-        if (!isWalletApp) {
-            return false;
-        }
-
+        // 4. Verificación por palabras clave en el cuerpo del mensaje O(1)
         String fullText = (title + " " + text).toLowerCase();
-
-        for (String keyword : paymentKeywords) {
+        for (String keyword : keywordSet) {
             if (fullText.contains(keyword)) {
                 return true;
             }

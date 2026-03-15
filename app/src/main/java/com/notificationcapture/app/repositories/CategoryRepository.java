@@ -21,6 +21,7 @@ public class CategoryRepository implements GsonAccess {
 
     private SharedPreferences prefs;
     private Gson gson;
+    private List<Category> cachedCategories = null; // Memory Cache
 
     public static final String OTHER_INCOME_ID = "other_income";
     public static final String OTHER_OUTCOME_ID = "other_outcome";
@@ -113,6 +114,16 @@ public class CategoryRepository implements GsonAccess {
                 return c;
             }
         }
+        // Fallback para migraciones de objetos antiguos y IDs por defecto cruzados
+        if (OTHER_INCOME_ID.equals(id) || "Otros_INGRESO".equals(id)) {
+            for (Category c : all) {
+                if ("Otros".equalsIgnoreCase(c.getName()) && c.getType() == IngresoOEgreso.INGRESO) return c;
+            }
+        } else if (OTHER_OUTCOME_ID.equals(id) || "Otros_EGRESO".equals(id)) {
+            for (Category c : all) {
+                if ("Otros".equalsIgnoreCase(c.getName()) && c.getType() == IngresoOEgreso.EGRESO) return c;
+            }
+        }
         return null;
     }
 
@@ -129,6 +140,10 @@ public class CategoryRepository implements GsonAccess {
     }
 
     public List<Category> getAllCategories() {
+        if (cachedCategories != null) {
+            return new ArrayList<>(cachedCategories); // Devuelve copia rápida desde RAM O(1)
+        }
+        
         try {
             String json = prefs.getString(KEY_CATEGORIES, null);
             if (json == null)
@@ -153,7 +168,8 @@ public class CategoryRepository implements GsonAccess {
                 return new ArrayList<>();
             }
 
-            return cats;
+            cachedCategories = cats;
+            return new ArrayList<>(cachedCategories);
         } catch (Exception e) {
             AppLogger.e("CategoryRepository", "Error getting categories: " + e.getMessage(), e);
             return new ArrayList<>();
@@ -162,6 +178,7 @@ public class CategoryRepository implements GsonAccess {
 
     private void saveCategories(List<Category> categories) {
         try {
+            cachedCategories = new ArrayList<>(categories); // Sincroniza caché en memoria
             prefs.edit().putString(KEY_CATEGORIES, gson.toJson(categories)).apply();
         } catch (Exception e) {
             AppLogger.e("CategoryRepository", "Error saving categories: " + e.getMessage(), e);

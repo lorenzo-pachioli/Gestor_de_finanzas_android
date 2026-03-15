@@ -20,26 +20,42 @@ import com.notificationcapture.app.fragments.CategoriasFragment;
 import com.notificationcapture.app.fragments.HistorialFragment;
 import com.notificationcapture.app.fragments.InicioFragment;
 import com.notificationcapture.app.fragments.PerfilFragment;
-import com.notificationcapture.app.repositories.RepositoryProvider;
+import com.notificationcapture.app.viewmodels.SettingsViewModel;
+import com.notificationcapture.app.utils.SecurityPreferencesManager;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.appcompat.app.AppCompatDelegate;
 
 public class MainActivity extends AppCompatActivity {
 
     private BottomNavigationView bottomNavigation;
     private CardView fabAdd;
     private ViewPager2 viewPager;
+    private SettingsViewModel settingsViewModel;
+    private SecurityPreferencesManager prefsManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Cargar preferencia de tema
-        android.content.SharedPreferences prefs = getSharedPreferences("app_settings", MODE_PRIVATE);
-        int nightMode = prefs.getInt("night_mode", androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(nightMode);
+        // Inicializar Gestor de Preferencias Seguro y ViewModel
+        prefsManager = new SecurityPreferencesManager(this);
+        settingsViewModel = new ViewModelProvider(this).get(SettingsViewModel.class);
 
-        // Cargar preferencia de idioma
-        String savedLanguage = prefs.getString("app_language", "es");
-        setLocale(savedLanguage);
+        // Configurar Observadores para cambios de estado (MVVM)
+        settingsViewModel.getNightModeState().observe(this, mode -> {
+            AppCompatDelegate.setDefaultNightMode(mode);
+        });
+
+        settingsViewModel.getLanguageState().observe(this, lang -> {
+            setLocale(lang);
+        });
+
+        // Cargar valores iniciales desde almacenamiento seguro
+        int nightMode = prefsManager.getNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        String savedLanguage = prefsManager.getLanguage("es");
+        
+        settingsViewModel.setNightMode(nightMode);
+        settingsViewModel.setLanguage(savedLanguage);
 
         setContentView(R.layout.activity_main);
 
@@ -97,9 +113,6 @@ public class MainActivity extends AppCompatActivity {
             viewPager.setCurrentItem(0, false); // InicioFragment, sin animación
             bottomNavigation.setSelectedItemId(R.id.nav_home);
         }
-
-        // Inicializar el RepositoryProvider (SOLO UNA VEZ)
-        RepositoryProvider.initialize(this);
     }
 
     /**

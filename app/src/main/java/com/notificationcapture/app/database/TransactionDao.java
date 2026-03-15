@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import androidx.lifecycle.LiveData;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 import java.util.List;
 
@@ -29,6 +30,12 @@ public interface TransactionDao {
 
     @Query("SELECT * FROM transactions WHERE status = :status AND timestamp BETWEEN :start AND :end ORDER BY timestamp DESC")
     List<TransactionEntity> getByMonthAndStatus(long start, long end, String status);
+
+    @Query("SELECT * FROM transactions WHERE status = 'APPROVED' AND timestamp BETWEEN :start AND :end ORDER BY timestamp DESC")
+    LiveData<List<TransactionEntity>> getByMonthLiveData(long start, long end);
+
+    @Query("SELECT * FROM transactions WHERE status = :status ORDER BY timestamp DESC")
+    LiveData<List<TransactionEntity>> getAllByStatusLiveData(String status);
 
     @Query("DELETE FROM transactions WHERE status = 'PENDING' AND timestamp < :timestamp")
     void deleteOldPending(long timestamp);

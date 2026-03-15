@@ -8,6 +8,9 @@ import android.os.Looper;
 
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Transformations;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -32,6 +35,13 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
+import java.util.Calendar;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class TransactionRepository implements GsonAccess {
 
     private final SharedPreferences prefs;
@@ -51,7 +61,27 @@ public class TransactionRepository implements GsonAccess {
 
     public TransactionRepository(Context context) {
         this.context = context.getApplicationContext();
-        this.prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        
+        SharedPreferences securePrefs;
+        try {
+            MasterKey masterKey = new MasterKey.Builder(context)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build();
+            securePrefs = EncryptedSharedPreferences.create(
+                    context,
+                    "encrypted_secure_prefs",
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Fallback for extreme cases mapping to an unencrypted pref just to not crash completely, 
+            // though normally it should just fail securely. 
+            securePrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        }
+        this.prefs = securePrefs;
+        
         this.dao = AppDatabase.getDatabase(context).transactionDao();
         this.executor = Executors.newSingleThreadExecutor();
         this.mainHandler = new Handler(Looper.getMainLooper());
@@ -227,6 +257,16 @@ public class TransactionRepository implements GsonAccess {
 
     public List<Transaction> getAllTransactions() {
         return getByStatusBlocking(TransactionEntity.STATUS_APPROVED);
+    }
+
+    public LiveData<List<Transaction>> getAllTransactionsLiveData() {
+        return Transformations.map(dao.getAllByStatusLiveData(TransactionEntity.STATUS_APPROVED), 
+            TransactionMapper::fromEntityList);
+    }
+    
+    public LiveData<List<Transaction>> getAllTransactionNotFilteredLiveData() {
+        return Transformations.map(dao.getAllByStatusLiveData(TransactionEntity.STATUS_PENDING), 
+            TransactionMapper::fromEntityList);
     }
 
     private List<Transaction> getByStatusBlocking(String status) {

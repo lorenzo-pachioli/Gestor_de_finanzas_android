@@ -18,6 +18,7 @@ public class WalletRepository implements GsonAccess {
 
     private SharedPreferences prefs;
     private Gson gson;
+    private List<Wallets> cachedWallets = null; // Memory Cache
 
     public WalletRepository(Context context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -65,6 +66,10 @@ public class WalletRepository implements GsonAccess {
     }
 
     public List<Wallets> getAllWallets() {
+        if (cachedWallets != null) {
+            return new ArrayList<>(cachedWallets); // Devuelve copia rápida desde RAM O(1)
+        }
+        
         String json = prefs.getString(KEY_WALLETS, null);
         if (json == null)
             return new ArrayList<>();
@@ -88,7 +93,8 @@ public class WalletRepository implements GsonAccess {
                 return migrated;
             }
 
-            return list != null ? list : new ArrayList<>();
+            cachedWallets = list != null ? list : new ArrayList<>();
+            return new ArrayList<>(cachedWallets);
         } catch (Exception e) {
             AppLogger.e("WalletRepository", "Error getting all wallets", e);
             return new ArrayList<>();
@@ -129,6 +135,7 @@ public class WalletRepository implements GsonAccess {
     }
 
     private void saveWallets(List<Wallets> wallets) {
+        cachedWallets = new ArrayList<>(wallets); // Sincroniza caché en memoria
         prefs.edit().putString(KEY_WALLETS, gson.toJson(wallets)).apply();
     }
 

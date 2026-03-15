@@ -1,35 +1,25 @@
 package com.notificationcapture.app.fragments;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 import com.notificationcapture.app.adapters.TransactionAdapter;
 import com.notificationcapture.app.models.Transaction;
-import com.notificationcapture.app.repositories.CategoryRepository;
-import com.notificationcapture.app.repositories.RepositoryProvider;
-import com.notificationcapture.app.repositories.TransactionRepository;
+import com.notificationcapture.app.viewmodels.MainViewModel;
 import com.notificationcapture.app.R;
-import com.notificationcapture.app.models.Category;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 
 public class InicioFragment extends Fragment {
@@ -42,9 +32,7 @@ public class InicioFragment extends Fragment {
     private TextView tvEgresos;
     private TextView tvBalance;
     private TextView tvMonthTitle;
-    private TransactionRepository repository;
-    private CategoryRepository categoryRepository;
-    private BroadcastReceiver notificationReceiver;
+    private MainViewModel viewModel;
 
     @Nullable
     @Override
@@ -57,8 +45,8 @@ public class InicioFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        repository = RepositoryProvider.getInstance().getTransactionRepository();
-        categoryRepository = RepositoryProvider.getInstance().getCategoryRepository();
+        // Initialize ViewModel scoped to Activity so all fragments share data
+        viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
         recyclerView = view.findViewById(R.id.recyclerView);
         emptyView = view.findViewById(R.id.emptyView);
@@ -71,61 +59,30 @@ public class InicioFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         adapter = new TransactionAdapter(new ArrayList<>(), getChildFragmentManager(), item -> {
-            repository.deleteTransaction(item.getId());
-            loadNotifications();
+            viewModel.deleteTransaction(item.getId());
         }, null, false); // showAddButton = false para transacciones aprobadas
         recyclerView.setAdapter(adapter);
-
-        loadNotifications();
-
-        notificationReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                loadNotifications();
-            }
-        };
-
-        IntentFilter filter = new IntentFilter("com.notificationcapture.NEW_NOTIFICATION");
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            requireContext().registerReceiver(notificationReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        loadNotifications();
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (notificationReceiver != null) {
-            requireContext().unregisterReceiver(notificationReceiver);
-        }
-    }
-
-    private void loadNotifications() {
-        List<Transaction> allNotifications = repository.getAllTransactions();
-
-        // Filtrar solo las notificaciones del mes actual
-        List<Transaction> currentMonthNotifications = getCurrentMonthNotifications(allNotifications);
-        adapter.updateData(currentMonthNotifications);
-
-        if (currentMonthNotifications.isEmpty()) {
-            emptyView.setVisibility(View.VISIBLE);
-            recyclerView.setVisibility(View.GONE);
-        } else {
-            emptyView.setVisibility(View.GONE);
-            recyclerView.setVisibility(View.VISIBLE);
-        }
 
         // Actualizar el título del mes
         String monthName = getMonthName();
         tvMonthTitle.setText(getString(R.string.resumen_de, monthName));
 
-        // Actualizar el resumen financiero
-        updateFinancialSummary(currentMonthNotifications);
+        // Setup observer for unidirectional data flow
+        viewModel.getAllApprovedTransactions().observe(getViewLifecycleOwner(), allNotifications -> {
+            List<Transaction> currentMonthNotifications = getCurrentMonthNotifications(allNotifications);
+            adapter.updateData(currentMonthNotifications);
+
+            if (currentMonthNotifications.isEmpty()) {
+                emptyView.setVisibility(View.VISIBLE);
+                recyclerView.setVisibility(View.GONE);
+            } else {
+                emptyView.setVisibility(View.GONE);
+                recyclerView.setVisibility(View.VISIBLE);
+            }
+
+            // Actualizar el resumen financiero
+            updateFinancialSummary(currentMonthNotifications);
+        });
     }
 
     private List<Transaction> getCurrentMonthNotifications(List<Transaction> allNotifications) {

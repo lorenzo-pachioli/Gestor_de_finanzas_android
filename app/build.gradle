@@ -46,6 +46,16 @@ dependencies {
     implementation libs.androidx.room.common.jvm
     implementation libs.room.runtime
     implementation libs.androidx.core
+    
+    // Security Crypto for EncryptedSharedPreferences
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+    
+    // App Startup for AppInitializer
+    implementation 'androidx.startup:startup-runtime:1.1.1'
+    
+    // Lifecycle components for MVVM
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.6.2'
 
     testImplementation libs.junit
     testImplementation libs.robolectric
