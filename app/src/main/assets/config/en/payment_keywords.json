@@ -20,5 +20,18 @@
   "money credited",
   "balance credited",
   "money received",
-  "transfer received"
+  "transfer received",
+  "payment",
+  "paid",
+  "transfer",
+  "transferred",
+  "credit",
+  "credited",
+  "purchase",
+  "bought",
+  "debit",
+  "deposit",
+  "withdrawal",
+  "charge",
+  "charged"
 ]

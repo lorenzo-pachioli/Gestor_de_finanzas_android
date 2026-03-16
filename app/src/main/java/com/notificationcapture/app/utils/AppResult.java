@@ -5,6 +5,11 @@ package com.notificationcapture.app.utils;
  * @param <T> The type of data returned on success.
  */
 public class AppResult<T> {
+
+    public interface Consumer<T> {
+        void accept(T value);
+    }
+
     private final T data;
     private final Exception error;
 
@@ -33,19 +38,13 @@ public class AppResult<T> {
         return error;
     }
 
-    /**
-     * Executes a runnable if the result is a failure.
-     */
-    public void onFailure(java.util.function.Consumer<Exception> action) {
+    public void onFailure(Consumer<Exception> action) {
         if (!isSuccess() && action != null) {
             action.accept(error);
         }
     }
 
-    /**
-     * Executes a runnable if the result is a success.
-     */
-    public void onSuccess(java.util.function.Consumer<T> action) {
+    public void onSuccess(Consumer<T> action) {
         if (isSuccess() && action != null) {
             action.accept(data);
         }

@@ -119,7 +119,12 @@ public class WalletRepository implements GsonAccess {
 
     public void deleteWallet(String id) {
         List<Wallets> wallets = getAllWallets();
-        wallets.removeIf(w -> w.getId().equals(id));
+        java.util.Iterator<Wallets> iterator = wallets.iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().getId().equals(id)) {
+                iterator.remove();
+            }
+        }
         saveWallets(wallets);
     }
 
@@ -140,15 +145,51 @@ public class WalletRepository implements GsonAccess {
     }
 
     public Wallets getWalletByPackageName(String title, String packageName) {
+        if (packageName == null) return null;
+        
         List<Wallets> walletsList = getAllWallets();
+        // 1. Check if user already has an exact match
         for (Wallets wallet : walletsList) {
-            if (wallet.getPackageName().equals(packageName))
+            String pName = wallet.getPackageName();
+            if (pName != null && pName.equals(packageName)) {
                 return wallet;
+            }
         }
-        Wallets newWallet = new Wallets(title, packageName);
-        walletsList.add(newWallet);
-        saveWallets(walletsList);
-        return newWallet;
+        
+        // 2. Check if it matches any global wallet (by exact or substring)
+        com.notificationcapture.app.utils.ConfigManager config = com.notificationcapture.app.utils.ConfigManager.getInstance();
+        for (com.notificationcapture.app.models.GlobalWallet gw : config.getGlobalWallets()) {
+            boolean matches = false;
+            if (gw.matchesPackage(packageName)) {
+                matches = true;
+            } else {
+                for (String pkg : gw.getPackageNames()) {
+                    // Prevenir matches demasiado genéricos con substrings muy cortos o vacíos
+                    if (pkg.length() > 2 && packageName.toLowerCase().contains(pkg.toLowerCase())) {
+                        matches = true;
+                        break;
+                    }
+                }
+            }
+
+            if (matches) {
+                // Verificar si el usuario ya la tiene con su nombre primario
+                for (Wallets wallet : walletsList) {
+                    if (wallet.getPackageName().equals(gw.getPrimaryPackageName())) {
+                        return wallet;
+                    }
+                }
+                // Si no, autogenerar la wallet oficial
+                Wallets newGlobalWallet = gw.toUserWallet();
+                walletsList.add(newGlobalWallet);
+                saveWallets(walletsList);
+                return newGlobalWallet;
+            }
+        }
+
+        // 3. Unknown app, NO CREAR NUEVA BILLETERA. 
+        // Retornar null para que asigne walletId="1" y ponga "Desconocido".
+        return null;
     }
 
     public static String getPackageNameFromApp(String appName) {

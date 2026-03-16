@@ -7,6 +7,7 @@ import android.service.notification.StatusBarNotification;
 import android.app.Notification;
 
 import com.notificationcapture.app.models.Debit;
+import com.notificationcapture.app.models.GlobalWallet;
 import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
@@ -38,9 +39,10 @@ public class NotificationListener extends NotificationListenerService {
                 .getInstance();
                 
         // Optimización algorítmica: Cachear en HashSets para matching O(1)
+        // Indexa TODOS los packageNames alternativos de cada wallet global
         globalWalletPackagesSet = new HashSet<>();
-        for (com.notificationcapture.app.models.Wallets w : config.getGlobalWallets()) {
-            globalWalletPackagesSet.add(w.getPackageName());
+        for (GlobalWallet w : config.getGlobalWallets()) {
+            globalWalletPackagesSet.addAll(w.getPackageNames());
         }
         
         keywordSet = new HashSet<>();
@@ -112,7 +114,7 @@ public class NotificationListener extends NotificationListenerService {
         // 2. Verificar contra wallets personalizadas del usuario
         List<com.notificationcapture.app.models.Wallets> userWallets = walletsRepository.getAllWallets();
         for (com.notificationcapture.app.models.Wallets userWallet : userWallets) {
-            if (userWallet.getPackageName().equals(packageName)) {
+            if (packageName.equals(userWallet.getPackageName())) {
                 return true;
             }
         }

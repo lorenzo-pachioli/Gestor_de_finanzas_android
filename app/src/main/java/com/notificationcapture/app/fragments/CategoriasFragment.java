@@ -242,7 +242,8 @@ public class CategoriasFragment extends Fragment {
                     }
 
                     Double amount = item.getAmount();
-                    categoryTotals.put(category, categoryTotals.getOrDefault(category, 0.0) + amount);
+                    Double current = categoryTotals.get(category);
+                    categoryTotals.put(category, (current != null ? current : 0.0) + amount);
                 }
             }
         }

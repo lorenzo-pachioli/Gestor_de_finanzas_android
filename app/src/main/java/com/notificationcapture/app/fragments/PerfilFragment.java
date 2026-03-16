@@ -306,43 +306,51 @@ public class PerfilFragment extends Fragment {
     }
 
     private void showGlobalWalletSelectionDialog() {
-        List<com.notificationcapture.app.models.Wallets> globalWallets = com.notificationcapture.app.utils.ConfigManager.getInstance().getGlobalWallets();
+        List<com.notificationcapture.app.models.GlobalWallet> globalWallets = com.notificationcapture.app.utils.ConfigManager.getInstance().getGlobalWallets();
         List<com.notificationcapture.app.models.Wallets> userWallets = walletRepository.getAllWallets();
-        
+
+        // Construir conjunto de packages del usuario para highlight
         List<String> userWalletPackages = new ArrayList<>();
         for (com.notificationcapture.app.models.Wallets w : userWallets) {
             userWalletPackages.add(w.getPackageName());
         }
 
+        // Convertir GlobalWallet a lista Serializable para el BottomSheet
+        // El BottomSheet usa SpinnerDisplayable — GlobalWallet ya lo implementa
+        List<com.notificationcapture.app.models.GlobalWallet> globalList = new ArrayList<>(globalWallets);
+
+        // highlighted: packageName primario de cada global wallet que ya tiene el usuario
+        List<String> highlightedPrimaries = new ArrayList<>();
+        for (com.notificationcapture.app.models.GlobalWallet gw : globalWallets) {
+            for (String userPkg : userWalletPackages) {
+                if (gw.matchesPackage(userPkg)) {
+                    highlightedPrimaries.add(gw.getPrimaryPackageName());
+                    break;
+                }
+            }
+        }
+
         SelectorBottomSheet bottomSheet = SelectorBottomSheet.newInstance(
                 "Seleccionar Billetera",
-                globalWallets,
+                globalList,
                 "",
-                userWalletPackages
+                highlightedPrimaries
         );
 
         bottomSheet.setOnOptionSelectedListener(optionName -> {
-            // Find the selected wallet in the global list
-            for (com.notificationcapture.app.models.Wallets globalWallet : globalWallets) {
+            for (com.notificationcapture.app.models.GlobalWallet globalWallet : globalWallets) {
                 if (globalWallet.getName().equals(optionName)) {
-                    // Check if already exists to avoid duplicates
+                    // Verificar si ya existe (matchea cualquier package alternativo)
                     boolean exists = false;
                     for (com.notificationcapture.app.models.Wallets uw : userWallets) {
-                        if (uw.getPackageName().equals(globalWallet.getPackageName())) {
+                        if (globalWallet.matchesPackage(uw.getPackageName())) {
                             exists = true;
                             break;
                         }
                     }
 
                     if (!exists) {
-                        // Create a NEW object to ensure a unique ID if needed, 
-                        // but here we might want to preserve the global ID prefix or just create new
-                        com.notificationcapture.app.models.Wallets newWallet = new com.notificationcapture.app.models.Wallets(
-                                globalWallet.getId(),
-                                globalWallet.getName(),
-                                globalWallet.getPackageName()
-                        );
-                        walletRepository.addWallet(newWallet);
+                        walletRepository.addWallet(globalWallet.toUserWallet());
                         loadWallets();
                         Toast.makeText(requireContext(), "Billetera '" + optionName + "' agregada", Toast.LENGTH_SHORT).show();
                     } else {
