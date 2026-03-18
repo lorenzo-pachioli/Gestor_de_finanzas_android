@@ -105,37 +105,49 @@ public class NotificationListener extends NotificationListenerService {
     }
 
     boolean isPaymentRelatedNotification(String packageName, String title, String text) {
+        if (packageName == null) return false;
 
-        // 1. Verificar contra el packagename exacto en la lista global O(1)
+        // 1. Debe pertenecer a una wallet de la lista global (o a una personalizada del usuario)
+        boolean isWallet = false;
         if (globalWalletPackagesSet.contains(packageName)) {
-            return true;
-        }
-
-        // 2. Verificar contra wallets personalizadas del usuario
-        List<com.notificationcapture.app.models.Wallets> userWallets = walletsRepository.getAllWallets();
-        for (com.notificationcapture.app.models.Wallets userWallet : userWallets) {
-            if (packageName.equals(userWallet.getPackageName())) {
-                return true;
+            isWallet = true;
+        } else {
+            List<com.notificationcapture.app.models.Wallets> userWallets = walletsRepository.getAllWallets();
+            if (userWallets != null) {
+                for (com.notificationcapture.app.models.Wallets userWallet : userWallets) {
+                    if (packageName.equals(userWallet.getPackageName())) {
+                        isWallet = true;
+                        break;
+                    }
+                }
             }
         }
 
-        // 3. Fallback: Verificar si contiene palabras clave en el packagename
-        String packageNameLower = packageName.toLowerCase();
-        for (String wallet : walletAppsSubstring) {
-            if (packageNameLower.contains(wallet)) {
-                return true;
-            }
+        if (!isWallet) {
+            return false;
         }
 
-        // 4. Verificación por palabras clave en el cuerpo del mensaje O(1)
+        // 2. La notificación debe contener alguna palabra clave que indique que es una transacción
+        boolean hasKeyword = false;
         String fullText = (title + " " + text).toLowerCase();
         for (String keyword : keywordSet) {
             if (fullText.contains(keyword)) {
-                return true;
+                hasKeyword = true;
+                break;
             }
         }
 
-        return false;
+        if (!hasKeyword) {
+            return false;
+        }
+
+        // 3. Se debe reconocer el monto de la transferencia en la notificación
+        Double amount = com.notificationcapture.app.utils.StringParser.extractAmount(title, text);
+        if (amount == null || amount <= 0) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override

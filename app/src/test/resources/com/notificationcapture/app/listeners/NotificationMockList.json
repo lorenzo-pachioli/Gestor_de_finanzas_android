@@ -1,0 +1,45 @@
+
+[
+    {
+        "packageName": "com.mercadopago.wallet",
+        "title": "Pago recibido",
+        "text": "Recibiste $100",
+        "description": "CASO 1: Wallet registrada global + Keyword incluida + Monto explícito. \n \t Aceptado: Transferencia entrante estándar en Mercado Pago",
+        "expectedResult": true
+    },
+    {
+        "packageName": "com.uala.app",
+        "title": "Préstamo Express",
+        "text": "¡Tenés preaprobado un préstamo de $500.000!",
+        "description": "CASO 2: Wallet registrada global + Monto explícito + Sin keyword de transferencia. \n \t Rechazado: Contiene monto y es wallet validada, pero carece de un keyword explícito de transferencia",
+        "expectedResult": false
+    },
+    {
+        "packageName": "com.whatsapp",
+        "title": "Mensaje de Juan",
+        "text": "Hola, ya te hice la transferencia de los $1000",
+        "description": "CASO 3: App no registrada (WhatsApp) + Keyword + Monto. \n \t Rechazado: La aplicación (WhatsApp) no figura en la lista de wallets permitidas",
+        "expectedResult": false
+    },
+    {
+        "packageName": "com.mercadopago.wallet",
+        "title": "Dinero nuevo",
+        "text": "Tu transferencia ha sido completada.",
+        "description": "CASO 4: Wallet registrada global + Keyword + Sin monto explícito. \n \t Rechazado: Hubo un keyword pero falta el monto ($) extraíble",
+        "expectedResult": false
+    },
+    {
+        "packageName": "brubank.app",
+        "title": "Transferencia",
+        "text": "Se procesó el ingreso de $1.250,50 a tu cuenta.",
+        "description": "CASO 5: Wallet registrada global + Keyword + Monto con decimales. \n \t Aceptado: Reconocimiento de 'ingreso' y montos con decimales complejos",
+        "expectedResult": true
+    },
+    {
+        "packageName": "com.custom.wallet",
+        "title": "Nuevo pago",
+        "text": "Te enviaron un pago de $ 500",
+        "description": "CASO 6: Wallet registrada local (personalizada) + Keyword + Monto. \n \t Aceptado: La wallet pertenece al repositorio local de adiciones explícitas del usuario",
+        "expectedResult": true
+    }
+]
