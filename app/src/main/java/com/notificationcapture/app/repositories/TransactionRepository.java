@@ -24,7 +24,7 @@ import com.notificationcapture.app.models.Cash;
 import com.notificationcapture.app.models.Credit;
 import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.mappers.TransactionMapper;
-import com.notificationcapture.app.utils.AppExceptions;
+import com.notificationcapture.app.exceptions.*;
 import com.notificationcapture.app.utils.AppLogger;
 import com.notificationcapture.app.utils.AppResult;
 
@@ -214,7 +214,7 @@ public class TransactionRepository implements GsonAccess {
                 if (callback != null) mainHandler.post(() -> callback.onResult(AppResult.success(null)));
             } catch (Exception e) {
                 AppLogger.e("TransactionRepository", "Error saving transactions", e);
-                if (callback != null) mainHandler.post(() -> callback.onResult(AppResult.failure(new AppExceptions.DatabaseException("Fallo al guardar transacciones", e))));
+                if (callback != null) mainHandler.post(() -> callback.onResult(AppResult.failure(new DatabaseException("Fallo al guardar transacciones", e))));
             }
         });
     }
@@ -299,7 +299,7 @@ public class TransactionRepository implements GsonAccess {
                 mainHandler.post(() -> callback.onResult(AppResult.success(result)));
             } catch (Exception e) {
                 AppLogger.e("TransactionRepository", "Error getting all transactions", e);
-                mainHandler.post(() -> callback.onResult(AppResult.failure(new AppExceptions.DatabaseException("Error al obtener transacciones", e))));
+                mainHandler.post(() -> callback.onResult(AppResult.failure(new DatabaseException("Error al obtener transacciones", e))));
             }
         });
     }
@@ -324,7 +324,7 @@ public class TransactionRepository implements GsonAccess {
                 mainHandler.post(() -> callback.onResult(AppResult.success(result)));
             } catch (Exception e) {
                 AppLogger.e("TransactionRepository", "Error getting transactions by month", e);
-                mainHandler.post(() -> callback.onResult(AppResult.failure(new AppExceptions.DatabaseException("Error al obtener transacciones del mes", e))));
+                mainHandler.post(() -> callback.onResult(AppResult.failure(new DatabaseException("Error al obtener transacciones del mes", e))));
             }
         });
     }

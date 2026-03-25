@@ -23,6 +23,7 @@ import java.util.Set;
 
 import com.notificationcapture.app.repositories.WalletRepository;
 import com.notificationcapture.app.models.Wallets;
+import com.notificationcapture.app.exceptions.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -130,7 +131,13 @@ public class NotificationListenerTest {
         for (NotificationMock mock : mocks) {
             System.out.print(ANSI_YELLOW + "Ejecutando caso: " + mock.description + " ... " + ANSI_RESET);
             
-            boolean result = listener.isPaymentRelatedNotification(mock.packageName, mock.title, mock.text);
+            boolean result;
+            try {
+                result = listener.isPaymentRelatedNotification(mock.packageName, mock.title, mock.text);
+            } catch (ParserException e) {
+                // Si lanzamos una excepción de parseo, lo consideramos false en el resultado final de captura
+                result = false;
+            }
             
             try {
                 assertEquals("Fallo evaluando caso lógico: " + mock.description, mock.expectedResult, result);

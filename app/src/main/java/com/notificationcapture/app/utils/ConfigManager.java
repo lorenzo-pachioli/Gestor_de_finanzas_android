@@ -4,6 +4,7 @@ import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.notificationcapture.app.models.GlobalWallet;
+import com.notificationcapture.app.exceptions.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -73,7 +74,8 @@ public class ConfigManager {
             Type listType = new TypeToken<ArrayList<String>>() {}.getType();
             return gson.fromJson(json, listType);
         } catch (IOException e) {
-            e.printStackTrace();
+            AppLogger.e("ConfigManager", "Error opening asset: " + fileName, e);
+            // Dependiendo de si es crítico, podríamos lanzar ResourceNotFoundException
             return new ArrayList<>();
         }
     }
@@ -135,7 +137,7 @@ public class ConfigManager {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            AppLogger.e("ConfigManager", "Error reading wallets_global.raw", e);
             globalWallets = new ArrayList<>();
             packageToWalletMap = new HashMap<>();
             nameToPackageMap = new HashMap<>();

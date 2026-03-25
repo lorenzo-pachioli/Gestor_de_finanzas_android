@@ -12,6 +12,8 @@ import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.repositories.WalletRepository;
+import com.notificationcapture.app.exceptions.*;
+import com.notificationcapture.app.utils.AppLogger;
 
 import java.util.HashSet;
 import java.util.List;
@@ -76,8 +78,14 @@ public class NotificationListener extends NotificationListenerService {
                 : "";
 
         // Filtrar solo notificaciones de wallets/pagos
-        if (!isPaymentRelatedNotification(packageName, title, text)) {
-            return; // Ignorar completamente las notificaciones que no son transacciones
+        try {
+            if (!isPaymentRelatedNotification(packageName, title, text)) {
+                return; // Ignorar completamente las notificaciones que no son transacciones
+            }
+        } catch (ParserException e) {
+            // Logs específicos por si queremos debugear por qué falló el parseo de un pago
+            AppLogger.d("NotificationListener", "Filtro skipping: " + e.getMessage());
+            return;
         }
 
         long timestamp = sbn.getPostTime();
@@ -104,7 +112,7 @@ public class NotificationListener extends NotificationListenerService {
         });
     }
 
-    boolean isPaymentRelatedNotification(String packageName, String title, String text) {
+    boolean isPaymentRelatedNotification(String packageName, String title, String text) throws ParserException {
         if (packageName == null) return false;
 
         // 1. Debe pertenecer a una wallet de la lista global (o a una personalizada del usuario)
@@ -124,6 +132,7 @@ public class NotificationListener extends NotificationListenerService {
         }
 
         if (!isWallet) {
+            // No lanzamos excepción aquí, simplemente no es de una wallet conocida, es normal
             return false;
         }
 
@@ -138,13 +147,15 @@ public class NotificationListener extends NotificationListenerService {
         }
 
         if (!hasKeyword) {
+            // Si es una app de wallet pero no tiene palabras clave de pago, es ruido (ej. publicidad de la app)
             return false;
         }
 
         // 3. Se debe reconocer el monto de la transferencia en la notificación
         Double amount = com.notificationcapture.app.utils.StringParser.extractAmount(title, text);
         if (amount == null || amount <= 0) {
-            return false;
+            // Aquí sí lanzamos excepción porque ES de una wallet y TIENE keywords, pero fallamos al parsear el monto
+            throw new AmountNotFoundException(fullText);
         }
 
         return true;

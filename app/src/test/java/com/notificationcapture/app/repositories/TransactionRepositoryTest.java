@@ -12,7 +12,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.notificationcapture.app.models.Debit;
 import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.utils.AppResult;
-import com.notificationcapture.app.utils.AppExceptions;
+import com.notificationcapture.app.exceptions.*;
 
 import org.junit.Before;
 import org.junit.Test;

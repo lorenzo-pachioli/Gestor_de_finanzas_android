@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.notificationcapture.app.interfaces.GsonAccess;
 import com.notificationcapture.app.models.Wallets;
+import com.notificationcapture.app.exceptions.*;
 import com.notificationcapture.app.utils.AppLogger;
 
 import java.lang.reflect.Type;
@@ -39,7 +40,7 @@ public class WalletRepository implements GsonAccess {
                     // repo if not imported
                     // But we can try to find it via reflection or just log the failure.
                     AppLogger.e("WalletRepository", "Could not find raw resource 'wallets'");
-                    return;
+                    throw new ResourceNotFoundException("raw/wallets.json");
                 }
 
                 java.io.InputStream is = context.getResources().openRawResource(resId);
