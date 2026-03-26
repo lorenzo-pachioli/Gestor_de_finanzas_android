@@ -71,6 +71,8 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_marginHorizontal="8dp"
+        android:paddingBottom="75dp"
+        android:clipToPadding="false"
         android:visibility="visible" />
 
     <TextView
