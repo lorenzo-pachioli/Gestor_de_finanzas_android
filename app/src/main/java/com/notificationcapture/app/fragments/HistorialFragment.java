@@ -34,6 +34,8 @@ public class HistorialFragment extends Fragment {
     private TextView emptyView;
     private TransactionAdapter adapter;
     private Button btnEnableAccess;
+    private View layoutPermissionNeeded;
+    private View layoutHistoryContent;
     private HistorialViewModel viewModel;
 
     public HistorialFragment() {
@@ -62,6 +64,8 @@ public class HistorialFragment extends Fragment {
         emptyView = view.findViewById(R.id.emptyViewHistorial);
         recyclerView = view.findViewById(R.id.recyclerViewHistorial);
         btnEnableAccess = view.findViewById(R.id.btnEnableAccess);
+        layoutPermissionNeeded = view.findViewById(R.id.layoutPermissionNeeded);
+        layoutHistoryContent = view.findViewById(R.id.layoutHistoryContent);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
@@ -110,9 +114,11 @@ public class HistorialFragment extends Fragment {
 
     private void checkNotificationPermission() {
         if (!isNotificationServiceEnabled()) {
-            btnEnableAccess.setVisibility(View.VISIBLE);
+            layoutPermissionNeeded.setVisibility(View.VISIBLE);
+            layoutHistoryContent.setVisibility(View.GONE);
         } else {
-            btnEnableAccess.setVisibility(View.GONE);
+            layoutPermissionNeeded.setVisibility(View.GONE);
+            layoutHistoryContent.setVisibility(View.VISIBLE);
         }
     }
 
