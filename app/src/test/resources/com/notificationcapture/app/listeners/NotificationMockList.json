@@ -41,5 +41,12 @@
         "text": "Te enviaron un pago de $ 500",
         "description": "CASO 6: Wallet registrada local (personalizada) + Keyword + Monto. \n \t Aceptado: La wallet pertenece al repositorio local de adiciones explícitas del usuario",
         "expectedResult": true
+    },
+    {
+        "packageName": "com.mercadopago.wallet",
+        "title": "Reintegro de farmacias",
+        "text": "Tenés hasta $38.500 por compra, sólo con foto de tiket y receta. Un seguro que se paga solo",
+        "description": "CASO 7: Wallet registrada global + Monto explícito + Sin keyword de transferencia por ser publicidad. \n \t Rechazado: Contiene monto y es wallet validada, pero es una notificación es una publicidad.",
+        "expectedResult": false
     }
 ]

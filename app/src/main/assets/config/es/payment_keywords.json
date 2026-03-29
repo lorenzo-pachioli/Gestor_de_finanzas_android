@@ -25,13 +25,10 @@
   "transfer successful",
   "money received",
   "you received",
-  "pago",
   "transferencia",
   "te transfirieron",
   "acredit",
-  "compra",
   "compraste",
-  "cobro",
   "débito",
   "debito",
   "depósito",
@@ -42,6 +39,5 @@
   "retiro",
   "extracción",
   "extraccion",
-  "enviaste",
-  "cargo"
+  "enviaste"
 ]

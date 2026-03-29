@@ -25,8 +25,7 @@ import com.notificationcapture.app.repositories.WalletRepository;
 import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.exceptions.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 
 /**
@@ -74,29 +73,47 @@ public class NotificationListenerTest {
         com.notificationcapture.app.repositories.RepositoryProvider.initialize(context);
 
         // 3. Setear las variables globales que el NotificationListener obtiene internamente en su onCreate()
-        Set<String> mockGlobalWallets = new HashSet<>(Arrays.asList(
-                "com.mercadopago.wallet", 
-                "com.uala.app", 
-                "brubank.app"
-        ));
-        
-        Set<String> mockKeywords = new HashSet<>(Arrays.asList(
-                "transferencia", 
-                "enviaste", 
-                "recibiste",
-                "ingreso",
-                "pago"
-        ));
+        // 3a. Cargar keywords reales desde el ConfigManager de producción (vía assets de Robolectric)
+        // Esto garantiza que el test valide exactamente la misma lógica que corre en el dispositivo.
+        com.notificationcapture.app.utils.ConfigManager config = com.notificationcapture.app.utils.ConfigManager.getInstance();
 
-        // 3. Inicializar el repositorio real de forma local
+        List<String> rawKeywords = config.getPaymentKeywords();
+        assertFalse(
+                "[SETUP ERROR] Los keywords de producción están vacíos. " +
+                "Verificar que Robolectric puede acceder a src/main/assets/config/",
+                rawKeywords.isEmpty()
+        );
+        Set<String> productionKeywords = new HashSet<>();
+        for (String kw : rawKeywords) {
+            productionKeywords.add(kw.toLowerCase());
+        }
+
+        // 3b. Cargar wallets globales desde el ConfigManager (raw resource wallets_global.json)
+        List<com.notificationcapture.app.models.GlobalWallet> globalWalletsList = config.getGlobalWallets();
+        Set<String> productionGlobalWallets = new HashSet<>();
+        if (!globalWalletsList.isEmpty()) {
+            for (com.notificationcapture.app.models.GlobalWallet w : globalWalletsList) {
+                productionGlobalWallets.addAll(w.getPackageNames());
+            }
+        } else {
+            // Fallback: Robolectric no pudo cargar el raw resource con Config.NONE
+            // En este caso se mantiene el set mínimo necesario para los casos del mock JSON
+            productionGlobalWallets.addAll(Arrays.asList(
+                    "com.mercadopago.wallet",
+                    "com.uala.app",
+                    "brubank.app"
+            ));
+        }
+
+        // 4. Inicializar el repositorio real de forma local
         WalletRepository walletRepository = new WalletRepository(context);
         // Creamos y guardamos una custom wallet configurada por el "usuario"
         walletRepository.addWallet(new Wallets("Mi Custom Wallet", "com.custom.wallet"));
 
-        // 4. Inyectar las variables privadas directas por reflection
+        // 5. Inyectar las variables privadas directas por reflection
         // Esto evita tener que ejecutar el .onCreate() del Service de Android que acopla instancias como Database y ConfigManager globales
-        setPrivateField(listener, "globalWalletPackagesSet", mockGlobalWallets);
-        setPrivateField(listener, "keywordSet", mockKeywords);
+        setPrivateField(listener, "globalWalletPackagesSet", productionGlobalWallets);
+        setPrivateField(listener, "keywordSet", productionKeywords);
         setPrivateField(listener, "walletsRepository", walletRepository);
     }
 
