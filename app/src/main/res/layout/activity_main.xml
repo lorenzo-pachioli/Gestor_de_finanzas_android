@@ -28,8 +28,8 @@
             android:layout_centerInParent="true"
             android:src="@drawable/fluxus_logo"
             android:contentDescription="@null"
-            android:scaleY="4.0"
-            android:scaleX="4.0"
+            android:scaleY="1.0"
+            android:scaleX="1.0"
 
             android:adjustViewBounds="true"/>
 
