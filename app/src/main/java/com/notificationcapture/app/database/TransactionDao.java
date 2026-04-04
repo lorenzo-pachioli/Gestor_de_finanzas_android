@@ -66,4 +66,19 @@ public interface TransactionDao {
 
     @Query("SELECT COUNT(*) FROM transactions")
     int getCount();
+
+    @Query("SELECT " +
+           "CASE " +
+           "  WHEN paymentMethod = 'EFECTIVO' THEN 'Efectivo' " +
+           "  WHEN paymentMethod = 'DEBITO' THEN IFNULL(walletId, 'Desconocida') " +
+           "  ELSE 'Desconocida' " +
+           "END AS nombreCuenta, " +
+           "paymentMethod AS tipoCuenta, " +
+           "SUM(CASE WHEN type = 'INGRESO' THEN amount ELSE -amount END) AS saldo " +
+           "FROM transactions " +
+           "WHERE status = 'APPROVED' AND paymentMethod != 'CREDITO' " +
+           "GROUP BY nombreCuenta, tipoCuenta " +
+           "HAVING ROUND(saldo, 2) != 0 " +
+           "ORDER BY tipoCuenta, nombreCuenta")
+    List<com.notificationcapture.app.models.SaldoCuenta> getSaldosPorCuenta();
 }

@@ -51,6 +51,8 @@ public class TransactionRepository implements GsonAccess {
     private final Handler mainHandler;
     private final Gson gson;
 
+    private static final int MAX_RECORDS = 5000;
+
     private static final String PREF_MIGRATED = "sqlite_migrated";
     private static final String PREF_MIGRATION_IN_PROGRESS = "sqlite_migration_in_progress";
     private static final String PREF_LAST_MAINTENANCE_MONTH = "last_maintenance_month";
@@ -60,8 +62,9 @@ public class TransactionRepository implements GsonAccess {
     }
 
     public TransactionRepository(Context context) {
+
         this.context = context.getApplicationContext();
-        
+
         SharedPreferences securePrefs;
         try {
             MasterKey masterKey = new MasterKey.Builder(context)
@@ -72,16 +75,16 @@ public class TransactionRepository implements GsonAccess {
                     "encrypted_secure_prefs",
                     masterKey,
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            );
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
         } catch (Exception e) {
             e.printStackTrace();
-            // Fallback for extreme cases mapping to an unencrypted pref just to not crash completely, 
-            // though normally it should just fail securely. 
+            // Fallback for extreme cases mapping to an unencrypted pref just to not crash
+            // completely,
+            // though normally it should just fail securely.
             securePrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         }
         this.prefs = securePrefs;
-        
+
         this.dao = AppDatabase.getDatabase(context).transactionDao();
         this.executor = Executors.newSingleThreadExecutor();
         this.mainHandler = new Handler(Looper.getMainLooper());
@@ -104,10 +107,10 @@ public class TransactionRepository implements GsonAccess {
                     cal.set(Calendar.MINUTE, 0);
                     cal.set(Calendar.SECOND, 0);
                     cal.set(Calendar.MILLISECOND, 0);
-                    
+
                     // Delete all PENDING records from previous months
                     dao.deleteOldPending(cal.getTimeInMillis());
-                    
+
                     prefs.edit().putInt(PREF_LAST_MAINTENANCE_MONTH, currentMonthYear).apply();
                 }
             } catch (Exception e) {
@@ -140,18 +143,20 @@ public class TransactionRepository implements GsonAccess {
         String json = prefs.getString(key, null);
         if (json != null && !json.isEmpty()) {
             try {
-                // Deserializamos como JsonArray para poder inspeccionar cada objeto individualmente
-                // y decidir su clase concreta (Credit, Cash, Debit) basándonos en paymentMethod.
+                // Deserializamos como JsonArray para poder inspeccionar cada objeto
+                // individualmente
+                // y decidir su clase concreta (Credit, Cash, Debit) basándonos en
+                // paymentMethod.
                 JsonArray array = gson.fromJson(json, JsonArray.class);
                 if (array != null) {
                     List<TransactionEntity> entities = new ArrayList<>();
-                    String status = KEY_NOTIFICATIONS.equals(key) ? 
-                            TransactionEntity.STATUS_APPROVED : TransactionEntity.STATUS_PENDING;
+                    String status = KEY_NOTIFICATIONS.equals(key) ? TransactionEntity.STATUS_APPROVED
+                            : TransactionEntity.STATUS_PENDING;
 
                     for (JsonElement element : array) {
                         JsonObject obj = element.getAsJsonObject();
                         String method = obj.has("paymentMethod") ? obj.get("paymentMethod").getAsString() : "DEBITO";
-                        
+
                         Transaction t;
                         if ("CREDITO".equals(method)) {
                             t = gson.fromJson(obj, com.notificationcapture.app.models.Credit.class);
@@ -211,10 +216,13 @@ public class TransactionRepository implements GsonAccess {
                 }
                 dao.insertAll(entities);
                 checkCleanup();
-                if (callback != null) mainHandler.post(() -> callback.onResult(AppResult.success(null)));
+                if (callback != null)
+                    mainHandler.post(() -> callback.onResult(AppResult.success(null)));
             } catch (Exception e) {
                 AppLogger.e("TransactionRepository", "Error saving transactions", e);
-                if (callback != null) mainHandler.post(() -> callback.onResult(AppResult.failure(new DatabaseException("Fallo al guardar transacciones", e))));
+                if (callback != null)
+                    mainHandler.post(() -> callback
+                            .onResult(AppResult.failure(new DatabaseException("Fallo al guardar transacciones", e))));
             }
         });
     }
@@ -231,7 +239,7 @@ public class TransactionRepository implements GsonAccess {
     }
 
     private void checkCleanup() {
-        if (dao.getCount() > 5000) {
+        if (dao.getCount() > MAX_RECORDS) {
             Long oldest = dao.getOldestRecordTimestamp();
             if (oldest != null) {
                 Calendar cal = Calendar.getInstance();
@@ -260,13 +268,13 @@ public class TransactionRepository implements GsonAccess {
     }
 
     public LiveData<List<Transaction>> getAllTransactionsLiveData() {
-        return Transformations.map(dao.getAllByStatusLiveData(TransactionEntity.STATUS_APPROVED), 
-            TransactionMapper::fromEntityList);
+        return Transformations.map(dao.getAllByStatusLiveData(TransactionEntity.STATUS_APPROVED),
+                TransactionMapper::fromEntityList);
     }
-    
+
     public LiveData<List<Transaction>> getAllTransactionNotFilteredLiveData() {
-        return Transformations.map(dao.getAllByStatusLiveData(TransactionEntity.STATUS_PENDING), 
-            TransactionMapper::fromEntityList);
+        return Transformations.map(dao.getAllByStatusLiveData(TransactionEntity.STATUS_PENDING),
+                TransactionMapper::fromEntityList);
     }
 
     private List<Transaction> getByStatusBlocking(String status) {
@@ -294,12 +302,14 @@ public class TransactionRepository implements GsonAccess {
     public void getAllTransactions(RepositoryCallback<List<Transaction>> callback) {
         executor.execute(() -> {
             try {
-                List<TransactionEntity> entities = dao.getByMonthAndStatus(0, Long.MAX_VALUE, TransactionEntity.STATUS_APPROVED);
+                List<TransactionEntity> entities = dao.getByMonthAndStatus(0, Long.MAX_VALUE,
+                        TransactionEntity.STATUS_APPROVED);
                 List<Transaction> result = TransactionMapper.fromEntityList(entities);
                 mainHandler.post(() -> callback.onResult(AppResult.success(result)));
             } catch (Exception e) {
                 AppLogger.e("TransactionRepository", "Error getting all transactions", e);
-                mainHandler.post(() -> callback.onResult(AppResult.failure(new DatabaseException("Error al obtener transacciones", e))));
+                mainHandler.post(() -> callback
+                        .onResult(AppResult.failure(new DatabaseException("Error al obtener transacciones", e))));
             }
         });
     }
@@ -307,7 +317,7 @@ public class TransactionRepository implements GsonAccess {
     public void deleteTransactionNotFiltered(String id) {
         deleteTransaction(id);
     }
-    
+
     public void moveTransactionToApproved(String id) {
         executor.execute(() -> dao.updateStatus(id, TransactionEntity.STATUS_APPROVED));
     }
@@ -324,7 +334,8 @@ public class TransactionRepository implements GsonAccess {
                 mainHandler.post(() -> callback.onResult(AppResult.success(result)));
             } catch (Exception e) {
                 AppLogger.e("TransactionRepository", "Error getting transactions by month", e);
-                mainHandler.post(() -> callback.onResult(AppResult.failure(new DatabaseException("Error al obtener transacciones del mes", e))));
+                mainHandler.post(() -> callback.onResult(
+                        AppResult.failure(new DatabaseException("Error al obtener transacciones del mes", e))));
             }
         });
     }
@@ -346,6 +357,37 @@ public class TransactionRepository implements GsonAccess {
             AppLogger.e("TransactionRepository", "Error getting database size", e);
             return 0.0;
         }
+    }
+
+    public void getSaldosPorCuenta(RepositoryCallback<java.util.List<com.notificationcapture.app.models.SaldoCuenta>> callback) {
+        executor.execute(() -> {
+            try {
+                java.util.List<com.notificationcapture.app.models.SaldoCuenta> result = dao.getSaldosPorCuenta();
+                
+                // Set human readable names instead of UUIDs for wallets
+                com.notificationcapture.app.repositories.WalletRepository walletRepo = 
+                        com.notificationcapture.app.repositories.RepositoryProvider.getInstance().getWalletRepository();
+                
+                java.util.Map<String, String> walletNames = new java.util.HashMap<>();
+                for (com.notificationcapture.app.models.Wallets w : walletRepo.getAllWallets()) {
+                    walletNames.put(w.getId(), w.getName());
+                }
+                
+                java.util.List<com.notificationcapture.app.models.SaldoCuenta> finalResult = new java.util.ArrayList<>();
+                for (com.notificationcapture.app.models.SaldoCuenta sc : result) {
+                    String finalName = sc.getNombreCuenta();
+                    if ("DEBITO".equals(sc.getTipoCuenta()) && walletNames.containsKey(finalName)) {
+                        finalName = walletNames.get(finalName);
+                    }
+                    finalResult.add(new com.notificationcapture.app.models.SaldoCuenta(finalName, sc.getTipoCuenta(), sc.getSaldo()));
+                }
+
+                mainHandler.post(() -> callback.onResult(AppResult.success(finalResult)));
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error getting saldos por cuenta", e);
+                mainHandler.post(() -> callback.onResult(AppResult.failure(new DatabaseException("Error al obtener saldos", e))));
+            }
+        });
     }
 
 }

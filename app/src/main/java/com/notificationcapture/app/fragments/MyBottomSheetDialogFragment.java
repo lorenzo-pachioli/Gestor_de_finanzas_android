@@ -87,6 +87,30 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         recyclerDetails = view.findViewById(R.id.recyclerDetails);
 
         if (getArguments() != null) {
+            String modo = getArguments().getString("modo");
+
+            if ("patrimonio_neto".equals(modo)) {
+                tvTitle.setText("Patrimonio Neto por Cuenta");
+                TransactionRepository repository = RepositoryProvider.getInstance().getTransactionRepository();
+                repository.getSaldosPorCuenta(result -> {
+                    if (result.isSuccess() && result.getData() != null && !result.getData().isEmpty()) {
+                        com.notificationcapture.app.adapters.SaldoCuentaAdapter saldoAdapter = 
+                                new com.notificationcapture.app.adapters.SaldoCuentaAdapter(result.getData());
+                        recyclerDetails.setLayoutManager(new LinearLayoutManager(getContext()));
+                        recyclerDetails.setAdapter(saldoAdapter);
+                        recyclerDetails.setVisibility(View.VISIBLE);
+                    } else {
+                        com.notificationcapture.app.adapters.SaldoCuentaAdapter saldoAdapter = 
+                                new com.notificationcapture.app.adapters.SaldoCuentaAdapter(new java.util.ArrayList<>());
+                        recyclerDetails.setLayoutManager(new LinearLayoutManager(getContext()));
+                        recyclerDetails.setAdapter(saldoAdapter);
+                        recyclerDetails.setVisibility(View.VISIBLE);
+                        android.widget.Toast.makeText(getContext(), "No tienes cuentas con saldo", android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return;
+            }
+
             String title = getArguments().getString(ARG_TITLE);
             List<Transaction> notifications = (List<Transaction>) getArguments()
                     .getSerializable(ARG_NOTIFICATIONS);

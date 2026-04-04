@@ -55,8 +55,23 @@ public class InicioFragment extends Fragment {
         tvEgresos = view.findViewById(R.id.tvEgresos);
         tvBalance = view.findViewById(R.id.tvBalance);
         tvMonthTitle = view.findViewById(R.id.tvMonthTitle);
+        
+        View cardTotalDisponible = view.findViewById(R.id.cardTotalDisponible);
+        TextView tvTotalDisponible = view.findViewById(R.id.tvTotalDisponible);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        // Patrimonio Neto Trigger mensual (si corresponde) o global
+        View.OnClickListener patrimonioClickListener = v -> {
+            MyBottomSheetDialogFragment sheet = new MyBottomSheetDialogFragment();
+            Bundle args = new Bundle();
+            args.putString("modo", "patrimonio_neto");
+            sheet.setArguments(args);
+            sheet.show(getParentFragmentManager(), "patrimonio_neto");
+        };
+
+        tvBalance.setOnClickListener(patrimonioClickListener);
+        cardTotalDisponible.setOnClickListener(patrimonioClickListener);
 
         adapter = new TransactionAdapter(new ArrayList<>(), getChildFragmentManager(), item -> {
             viewModel.deleteTransaction(item.getId());
@@ -80,8 +95,23 @@ public class InicioFragment extends Fragment {
                 recyclerView.setVisibility(View.VISIBLE);
             }
 
-            // Actualizar el resumen financiero
+            // Actualizar el resumen financiero del mes
             updateFinancialSummary(currentMonthNotifications);
+            
+            // Actualizar el total disponible usando todas las transacciones
+            double totalHistorico = 0;
+            for (Transaction t : allNotifications) {
+                if (t.hasAmount()) {
+                    if (t.getType() == IngresoOEgreso.INGRESO) totalHistorico += t.getAmount();
+                    else totalHistorico -= t.getAmount();
+                }
+            }
+            tvTotalDisponible.setText(formatAmount(totalHistorico));
+            if (totalHistorico >= 0) {
+                tvTotalDisponible.setTextColor(getResources().getColor(R.color.green));
+            } else {
+                tvTotalDisponible.setTextColor(getResources().getColor(R.color.red));
+            }
         });
     }
 
