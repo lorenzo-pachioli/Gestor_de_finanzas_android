@@ -1,5 +1,6 @@
 package com.notificationcapture.app.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -91,23 +92,7 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
 
             if ("patrimonio_neto".equals(modo)) {
                 tvTitle.setText("Patrimonio Neto por Cuenta");
-                TransactionRepository repository = RepositoryProvider.getInstance().getTransactionRepository();
-                repository.getSaldosPorCuenta(result -> {
-                    if (result.isSuccess() && result.getData() != null && !result.getData().isEmpty()) {
-                        com.notificationcapture.app.adapters.SaldoCuentaAdapter saldoAdapter = 
-                                new com.notificationcapture.app.adapters.SaldoCuentaAdapter(result.getData());
-                        recyclerDetails.setLayoutManager(new LinearLayoutManager(getContext()));
-                        recyclerDetails.setAdapter(saldoAdapter);
-                        recyclerDetails.setVisibility(View.VISIBLE);
-                    } else {
-                        com.notificationcapture.app.adapters.SaldoCuentaAdapter saldoAdapter = 
-                                new com.notificationcapture.app.adapters.SaldoCuentaAdapter(new java.util.ArrayList<>());
-                        recyclerDetails.setLayoutManager(new LinearLayoutManager(getContext()));
-                        recyclerDetails.setAdapter(saldoAdapter);
-                        recyclerDetails.setVisibility(View.VISIBLE);
-                        android.widget.Toast.makeText(getContext(), "No tienes cuentas con saldo", android.widget.Toast.LENGTH_SHORT).show();
-                    }
-                });
+                refreshSaldos();
                 return;
             }
 
@@ -154,6 +139,60 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
         if (dismissListener != null) {
             dismissListener.onDismissed(dataChanged);
         }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1001 && resultCode == android.app.Activity.RESULT_OK) {
+            refreshSaldos();
+            dataChanged = true;
+        }
+    }
+
+    private void refreshSaldos() {
+        TransactionRepository repository = RepositoryProvider.getInstance().getTransactionRepository();
+        repository.getSaldosPorCuenta(result -> {
+            if (result.isSuccess() && result.getData() != null) {
+                com.notificationcapture.app.adapters.SaldoCuentaAdapter saldoAdapter = new com.notificationcapture.app.adapters.SaldoCuentaAdapter(
+                        result.getData(), saldo -> {
+                            java.util.Calendar cal = java.util.Calendar.getInstance();
+                            cal.set(java.util.Calendar.DAY_OF_MONTH, 1);
+                            cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                            cal.set(java.util.Calendar.MINUTE, 0);
+                            cal.set(java.util.Calendar.SECOND, 0);
+                            cal.set(java.util.Calendar.MILLISECOND, 0);
+                            long start = cal.getTimeInMillis();
+
+                            cal.set(java.util.Calendar.DAY_OF_MONTH,
+                                    cal.getActualMaximum(java.util.Calendar.DAY_OF_MONTH));
+                            cal.set(java.util.Calendar.HOUR_OF_DAY, 23);
+                            cal.set(java.util.Calendar.MINUTE, 59);
+                            cal.set(java.util.Calendar.SECOND, 59);
+                            cal.set(java.util.Calendar.MILLISECOND, 0);
+                            long end = cal.getTimeInMillis();
+
+                            Intent intent = new Intent(requireContext(), PagoTarjetaActivity.class);
+                            intent.putExtra(PagoTarjetaActivity.EXTRA_CREDIT_CARD_ID, saldo.getSourceId());
+                            intent.putExtra(PagoTarjetaActivity.EXTRA_CARD_NAME, saldo.getNombreCuenta());
+                            intent.putExtra(PagoTarjetaActivity.EXTRA_START_TIMESTAMP, start);
+                            intent.putExtra(PagoTarjetaActivity.EXTRA_END_TIMESTAMP, end);
+                            startActivityForResult(intent, 1001); // 1001 = REQUEST_PAGO_TARJETA
+                        });
+                recyclerDetails.setLayoutManager(new LinearLayoutManager(getContext()));
+                recyclerDetails.setAdapter(saldoAdapter);
+                recyclerDetails.setVisibility(View.VISIBLE);
+
+                if (result.getData().isEmpty()) {
+                    android.widget.Toast
+                            .makeText(getContext(), "No tienes cuentas con saldo", android.widget.Toast.LENGTH_SHORT)
+                            .show();
+                }
+            } else {
+                android.widget.Toast.makeText(getContext(), "Error al cargar saldos", android.widget.Toast.LENGTH_SHORT)
+                        .show();
+            }
+        });
     }
 
     public void setView(View dialogView) {

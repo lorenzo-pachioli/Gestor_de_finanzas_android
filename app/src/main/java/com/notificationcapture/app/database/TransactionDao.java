@@ -8,6 +8,7 @@ import androidx.room.Update;
 
 import androidx.lifecycle.LiveData;
 import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.models.SaldoCuenta;
 import java.util.List;
 
 @Dao
@@ -18,6 +19,9 @@ public interface TransactionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<TransactionEntity> transactions);
+
+    @Query("DELETE FROM transactions WHERE title LIKE 'Saldo Impago%' AND paymentMethod = 'CREDITO'")
+    void deleteLegacyArrastres();
 
     @Update
     void update(TransactionEntity transaction);
@@ -58,6 +62,12 @@ public interface TransactionDao {
     @Query("DELETE FROM transactions WHERE timestamp BETWEEN :start AND :end")
     void deleteRecordsInRange(long start, long end);
 
+    @Query("SELECT SUM(amount) FROM transactions WHERE creditCardId = :creditCardId AND timestamp BETWEEN :start AND :end AND type = 'EGRESO' AND status = 'APPROVED'")
+    Double getMontoResumen(String creditCardId, long start, long end);
+
+    @Query("SELECT SUM(amount) FROM transactions WHERE creditCardId = :creditCardId AND timestamp BETWEEN :start AND :end AND type = 'EGRESO' AND status = 'APPROVED'")
+    LiveData<Double> getMontoResumenLiveData(String creditCardId, long start, long end);
+
     @Query("DELETE FROM transactions WHERE id = :id")
     void deleteById(String id);
 
@@ -67,18 +77,27 @@ public interface TransactionDao {
     @Query("SELECT COUNT(*) FROM transactions")
     int getCount();
 
-    @Query("SELECT " +
-           "CASE " +
-           "  WHEN paymentMethod = 'EFECTIVO' THEN 'Efectivo' " +
-           "  WHEN paymentMethod = 'DEBITO' THEN IFNULL(walletId, 'Desconocida') " +
-           "  ELSE 'Desconocida' " +
-           "END AS nombreCuenta, " +
-           "paymentMethod AS tipoCuenta, " +
-           "SUM(CASE WHEN type = 'INGRESO' THEN amount ELSE -amount END) AS saldo " +
-           "FROM transactions " +
-           "WHERE status = 'APPROVED' AND paymentMethod != 'CREDITO' " +
-           "GROUP BY nombreCuenta, tipoCuenta " +
-           "HAVING ROUND(saldo, 2) != 0 " +
+    @Query("SELECT nombreCuenta, tipoCuenta, saldo, sourceId FROM (" +
+           "  SELECT " +
+           "  CASE " +
+           "    WHEN paymentMethod = 'EFECTIVO' THEN 'Efectivo' " +
+           "    WHEN paymentMethod = 'DEBITO' THEN IFNULL(walletId, 'Desconocida') " +
+           "    WHEN paymentMethod = 'CREDITO' THEN IFNULL(creditCardId, 'Desconocida') " +
+           "    ELSE 'Desconocida' " +
+           "  END AS nombreCuenta, " +
+           "  paymentMethod AS tipoCuenta, " +
+           "  CASE " +
+           "    WHEN paymentMethod = 'EFECTIVO' THEN 'EFECTIVO' " +
+           "    WHEN paymentMethod = 'DEBITO' THEN walletId " +
+           "    WHEN paymentMethod = 'CREDITO' THEN creditCardId " +
+           "    ELSE NULL " +
+           "  END AS sourceId, " +
+           "  CAST(SUM(CASE WHEN type = 'INGRESO' THEN amount ELSE -amount END) " +
+           "    + COALESCE((SELECT SUM(cp.montoPagado) FROM credit_card_payments cp WHERE cp.creditCardId = transactions.creditCardId AND cp.timestampPago <= :maxTimestamp), 0) AS REAL) AS saldo " +
+           "  FROM transactions " +
+           "  WHERE status = 'APPROVED' AND timestamp <= :maxTimestamp " +
+           "  GROUP BY nombreCuenta, tipoCuenta, sourceId " +
+           ") WHERE ROUND(saldo, 2) != 0 " +
            "ORDER BY tipoCuenta, nombreCuenta")
-    List<com.notificationcapture.app.models.SaldoCuenta> getSaldosPorCuenta();
+    List<SaldoCuenta> getSaldosPorCuenta(long maxTimestamp);
 }

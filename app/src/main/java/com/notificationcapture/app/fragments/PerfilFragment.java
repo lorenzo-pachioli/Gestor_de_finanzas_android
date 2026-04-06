@@ -408,6 +408,7 @@ public class PerfilFragment extends Fragment {
 
         EditText etName = dialogView.findViewById(R.id.etCardName);
         EditText etClosingDate = dialogView.findViewById(R.id.etClosingDate);
+        EditText etLast4 = dialogView.findViewById(R.id.etLast4);
         LinearLayout containerColors = dialogView.findViewById(R.id.containerCardColors);
 
         // Populate Colors (use same logic as categories or a separate palette?)
@@ -424,6 +425,8 @@ public class PerfilFragment extends Fragment {
         btnCreate.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             String closingDateStr = etClosingDate.getText().toString().trim();
+            String last4 = etLast4.getText().toString().trim();
+            
             int closingDate = 1;
             try {
                 closingDate = Integer.parseInt(closingDateStr);
@@ -434,7 +437,7 @@ public class PerfilFragment extends Fragment {
             }
 
             if (!name.isEmpty()) {
-                CreditCard newCard = new CreditCard(name, closingDate, selectedColor);
+                CreditCard newCard = new CreditCard(name, closingDate, selectedColor, last4.isEmpty() ? "0000" : last4);
                 creditCardRepository.addCreditCard(newCard);
                 loadCreditCards();
                 Toast.makeText(requireContext(), "Tarjeta agregada", Toast.LENGTH_SHORT).show();
@@ -583,10 +586,12 @@ public class PerfilFragment extends Fragment {
 
         EditText etName = dialogView.findViewById(R.id.etCardName);
         EditText etClosingDate = dialogView.findViewById(R.id.etClosingDate);
+        EditText etLast4 = dialogView.findViewById(R.id.etLast4);
         LinearLayout containerColors = dialogView.findViewById(R.id.containerCardColors);
 
         etName.setText(card.getName());
         etClosingDate.setText(String.valueOf(card.getClosingDate()));
+        etLast4.setText(card.getLast4());
         selectedColor = card.getColor();
 
         int[] colors = CatColors.getIntEgresosColors();
@@ -605,6 +610,8 @@ public class PerfilFragment extends Fragment {
         btnCreate.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             String closingDateStr = etClosingDate.getText().toString().trim();
+            String last4 = etLast4.getText().toString().trim();
+            
             int closingDate = 1;
             try {
                 closingDate = Integer.parseInt(closingDateStr);
@@ -617,6 +624,7 @@ public class PerfilFragment extends Fragment {
                 card.setName(name);
                 card.setClosingDate(closingDate);
                 card.setColor(selectedColor);
+                card.setLast4(last4.isEmpty() ? "0000" : last4);
                 creditCardRepository.updateCreditCard(card);
                 loadCreditCards();
                 Toast.makeText(requireContext(), "Tarjeta actualizada", Toast.LENGTH_SHORT).show();

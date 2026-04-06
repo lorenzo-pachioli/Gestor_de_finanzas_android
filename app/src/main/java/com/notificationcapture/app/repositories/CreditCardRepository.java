@@ -39,6 +39,10 @@ public class CreditCardRepository implements GsonAccess {
         return new ArrayList<>(cachedCreditCards);
     }
 
+    public List<CreditCard> getAllCreditCards() {
+        return getCreditCards();
+    }
+
     public void addCreditCard(com.notificationcapture.app.models.CreditCard card) {
         List<com.notificationcapture.app.models.CreditCard> cards = getCreditCards();
         cards.add(card);

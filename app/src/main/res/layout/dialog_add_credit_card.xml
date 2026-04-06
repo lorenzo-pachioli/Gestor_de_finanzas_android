@@ -45,6 +45,25 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="Últimos 4 dígitos"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/etLast4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="XXXX"
+        android:inputType="number"
+        android:maxLength="4"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="@string/seleccionar_color"
         android:textSize="16sp"
         android:textStyle="bold"

@@ -22,6 +22,7 @@ import com.notificationcapture.app.database.TransactionEntity;
 import com.notificationcapture.app.interfaces.GsonAccess;
 import com.notificationcapture.app.models.Cash;
 import com.notificationcapture.app.models.Credit;
+import com.notificationcapture.app.models.ResumenDeudaTarjeta;
 import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.mappers.TransactionMapper;
 import com.notificationcapture.app.exceptions.*;
@@ -137,6 +138,16 @@ public class TransactionRepository implements GsonAccess {
 
     public void shutdown() {
         executor.shutdownNow();
+    }
+
+    private long getEndOfCurrentMonth() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTimeInMillis();
     }
 
     private void migrateLegacyList(String key) {
@@ -359,33 +370,163 @@ public class TransactionRepository implements GsonAccess {
         }
     }
 
-    public void getSaldosPorCuenta(RepositoryCallback<java.util.List<com.notificationcapture.app.models.SaldoCuenta>> callback) {
+    public void getSaldosPorCuenta(
+            RepositoryCallback<java.util.List<com.notificationcapture.app.models.SaldoCuenta>> callback) {
         executor.execute(() -> {
             try {
-                java.util.List<com.notificationcapture.app.models.SaldoCuenta> result = dao.getSaldosPorCuenta();
-                
+                long endOfMonth = getEndOfCurrentMonth();
+                java.util.List<com.notificationcapture.app.models.SaldoCuenta> result = dao
+                        .getSaldosPorCuenta(endOfMonth);
+
                 // Set human readable names instead of UUIDs for wallets
-                com.notificationcapture.app.repositories.WalletRepository walletRepo = 
-                        com.notificationcapture.app.repositories.RepositoryProvider.getInstance().getWalletRepository();
-                
+                com.notificationcapture.app.repositories.WalletRepository walletRepo = com.notificationcapture.app.repositories.RepositoryProvider
+                        .getInstance().getWalletRepository();
+                com.notificationcapture.app.repositories.CreditCardRepository creditCardRepo = com.notificationcapture.app.repositories.RepositoryProvider
+                        .getInstance().getCreditCardRepository();
+
                 java.util.Map<String, String> walletNames = new java.util.HashMap<>();
                 for (com.notificationcapture.app.models.Wallets w : walletRepo.getAllWallets()) {
                     walletNames.put(w.getId(), w.getName());
                 }
-                
+
+                java.util.Map<String, String> cardNames = new java.util.HashMap<>();
+                for (com.notificationcapture.app.models.CreditCard c : creditCardRepo.getAllCreditCards()) {
+                    cardNames.put(c.getId(), c.getName() + " (*" + c.getLast4() + ")");
+                }
+
                 java.util.List<com.notificationcapture.app.models.SaldoCuenta> finalResult = new java.util.ArrayList<>();
                 for (com.notificationcapture.app.models.SaldoCuenta sc : result) {
                     String finalName = sc.getNombreCuenta();
-                    if ("DEBITO".equals(sc.getTipoCuenta()) && walletNames.containsKey(finalName)) {
-                        finalName = walletNames.get(finalName);
+                    double saldo = sc.getSaldo();
+
+                    if ("DEBITO".equals(sc.getTipoCuenta())) {
+                        if (walletNames.containsKey(sc.getSourceId())) {
+                            finalName = walletNames.get(sc.getSourceId());
+                        } else if (sc.getSourceId() == null || "EFECTIVO".equals(sc.getSourceId())) {
+                            finalName = "Efectivo";
+                        } else {
+                            finalName = "Billetera (" + sc.getSourceId() + ")";
+                        }
+                    } else if ("CREDITO".equals(sc.getTipoCuenta())) {
+                        if (cardNames.containsKey(sc.getSourceId())) {
+                            finalName = cardNames.get(sc.getSourceId());
+                        } else {
+                            finalName = "Tarjeta (" + sc.getSourceId() + ")";
+                        }
+
+                    } else if ("EFECTIVO".equals(sc.getTipoCuenta())) {
+                        finalName = "Efectivo";
                     }
-                    finalResult.add(new com.notificationcapture.app.models.SaldoCuenta(finalName, sc.getTipoCuenta(), sc.getSaldo()));
+                    finalResult.add(new com.notificationcapture.app.models.SaldoCuenta(finalName, sc.getTipoCuenta(),
+                            saldo, sc.getSourceId()));
                 }
 
                 mainHandler.post(() -> callback.onResult(AppResult.success(finalResult)));
             } catch (Exception e) {
                 AppLogger.e("TransactionRepository", "Error getting saldos por cuenta", e);
-                mainHandler.post(() -> callback.onResult(AppResult.failure(new DatabaseException("Error al obtener saldos", e))));
+                mainHandler.post(() -> callback
+                        .onResult(AppResult.failure(new DatabaseException("Error al obtener saldos", e))));
+            }
+        });
+    }
+
+    public void efectuarPagoTarjeta(com.notificationcapture.app.database.CreditCardPaymentEntity pago,
+            TransactionEntity gastoDeBilletera,
+            RepositoryCallback<Void> callback) {
+        executor.execute(() -> {
+            try {
+                AppDatabase.getDatabase(context).runInTransaction(() -> {
+                    AppDatabase.getDatabase(context).creditCardPaymentDao().insert(pago);
+                    dao.insert(gastoDeBilletera);
+                });
+                mainHandler.post(() -> callback.onResult(AppResult.success(null)));
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error al procesar el pago de la tarjeta", e);
+                mainHandler.post(
+                        () -> callback.onResult(AppResult.failure(new DatabaseException("Error procesando pago", e))));
+            }
+        });
+    }
+
+    /**
+     * Fuente de verdad para el cálculo del arrastre histórico (deuda no pagada).
+     * Arrastre = (Egresos con timestamp < InicioMes) - (Pagos con startTimestamp < InicioMes)
+     */
+    public double getArrastreHistoricoBlocking(String creditCardId, long startOfMonth) {
+        try {
+            // 1. Gastos totales antes de este período
+            Double gastosAnteriores = dao.getMontoResumen(creditCardId, 0, startOfMonth - 1);
+            double totalGastado = gastosAnteriores == null ? 0.0 : gastosAnteriores;
+
+            // 2. Pagos totales asignados a períodos anteriores
+            double totalPagado = AppDatabase.getDatabase(context)
+                    .creditCardPaymentDao()
+                    .getPagosAnteriores(creditCardId, startOfMonth);
+
+            double balance = totalGastado - totalPagado;
+            return Math.max(0, balance); // No devolvemos deuda negativa (crédito a favor) como arrastre por ahora
+        } catch (Exception e) {
+            AppLogger.e("TransactionRepository", "Error calculando arrastre historico", e);
+            return 0.0;
+        }
+    }
+
+    public void getResumenDeudaTarjeta(String creditCardId, String cardName,
+            long start, long end,
+            RepositoryCallback<ResumenDeudaTarjeta> callback) {
+        executor.execute(() -> {
+            try {
+                // Normalizar a precisión de segundos pero asegurar el rango completo
+                long cleanStart = (start / 1000) * 1000;
+                long cleanEnd = ((end / 1000) * 1000) + 999;
+
+                // 1. Gastos reales del mes
+                Double gastos = dao.getMontoResumen(creditCardId, cleanStart, cleanEnd);
+                double gastosDelMes = gastos == null ? 0.0 : gastos;
+
+                // 2. Arrastre dinámico (Fuente de Verdad)
+                double arrastre = getArrastreHistoricoBlocking(creditCardId, cleanStart);
+
+                // 3. Pagos registrados para este período específico
+                double pagos = AppDatabase.getDatabase(context)
+                        .creditCardPaymentDao()
+                        .getTotalPagadoEnPeriodo(creditCardId, cleanStart);
+
+                ResumenDeudaTarjeta resumen = new ResumenDeudaTarjeta(
+                        creditCardId, cardName,
+                        gastosDelMes, arrastre, pagos,
+                        cleanStart, cleanEnd);
+
+                mainHandler.post(() -> callback.onResult(AppResult.success(resumen)));
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error al calcular resumen deuda", e);
+                mainHandler.post(() -> callback.onResult(
+                        AppResult.failure(new DatabaseException("Error al calcular deuda", e))));
+            }
+        });
+    }
+
+    public void getMontoResumenTarjeta(String creditCardId, long start, long end, RepositoryCallback<Double> callback) {
+        executor.execute(() -> {
+            try {
+                Double total = dao.getMontoResumen(creditCardId, start, end);
+                mainHandler.post(() -> callback.onResult(AppResult.success(total == null ? 0.0 : total)));
+            } catch (Exception e) {
+                mainHandler.post(() -> callback
+                        .onResult(AppResult.failure(new DatabaseException("Error al cargar resumen", e))));
+            }
+        });
+    }
+
+    public void getTotalPagadoTarjeta(String creditCardId, long start, long end, RepositoryCallback<Double> callback) {
+        executor.execute(() -> {
+            try {
+                double total = AppDatabase.getDatabase(context).creditCardPaymentDao()
+                        .getTotalPagadoEnPeriodo(creditCardId, start);
+                mainHandler.post(() -> callback.onResult(AppResult.success(total)));
+            } catch (Exception e) {
+                mainHandler.post(() -> callback
+                        .onResult(AppResult.failure(new DatabaseException("Error al ver pagos resúmen", e))));
             }
         });
     }

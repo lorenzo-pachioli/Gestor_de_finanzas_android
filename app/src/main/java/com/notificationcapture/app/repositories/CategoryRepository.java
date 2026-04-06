@@ -25,10 +25,11 @@ public class CategoryRepository implements GsonAccess {
 
     public static final String OTHER_INCOME_ID = "other_income";
     public static final String OTHER_OUTCOME_ID = "other_outcome";
+    public static final String PAGO_TARJETA_ID = "pago_tarjeta";
 
     private static final String[] OUTCOME_CATEGORIES = {
             "Otros", "Comida", "Combustible", "Transporte", "Servicios",
-            "Entretenimiento", "Salud", "Educación", "Compras", "Vivienda"
+            "Entretenimiento", "Salud", "Educación", "Compras", "Vivienda", "Pago de Tarjeta"
     };
 
     private static final String[] INCOME_CATEGORIES = {
@@ -57,6 +58,8 @@ public class CategoryRepository implements GsonAccess {
             for (String name : OUTCOME_CATEGORIES) {
                 if (name.equals("Otros")) {
                     defaultCategories.add(new Category(OTHER_OUTCOME_ID, name, IngresoOEgreso.EGRESO));
+                } else if (name.equals("Pago de Tarjeta")) {
+                    defaultCategories.add(new Category(PAGO_TARJETA_ID, name, IngresoOEgreso.EGRESO));
                 } else {
                     defaultCategories.add(new Category(name, IngresoOEgreso.EGRESO));
                 }
@@ -152,15 +155,26 @@ public class CategoryRepository implements GsonAccess {
             }.getType();
             List<Category> cats = gson.fromJson(json, type);
 
-            // Migración: asegurar que todos tengan ID
+            // Migración: asegurar que todos tengan ID y existan categorías base nuevas
             boolean needsSave = false;
             if (cats != null) {
+                boolean hasPagoTarjeta = false;
                 for (Category c : cats) {
                     if (c.getId() == null) {
                         c.setId(c.getName() + "_" + c.getType());
                         needsSave = true;
                     }
+                    if (PAGO_TARJETA_ID.equals(c.getId())) {
+                        hasPagoTarjeta = true;
+                    }
                 }
+
+                // Si no existe la categoría de Pago de Tarjeta, la agregamos
+                if (!hasPagoTarjeta) {
+                    cats.add(new Category(PAGO_TARJETA_ID, "Pago de Tarjeta", IngresoOEgreso.EGRESO));
+                    needsSave = true;
+                }
+
                 if (needsSave) {
                     saveCategories(cats);
                 }

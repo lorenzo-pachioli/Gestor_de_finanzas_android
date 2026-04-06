@@ -98,10 +98,19 @@ public class InicioFragment extends Fragment {
             // Actualizar el resumen financiero del mes
             updateFinancialSummary(currentMonthNotifications);
             
-            // Actualizar el total disponible usando todas las transacciones
+            // Task 11: Ignore future installments in historical total
+            // Only count if timestamp is current month or earlier
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+            cal.set(Calendar.HOUR_OF_DAY, 23);
+            cal.set(Calendar.MINUTE, 59);
+            cal.set(Calendar.SECOND, 59);
+            cal.set(Calendar.MILLISECOND, 999);
+            long endOfMonth = cal.getTimeInMillis();
+
             double totalHistorico = 0;
             for (Transaction t : allNotifications) {
-                if (t.hasAmount()) {
+                if (t.getTimestamp() <= endOfMonth && t.hasAmount()) {
                     if (t.getType() == IngresoOEgreso.INGRESO) totalHistorico += t.getAmount();
                     else totalHistorico -= t.getAmount();
                 }

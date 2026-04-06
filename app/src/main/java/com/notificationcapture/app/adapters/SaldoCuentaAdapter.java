@@ -13,10 +13,16 @@ import java.util.List;
 
 public class SaldoCuentaAdapter extends RecyclerView.Adapter<SaldoCuentaAdapter.ViewHolder> {
 
-    private List<SaldoCuenta> saldos;
+    public interface OnPagarClickListener {
+        void onPagarClick(SaldoCuenta saldoCuenta);
+    }
 
-    public SaldoCuentaAdapter(List<SaldoCuenta> saldos) {
+    private List<SaldoCuenta> saldos;
+    private OnPagarClickListener listener;
+
+    public SaldoCuentaAdapter(List<SaldoCuenta> saldos, OnPagarClickListener listener) {
         this.saldos = saldos;
+        this.listener = listener;
     }
 
     @NonNull
@@ -39,7 +45,19 @@ public class SaldoCuentaAdapter extends RecyclerView.Adapter<SaldoCuentaAdapter.
             holder.tvSaldo.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.green));
         } else {
             holder.tvSaldo.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.red));
+            holder.tvSaldo.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.red));
             holder.tvSaldo.setText("-$" + MoneyTextWatcher.format(Math.abs(saldo.getSaldo())));
+        }
+
+        if ("CREDITO".equalsIgnoreCase(saldo.getTipoCuenta()) && saldo.getSaldo() < 0) {
+            holder.btnPagar.setVisibility(View.VISIBLE);
+            holder.btnPagar.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onPagarClick(saldo);
+                }
+            });
+        } else {
+            holder.btnPagar.setVisibility(View.GONE);
         }
     }
 
@@ -50,12 +68,14 @@ public class SaldoCuentaAdapter extends RecyclerView.Adapter<SaldoCuentaAdapter.
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvNombreCuenta, tvTipoCuenta, tvSaldo;
+        android.widget.Button btnPagar;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvNombreCuenta = itemView.findViewById(R.id.tvNombreCuenta);
             tvTipoCuenta = itemView.findViewById(R.id.tvTipoCuenta);
             tvSaldo = itemView.findViewById(R.id.tvSaldo);
+            btnPagar = itemView.findViewById(R.id.btnPagar);
         }
     }
 }

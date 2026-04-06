@@ -132,6 +132,23 @@
 
     <!-- Notification Permission Explanation -->
     <string name="permiso_notificaciones_titulo">¿Por qué necesitamos acceso?</string>
+    <!-- Pago Tarjeta -->
+    <string name="pago_de_tarjeta">Pago de %s</string>
+    <string name="deuda_mes_actual">Deuda del mes actual:</string>
+    <string name="deuda_arrastrada">Deuda arrastrada:</string>
+    <string name="pagos_registrados">Pagos previos:</string>
+    <string name="total_a_pagar">Total a pagar:</string>
+    <string name="pagar_desde">Pagar desde:</string>
+    <string name="monto_a_pagar_label">Monto a pagar</string>
+    <string name="monto_invalido">Monto inválido</string>
+    <string name="monto_positivo">El monto debe ser superior a 0</string>
+    <string name="monto_excede_deuda">El monto no puede superar la deuda total</string>
+    <string name="pago_exitoso">Pago ingresado correctamente</string>
+    <string name="error_pago">Error al procesar el pago</string>
+    <string name="confirmar_pago">Confirmar Pago</string>
+    <string name="detalle_deuda">DETALLE DE DEUDA</string>
+    <string name="realizar_pago">REALIZAR PAGO</string>
+
     <string name="permiso_notificaciones_descripcion">Fluxus utiliza el permiso de lectura de notificaciones exclusivamente para reconocer automáticamente los pagos realizados con tus aplicaciones bancarias y billeteras virtuales.\n\n🔒 <b>Privacidad Total</b>: Solo procesamos notificaciones relacionadas con flujos de dinero. Ninguna información personal o financiera sale jamás de tu dispositivo; todo se almacena de forma local y segura, sin ningun tipo de conexión a bases de datos externas.\n\nAl habilitar este acceso, ya no tendrás que registrar cada gasto manualmente, ya que nosotros lo haremos por ti cada vez que recibas una confirmación de pago.</string>
 </resources>
 

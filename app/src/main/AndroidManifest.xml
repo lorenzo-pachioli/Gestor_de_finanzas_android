@@ -31,6 +31,10 @@
             android:name=".MainActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".fragments.PagoTarjetaActivity"
+            android:windowSoftInputMode="adjustResize" />
+
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
