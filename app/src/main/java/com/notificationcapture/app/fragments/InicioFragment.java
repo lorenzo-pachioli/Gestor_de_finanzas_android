@@ -17,6 +17,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import com.notificationcapture.app.adapters.TransactionAdapter;
+import com.notificationcapture.app.enums.PaymentMethod;
 import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.viewmodels.MainViewModel;
 import com.notificationcapture.app.R;
@@ -32,6 +33,7 @@ public class InicioFragment extends Fragment {
     private TextView tvEgresos;
     private TextView tvBalance;
     private TextView tvMonthTitle;
+    private TextView tvDeudaCredito;
     private MainViewModel viewModel;
 
     @Nullable
@@ -58,6 +60,7 @@ public class InicioFragment extends Fragment {
         
         View cardTotalDisponible = view.findViewById(R.id.cardTotalDisponible);
         TextView tvTotalDisponible = view.findViewById(R.id.tvTotalDisponible);
+        tvDeudaCredito = view.findViewById(R.id.tvDeudaCredito);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
@@ -95,32 +98,41 @@ public class InicioFragment extends Fragment {
                 recyclerView.setVisibility(View.VISIBLE);
             }
 
-            // Actualizar el resumen financiero del mes
+            // 1. Actualizar el resumen financiero del mes (Ingresos/Egresos/Balance)
             updateFinancialSummary(currentMonthNotifications);
-            
-            // Task 11: Ignore future installments in historical total
-            // Only count if timestamp is current month or earlier
-            Calendar cal = Calendar.getInstance();
-            cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-            cal.set(Calendar.HOUR_OF_DAY, 23);
-            cal.set(Calendar.MINUTE, 59);
-            cal.set(Calendar.SECOND, 59);
-            cal.set(Calendar.MILLISECOND, 999);
-            long endOfMonth = cal.getTimeInMillis();
 
-            double totalHistorico = 0;
-            for (Transaction t : allNotifications) {
-                if (t.getTimestamp() <= endOfMonth && t.hasAmount()) {
-                    if (t.getType() == IngresoOEgreso.INGRESO) totalHistorico += t.getAmount();
-                    else totalHistorico -= t.getAmount();
+            // 2. Actualizar disponibilidad y deuda global usando los saldos de cada cuenta
+            viewModel.getSaldosPorCuenta(result -> {
+                if (result.isSuccess() && result.getData() != null) {
+                    double totalLiquid = 0;
+                    double totalDeuda = 0;
+                    for (com.notificationcapture.app.models.SaldoCuenta sc : result.getData()) {
+                        if ("CREDITO".equals(sc.getTipoCuenta())) {
+                            // En el repositorio, el saldo de crédito se devuelve como positivo si hay deuda
+                            totalDeuda += sc.getSaldo();
+                        } else {
+                            totalLiquid += sc.getSaldo();
+                        }
+                    }
+                    
+                    final double finalLiquid = totalLiquid;
+                    final double finalDeuda = totalDeuda;
+                    
+                    if (isAdded() && getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            tvTotalDisponible.setText(formatAmount(finalLiquid));
+                            tvTotalDisponible.setTextColor(getResources().getColor(finalLiquid >= 0 ? R.color.green : R.color.red));
+                            
+                            tvDeudaCredito.setText(formatAmount(finalDeuda));
+                            if (finalDeuda > 0) {
+                                tvDeudaCredito.setTextColor(getResources().getColor(R.color.red));
+                            } else {
+                                tvDeudaCredito.setTextColor(getResources().getColor(R.color.text_secondary));
+                            }
+                        });
+                    }
                 }
-            }
-            tvTotalDisponible.setText(formatAmount(totalHistorico));
-            if (totalHistorico >= 0) {
-                tvTotalDisponible.setTextColor(getResources().getColor(R.color.green));
-            } else {
-                tvTotalDisponible.setTextColor(getResources().getColor(R.color.red));
-            }
+            });
         });
     }
 
@@ -165,10 +177,14 @@ public class InicioFragment extends Fragment {
 
         for (Transaction item : currentMonthNotifications) {
             if (item.hasAmount()) {
-                if (item.getType() == IngresoOEgreso.INGRESO) {
-                    totalIngresos += item.getAmount();
-                } else {
-                    totalEgresos += item.getAmount();
+                // CASH FLOW: Ignorar gastos con tarjeta en el resumen mensual de egresos
+                // Solo cuentan si son ingresos o egresos de billetera (Efectivo/Débito)
+                if (item.getPaymentMethod() != PaymentMethod.CREDITO) {
+                    if (item.getType() == IngresoOEgreso.INGRESO) {
+                        totalIngresos += item.getAmount();
+                    } else {
+                        totalEgresos += item.getAmount();
+                    }
                 }
             }
         }

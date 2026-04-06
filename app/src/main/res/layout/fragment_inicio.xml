@@ -153,37 +153,70 @@
         app:cardCornerRadius="8dp"
         app:cardBackgroundColor="@color/background_card">
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:padding="12dp">
-            
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:text="Total disponible"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp"/>
 
-            <TextView
-                android:id="@+id/tvTotalDisponible"
-                android:layout_width="wrap_content"
+            <!-- Fila Disponible -->
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:text="$0"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"/>
+                android:layout_marginBottom="4dp">
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:text="Total disponible"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"/>
 
-            <TextView
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/tvTotalDisponible"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:text="$0"
+                    android:textStyle="bold"
+                    android:textColor="@color/green"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:text="@string/ver_detalle"
+                    android:textColor="#3498db"
+                    android:textSize="12sp"/>
+            </RelativeLayout>
+
+            <!-- Fila Deuda Crédito -->
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:text="@string/ver_detalle"
-                android:textColor="#3498db"
-                android:textSize="12sp"/>
-        </RelativeLayout>
+                android:layout_marginTop="4dp">
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:text="Deuda con crédito"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/tvDeudaCredito"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:text="$0"
+                    android:textStyle="bold"
+                    android:textColor="@color/red"
+                    android:textSize="14sp"/>
+            </RelativeLayout>
+        </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <androidx.recyclerview.widget.RecyclerView

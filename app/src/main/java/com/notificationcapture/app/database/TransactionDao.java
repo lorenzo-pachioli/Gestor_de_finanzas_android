@@ -80,23 +80,23 @@ public interface TransactionDao {
     @Query("SELECT nombreCuenta, tipoCuenta, saldo, sourceId FROM (" +
            "  SELECT " +
            "  CASE " +
-           "    WHEN paymentMethod = 'EFECTIVO' THEN 'Efectivo' " +
-           "    WHEN paymentMethod = 'DEBITO' THEN IFNULL(walletId, 'Desconocida') " +
-           "    WHEN paymentMethod = 'CREDITO' THEN IFNULL(creditCardId, 'Desconocida') " +
+           "    WHEN t.paymentMethod = 'EFECTIVO' THEN 'Efectivo' " +
+           "    WHEN t.paymentMethod = 'DEBITO' THEN IFNULL(t.walletId, 'Desconocida') " +
+           "    WHEN t.paymentMethod = 'CREDITO' THEN IFNULL(t.creditCardId, 'Desconocida') " +
            "    ELSE 'Desconocida' " +
            "  END AS nombreCuenta, " +
-           "  paymentMethod AS tipoCuenta, " +
+           "  t.paymentMethod AS tipoCuenta, " +
            "  CASE " +
-           "    WHEN paymentMethod = 'EFECTIVO' THEN 'EFECTIVO' " +
-           "    WHEN paymentMethod = 'DEBITO' THEN walletId " +
-           "    WHEN paymentMethod = 'CREDITO' THEN creditCardId " +
+           "    WHEN t.paymentMethod = 'EFECTIVO' THEN 'EFECTIVO' " +
+           "    WHEN t.paymentMethod = 'DEBITO' THEN t.walletId " +
+           "    WHEN t.paymentMethod = 'CREDITO' THEN t.creditCardId " +
            "    ELSE NULL " +
            "  END AS sourceId, " +
-           "  CAST(SUM(CASE WHEN type = 'INGRESO' THEN amount ELSE -amount END) " +
-           "    + COALESCE((SELECT SUM(cp.montoPagado) FROM credit_card_payments cp WHERE cp.creditCardId = transactions.creditCardId AND cp.timestampPago <= :maxTimestamp), 0) AS REAL) AS saldo " +
-           "  FROM transactions " +
-           "  WHERE status = 'APPROVED' AND timestamp <= :maxTimestamp " +
-           "  GROUP BY nombreCuenta, tipoCuenta, sourceId " +
+           "  CAST(SUM(CASE WHEN t.type = 'INGRESO' THEN t.amount ELSE -t.amount END) " +
+           "    + COALESCE((SELECT SUM(cp.montoPagado) FROM credit_card_payments cp WHERE cp.creditCardId = t.creditCardId AND cp.timestampPago <= :maxTimestamp), 0) AS REAL) AS saldo " +
+           "  FROM transactions t " +
+           "  WHERE t.status = 'APPROVED' AND t.timestamp <= :maxTimestamp " +
+           "  GROUP BY t.paymentMethod, t.walletId, t.creditCardId" +
            ") WHERE ROUND(saldo, 2) != 0 " +
            "ORDER BY tipoCuenta, nombreCuenta")
     List<SaldoCuenta> getSaldosPorCuenta(long maxTimestamp);

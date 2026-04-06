@@ -34,4 +34,8 @@ public class MainViewModel extends AndroidViewModel {
     public void deleteTransaction(String id) {
         repository.deleteTransaction(id);
     }
+
+    public void getSaldosPorCuenta(com.notificationcapture.app.repositories.TransactionRepository.RepositoryCallback<java.util.List<com.notificationcapture.app.models.SaldoCuenta>> callback) {
+        repository.getSaldosPorCuenta(callback);
+    }
 }
