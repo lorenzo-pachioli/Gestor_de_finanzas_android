@@ -150,5 +150,7 @@
     <string name="realizar_pago">REALIZAR PAGO</string>
 
     <string name="permiso_notificaciones_descripcion">Fluxus utiliza el permiso de lectura de notificaciones exclusivamente para reconocer automáticamente los pagos realizados con tus aplicaciones bancarias y billeteras virtuales.\n\n🔒 <b>Privacidad Total</b>: Solo procesamos notificaciones relacionadas con flujos de dinero. Ninguna información personal o financiera sale jamás de tu dispositivo; todo se almacena de forma local y segura, sin ningun tipo de conexión a bases de datos externas.\n\nAl habilitar este acceso, ya no tendrás que registrar cada gasto manualmente, ya que nosotros lo haremos por ti cada vez que recibas una confirmación de pago.</string>
+    <string name="carga_rapida">Carga Rápida</string>
+    <string name="guardado_exito">¡Guardado con éxito!</string>
 </resources>
 

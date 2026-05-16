@@ -10,7 +10,7 @@
     <!-- Semantic Colors (Light) -->
     <color name="background_main">@color/primary_main</color>
     <color name="background_card">#FFFFFF</color>
-    <color name="background_card_90">#E6FFFFFF</color>
+    <color name="background_card_90">#CCFFFFFF</color>
     <color name="background_bottom_nav">#33FFFFFF</color>
     <color name="text_primary">#1C1C1C</color>
     <color name="text_secondary">@color/secondary_main</color>

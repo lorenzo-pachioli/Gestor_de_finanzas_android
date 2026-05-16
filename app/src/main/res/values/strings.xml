@@ -151,4 +151,6 @@
     <string name="realizar_pago">MAKE PAYMENT</string>
 
     <string name="permiso_notificaciones_descripcion">Fluxus uses notification access permission exclusively to automatically recognize payments made through your banking apps and digital wallets.\n\n🔒 <b>Total Privacy</b>: We only process notifications related to money flows. No personal or financial information ever leaves your device; everything is stored locally and securely, without any connection to external databases.\n\nBy enabling this access, you will no longer need to record every expense manually, as we will do it for you every time you receive a payment confirmation.</string>
+    <string name="carga_rapida">Quick Charge</string>
+    <string name="guardado_exito">Saved successfully!</string>
 </resources>
