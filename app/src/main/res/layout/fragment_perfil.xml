@@ -1,236 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<!-- ARCHIVO COMPLETO: app/src/main/res/layout/fragment_perfil.xml -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:paddingBottom="75dp"
-    android:clipToPadding="false"
-    tools:context=".fragments.PerfilFragment">
+    android:background="@color/background_main">
 
-    <LinearLayout
+    <!-- MENÚ PRINCIPAL de configuración -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/layoutSettingsMenu"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="match_parent"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false"
+        android:fillViewport="false">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/configuracion"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- SECCION APARIENCIA -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            android:orientation="vertical"
+            android:padding="16dp">
 
             <TextView
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/modo_oscuro"
-                android:textSize="20sp"
+                android:text="@string/configuracion"
+                android:textSize="24sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_primary"/>
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="24dp"/>
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                >
-                <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/switchDarkMode"
+            
+            <!-- Idioma -->
+            <com.notificationcapture.app.utils.CustomLanguageSwitch
+                android:id="@+id/swLanguage"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Modo Oscuro -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp"
+                android:background="@drawable/bg_card_rounded"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/modo_oscuro"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary"/>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:thumb="@drawable/selector_switch_thumb_day_night"
-                    app:thumbTint="@null"
-                    app:trackTint="@null"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintRight_toRightOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintVertical_bias="0.466"
-                    app:track="@drawable/track"
-                     />
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                    android:layout_height="40dp">
 
-        </LinearLayout>
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchDarkMode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:thumb="@drawable/selector_switch_thumb_day_night"
+                        app:thumbTint="@null"
+                        app:trackTint="@null"
+                        app:track="@drawable/track"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"/>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/text_secondary"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- SECCION IDIOMA -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/idioma"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"/>
-
-        </LinearLayout>
-
-        <com.notificationcapture.app.utils.CustomLanguageSwitch
-            android:id="@+id/swLanguage"
-            android:layout_width="match_parent"
-            android:layout_height="58dp"
-            android:layout_marginBottom="20dp" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/text_secondary"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- SECCION CATEGORIAS -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/categorias"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"/>
-
-            <Button
-                android:id="@+id/btnAddCategory"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <!-- Ítem: Categorías -->
+            <LinearLayout
+                android:id="@+id/itemCategorias"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp"
                 android:background="@drawable/bg_card_rounded"
-                android:text="@string/agregar"
-                android:textColor="@color/accent_main" />
-        </LinearLayout>
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
 
-        <!-- Switch Ingreso/Egreso para Categorías -->
-        <com.notificationcapture.app.utils.CustomTypeSwitch
-            android:id="@+id/swCatType"
-            android:layout_width="match_parent"
-            android:layout_height="58dp"
-            android:layout_marginBottom="20dp" />
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/categorias"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary"/>
 
-        <Spinner
-            android:id="@+id/spinnerCategories"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:padding="5dp"
-            android:background="@drawable/bg_spinner_field"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="20dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textSize="22sp"
+                    android:textColor="@color/text_secondary"/>
+            </LinearLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/text_secondary"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- SECCION WALLETS -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/billeteras_bancos"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"/>
-
-            <Button
-                android:id="@+id/btnAddWallet"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <!-- Ítem: Billeteras -->
+            <LinearLayout
+                android:id="@+id/itemBilleteras"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp"
                 android:background="@drawable/bg_card_rounded"
-                android:text="@string/agregar"
-                android:textColor="@color/accent_main" />
-        </LinearLayout>
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
 
-        <Spinner
-            android:id="@+id/spinnerWallets"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:padding="5dp"
-            android:background="@drawable/bg_spinner_field"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="20dp"/>
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/billeteras_bancos"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary"/>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/text_secondary"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="24dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textSize="22sp"
+                    android:textColor="@color/text_secondary"/>
+            </LinearLayout>
 
-        <!-- SECCION TARJETAS DE CREDITO -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/tarjetas_credito"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"/>
-
-            <Button
-                android:id="@+id/btnAddCreditCard"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <!-- Ítem: Tarjetas de Crédito -->
+            <LinearLayout
+                android:id="@+id/itemTarjetas"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp"
                 android:background="@drawable/bg_card_rounded"
-                android:text="@string/agregar"
-                android:textColor="@color/accent_main" />
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/tarjetas_credito"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textSize="22sp"
+                    android:textColor="@color/text_secondary"/>
+            </LinearLayout>
+
         </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-        <Spinner
-            android:id="@+id/spinnerCreditCards"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:padding="5dp"
-            android:background="@drawable/bg_spinner_field"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="20dp"/>
-    </LinearLayout>
+    <!-- CONTAINER para sub-pantallas (oculto por defecto) -->
+    <FrameLayout
+        android:id="@+id/settingsDetailContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="@color/background_main"/>
 
-</androidx.core.widget.NestedScrollView>
+</FrameLayout>

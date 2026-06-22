@@ -23,9 +23,11 @@ public class CategoryRepository implements GsonAccess {
     private Gson gson;
     private List<Category> cachedCategories = null; // Memory Cache
 
-    public static final String OTHER_INCOME_ID = "other_income";
-    public static final String OTHER_OUTCOME_ID = "other_outcome";
+    public static final String OTHER_INCOME_ID = "other";
+    public static final String OTHER_OUTCOME_ID = "other";
     public static final String PAGO_TARJETA_ID = "pago_tarjeta";
+    public static final String TRANSFER_OUT_ID = "transfer_out";
+    public static final String TRANSFER_IN_ID  = "transfer_in";
 
     private static final String[] OUTCOME_CATEGORIES = {
             "Otros", "Comida", "Combustible", "Transporte", "Servicios",
@@ -54,6 +56,7 @@ public class CategoryRepository implements GsonAccess {
                     defaultCategories.add(new Category(name, IngresoOEgreso.INGRESO));
                 }
             }
+            defaultCategories.add(new Category(TRANSFER_IN_ID, "Transferencia entrante", IngresoOEgreso.INGRESO));
             // Outcome Defaults
             for (String name : OUTCOME_CATEGORIES) {
                 if (name.equals("Otros")) {
@@ -64,6 +67,7 @@ public class CategoryRepository implements GsonAccess {
                     defaultCategories.add(new Category(name, IngresoOEgreso.EGRESO));
                 }
             }
+            defaultCategories.add(new Category(TRANSFER_OUT_ID, "Transferencia saliente", IngresoOEgreso.EGRESO));
             saveCategories(defaultCategories);
         }
     }
@@ -162,6 +166,10 @@ public class CategoryRepository implements GsonAccess {
                 for (Category c : cats) {
                     if (c.getId() == null) {
                         c.setId(c.getName() + "_" + c.getType());
+                        needsSave = true;
+                    }
+                    if ("other_income".equals(c.getId()) || "other_outcome".equals(c.getId()) || "Otros_INGRESO".equals(c.getId()) || "Otros_EGRESO".equals(c.getId())) {
+                        c.setId("other");
                         needsSave = true;
                     }
                     if (PAGO_TARJETA_ID.equals(c.getId())) {

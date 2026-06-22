@@ -143,11 +143,27 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             holder.switchType.setOnCheckedChangeListener(isChecked -> {
                 updateToggleUI(holder, isChecked);
 
-                // Resetear a "Otros" del tipo correspondiente cuando cambia el tipo
                 boolean isIngresoNow = !isChecked;
                 IngresoOEgreso newType = isIngresoNow ? IngresoOEgreso.INGRESO : IngresoOEgreso.EGRESO;
-                holder.selectedCategory = new Category("Otros", newType);
-                holder.tvCategorySelector.setText("Otros");
+                
+                boolean foundEquivalent = false;
+                List<Category> newTypeCategories = categoryRepo.getCategories(newType);
+                for (Category c : newTypeCategories) {
+                    if (c.getName().equalsIgnoreCase(holder.selectedCategory.getName())) {
+                        holder.selectedCategory = c;
+                        foundEquivalent = true;
+                        break;
+                    }
+                }
+                
+                if (!foundEquivalent) {
+                    holder.selectedCategory = categoryRepo.getCategoryById("other");
+                    if (holder.selectedCategory == null) {
+                        holder.selectedCategory = new Category("other", "Otros", newType);
+                    }
+                }
+                
+                holder.tvCategorySelector.setText(holder.selectedCategory.getName());
             });
 
             // *** MODIFICADO: Usar selectedCategory en lugar de crear nueva ***

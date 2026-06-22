@@ -531,4 +531,33 @@ public class TransactionRepository implements GsonAccess {
         });
     }
 
+    public void saveTransfer(String origenId, String destinoId, double monto, long timestamp,
+                             RepositoryCallback<Void> callback) {
+        // Generar un groupId para vincular ambas transacciones
+        String groupId = java.util.UUID.randomUUID().toString();
+
+        // Egreso desde el origen
+        com.notificationcapture.app.models.Debit egreso = new com.notificationcapture.app.models.Debit(
+                "Transferencia", "", timestamp,
+                com.notificationcapture.app.enums.IngresoOEgreso.EGRESO,
+                com.notificationcapture.app.repositories.CategoryRepository.TRANSFER_OUT_ID,
+                origenId, false);
+        egreso.setAmount(monto);
+
+        // Ingreso en el destino
+        com.notificationcapture.app.models.Debit ingreso = new com.notificationcapture.app.models.Debit(
+                "Transferencia", "", timestamp,
+                com.notificationcapture.app.enums.IngresoOEgreso.INGRESO,
+                com.notificationcapture.app.repositories.CategoryRepository.TRANSFER_IN_ID,
+                destinoId, false);
+        ingreso.setAmount(monto);
+
+        // Guardar ambas como transacciones aprobadas
+        List<Transaction> transferPair = new java.util.ArrayList<>();
+        transferPair.add(egreso);
+        transferPair.add(ingreso);
+
+        saveTransactions(transferPair, callback);
+    }
+
 }

@@ -1,5 +1,7 @@
 package com.notificationcapture.app.fragments;
 
+// ARCHIVO COMPLETO: app/src/main/java/com/notificationcapture/app/fragments/AgregarFragment.java
+
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,18 +13,20 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import com.notificationcapture.app.utils.CustomTypeSwitch;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.TimeZone;
 
+import com.notificationcapture.app.R;
+import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.enums.PaymentMethod;
 import com.notificationcapture.app.models.Cash;
+import com.notificationcapture.app.models.Category;
 import com.notificationcapture.app.models.Credit;
 import com.notificationcapture.app.models.CreditCard;
 import com.notificationcapture.app.models.Debit;
@@ -31,10 +35,8 @@ import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
-import com.notificationcapture.app.R;
-import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
-import com.notificationcapture.app.enums.PaymentMethod;
-import com.notificationcapture.app.models.Category;
+import com.notificationcapture.app.utils.CustomTypeSwitch;
+import com.notificationcapture.app.utils.MoneyTextWatcher;
 
 public class AgregarFragment extends Fragment {
 
@@ -55,8 +57,6 @@ public class AgregarFragment extends Fragment {
     private String selectedMethodDetailId = "";
     private int selectedInstallments = 1;
 
-    // Removed hardcoded walletApps
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -76,16 +76,14 @@ public class AgregarFragment extends Fragment {
         tvPaymentMethod = view.findViewById(R.id.tvPaymentMethod);
         etTitle = view.findViewById(R.id.etTitle);
         etAmount = view.findViewById(R.id.etAmount);
-        etAmount.addTextChangedListener(new com.notificationcapture.app.utils.MoneyTextWatcher(etAmount));
+        etAmount.addTextChangedListener(new MoneyTextWatcher(etAmount));
         etAmount.setHint("0");
         etAmount.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
-                // Hide Keyboard
-                android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) requireContext()
+                android.view.inputmethod.InputMethodManager imm =
+                        (android.view.inputmethod.InputMethodManager) requireContext()
                         .getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
-                if (imm != null) {
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                }
+                if (imm != null) imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 etAmount.clearFocus();
                 return true;
             }
@@ -96,24 +94,38 @@ public class AgregarFragment extends Fragment {
         btnCreate = view.findViewById(R.id.btnCreate);
         etDate = view.findViewById(R.id.etDate);
 
-        // Configurar fecha por defecto (hoy)
+        // Enlace a TransferenciaFragment
+        TextView tvTransferLink = view.findViewById(R.id.tvTransferLink);
+        if (tvTransferLink != null) {
+            tvTransferLink.setOnClickListener(v -> {
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right,
+                                android.R.anim.slide_in_left, android.R.anim.slide_out_right)
+                        .replace(R.id.viewPager, new TransferenciaFragment())
+                        .addToBackStack(null)
+                        .commit();
+            });
+        }
+
+        // Fecha por defecto
         selectedDateTimestamp = System.currentTimeMillis();
         updateDateField(selectedDateTimestamp);
 
-        // Configurar selector de método de pago
         tvPaymentMethod.setOnClickListener(v -> showPaymentMethodBottomSheet());
-
-        // Configurar listener del switch
         swType.setOnCheckedChangeListener(this::updateToggleUI);
-
-        // Estado inicial (Egreso = true/checked)
-        swType.setChecked(true, false); // Inicia en Egreso sin animación
+        swType.setChecked(true, false);
         updateToggleUI(true);
-
-        // Configurar selector de fecha
         etDate.setOnClickListener(v -> showDatePicker());
-
         btnCreate.setOnClickListener(v -> createNotification());
+
+        // Scroll automático al campo activo cuando aparece el teclado
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+            int imeHeight = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom;
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(),
+                    imeHeight > 0 ? imeHeight : 0);
+            return insets;
+        });
     }
 
     private void updateToggleUI(boolean isEgreso) {
@@ -121,56 +133,62 @@ public class AgregarFragment extends Fragment {
     }
 
     private void configurarSpinnerCat() {
-        // Configurar spinner de categorías based on switch
-        // isChecked = true -> Egreso
-        // isChecked = false -> Ingreso
         boolean isEgreso = swType.isChecked();
-
-        IngresoOEgreso type = isEgreso
-                ? IngresoOEgreso.EGRESO
-                : IngresoOEgreso.INGRESO;
-
+        IngresoOEgreso type = isEgreso ? IngresoOEgreso.EGRESO : IngresoOEgreso.INGRESO;
         java.util.List<Category> categories = categoryRepository.getCategories(type);
-        UniversalSpinnerAdapter<Category> adapterCategories = new UniversalSpinnerAdapter<>(
-                requireContext(), categories);
+        UniversalSpinnerAdapter<Category> adapterCategories = new UniversalSpinnerAdapter<>(requireContext(), categories);
+        
+        String currentSelectionName = "";
+        if (spinnerCategory.getSelectedItem() != null) {
+            currentSelectionName = ((Category)spinnerCategory.getSelectedItem()).getName();
+        }
+        
         spinnerCategory.setAdapter(adapterCategories);
+        
+        boolean found = false;
+        for (int i = 0; i < categories.size(); i++) {
+            if (categories.get(i).getName().equalsIgnoreCase(currentSelectionName)) {
+                spinnerCategory.setSelection(i);
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found) {
+            for (int i = 0; i < categories.size(); i++) {
+                if ("other".equals(categories.get(i).getId()) || "Otros".equalsIgnoreCase(categories.get(i).getName())) {
+                    spinnerCategory.setSelection(i);
+                    break;
+                }
+            }
+        }
     }
 
     private void createNotification() {
         String title = etTitle.getText().toString().trim();
         String amountStr = etAmount.getText().toString().trim();
-
-        // CAMBIO: Usar el objeto Category completo del spinner en lugar de solo el
-        // nombre
         Category selectedCategory = (Category) spinnerCategory.getSelectedItem();
 
-        // Validación de categoría
         if (selectedCategory == null) {
             Toast.makeText(requireContext(), "Debe seleccionar una categoría", Toast.LENGTH_SHORT).show();
             spinnerCategory.requestFocus();
             return;
         }
-
-        // Validaciones
         if (title.isEmpty()) {
             Toast.makeText(requireContext(), "El título es obligatorio", Toast.LENGTH_SHORT).show();
             etTitle.requestFocus();
             return;
         }
-
         if (amountStr.isEmpty()) {
             Toast.makeText(requireContext(), "El monto es obligatorio", Toast.LENGTH_SHORT).show();
             etAmount.requestFocus();
             return;
         }
 
-        double amountValue = 0;
+        double amountValue;
         try {
-            // Remove thousands separators (dots) and replace decimal separator (comma) with
-            // dot for parsing
             String cleanAmount = amountStr.replace(".", "").replace(",", ".");
             amountValue = Double.parseDouble(cleanAmount);
-
             if (amountValue <= 0) {
                 Toast.makeText(requireContext(), "El monto debe ser mayor a 0", Toast.LENGTH_SHORT).show();
                 etAmount.requestFocus();
@@ -182,83 +200,51 @@ public class AgregarFragment extends Fragment {
             return;
         }
 
-        // Determinar tipo de transacción
-        IngresoOEgreso type = swType.isChecked()
-                ? IngresoOEgreso.EGRESO
-                : IngresoOEgreso.INGRESO;
-
-        // Loop for installments
-        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        IngresoOEgreso type = swType.isChecked() ? IngresoOEgreso.EGRESO : IngresoOEgreso.INGRESO;
+        Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(selectedDateTimestamp);
-
         int totalInstallments = selectedInstallments > 0 ? selectedInstallments : 1;
-
-        // Generate Installment Group ID if installments > 1
         String installmentGroupId = totalInstallments > 1 ? java.util.UUID.randomUUID().toString() : null;
-
-        java.util.List<Transaction> transactionsToSave = new java.util.ArrayList<>();
 
         for (int i = 1; i <= totalInstallments; i++) {
             long itemTimestamp = calendar.getTimeInMillis();
             String itemTitle = title + (totalInstallments > 1 ? " (" + i + "/" + totalInstallments + ")" : "");
-            String itemDescription = "";
-
-            Transaction transaction = null;
+            Transaction transaction;
 
             if (selectedMethod == PaymentMethod.CREDITO) {
-                // Create Credit Transaction
-                transaction = new Credit(itemTitle, itemDescription, itemTimestamp, type,
-                        selectedCategory.getId(), selectedMethodDetailId, totalInstallments, i, installmentGroupId,
-                        false);
+                transaction = new Credit(itemTitle, "", itemTimestamp, type,
+                        selectedCategory.getId(), selectedMethodDetailId, totalInstallments, i,
+                        installmentGroupId, false);
             } else if (selectedMethod == PaymentMethod.DEBITO) {
-                // Create Debit Transaction
-                transaction = new Debit(itemTitle, itemDescription, itemTimestamp, type,
+                transaction = new Debit(itemTitle, "", itemTimestamp, type,
                         selectedCategory.getId(), selectedMethodDetailId, false);
             } else {
-                // Create Cash Transaction
-                transaction = new Cash(itemTitle, itemDescription, itemTimestamp, type,
+                transaction = new Cash(itemTitle, "", itemTimestamp, type,
                         selectedCategory.getId(), false);
             }
-
             transaction.setAmount(amountValue);
-            transactionsToSave.add(transaction);
-
-            // Add 1 month for next installment
-            calendar.add(java.util.Calendar.MONTH, 1);
+            repository.saveTransaction(transaction);
+            calendar.add(Calendar.MONTH, 1);
         }
 
-        repository.saveTransactions(transactionsToSave, result -> {
-            if (result.isSuccess()) {
-                // Notificar actualización omitida (auto por LiveData)
+        android.content.Intent intent = new android.content.Intent("com.notificationcapture.NEW_NOTIFICATION");
+        requireContext().sendBroadcast(intent);
 
-                // Limpiar formulario
-                etTitle.setText("");
-                etAmount.setText("");
+        // Limpiar formulario
+        etTitle.setText("");
+        etAmount.setText("");
+        selectedMethod = PaymentMethod.EFECTIVO;
+        selectedMethodDetailId = "";
+        selectedInstallments = 1;
+        tvPaymentMethod.setText("Efectivo");
+        spinnerCategory.setSelection(0);
+        swType.setChecked(true, true);
+        updateToggleUI(true);
+        selectedDateTimestamp = System.currentTimeMillis();
+        updateDateField(selectedDateTimestamp);
 
-                // Reset Payment Method
-                selectedMethod = PaymentMethod.EFECTIVO;
-                selectedMethodDetailId = "";
-                selectedInstallments = 1;
-                tvPaymentMethod.setText("Efectivo");
-
-                spinnerCategory.setSelection(0);
-                swType.setChecked(true, true); // Reset to Egreso with animation
-                updateToggleUI(true);
-                // Resetear fecha a hoy
-                selectedDateTimestamp = System.currentTimeMillis();
-                updateDateField(selectedDateTimestamp);
-
-                // Confirmación
-                String typeText = type == IngresoOEgreso.INGRESO ? "Ingreso" : "Egreso";
-                Toast.makeText(requireContext(),
-                        "✅ " + typeText + " creado exitosamente",
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(requireContext(),
-                        "❌ Error al guardar: " + result.getError().getMessage(),
-                        Toast.LENGTH_LONG).show();
-            }
-        });
+        String typeText = type == IngresoOEgreso.INGRESO ? "Ingreso" : "Egreso";
+        Toast.makeText(requireContext(), "✅ " + typeText + " creado exitosamente", Toast.LENGTH_SHORT).show();
     }
 
     private void showPaymentMethodBottomSheet() {
@@ -267,7 +253,6 @@ public class AgregarFragment extends Fragment {
             this.selectedMethod = method;
             this.selectedMethodDetailId = detailId != null ? detailId : "";
             this.selectedInstallments = installments;
-
             String displayText;
             if (method == PaymentMethod.EFECTIVO) {
                 displayText = "Efectivo";
@@ -285,15 +270,21 @@ public class AgregarFragment extends Fragment {
     }
 
     private void showDatePicker() {
-        // Crear el MaterialDatePicker con la fecha seleccionada actual
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                 .setTitleText("Seleccionar fecha")
                 .setSelection(selectedDateTimestamp)
                 .build();
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
-            selectedDateTimestamp = selection;
-            updateDateField(selection);
+            // FIX T7: reconstruir al mediodía local para evitar offset UTC
+            Calendar utcCal = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"));
+            utcCal.setTimeInMillis(selection);
+            Calendar localCal = Calendar.getInstance();
+            localCal.set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH),
+                    utcCal.get(Calendar.DAY_OF_MONTH), 12, 0, 0);
+            localCal.set(Calendar.MILLISECOND, 0);
+            selectedDateTimestamp = localCal.getTimeInMillis();
+            updateDateField(selectedDateTimestamp);
         });
 
         datePicker.show(getParentFragmentManager(), "DATE_PICKER");
@@ -301,8 +292,6 @@ public class AgregarFragment extends Fragment {
 
     private void updateDateField(long timestamp) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String formattedDate = sdf.format(new Date(timestamp));
-        etDate.setText(formattedDate);
+        etDate.setText(sdf.format(new Date(timestamp)));
     }
 }

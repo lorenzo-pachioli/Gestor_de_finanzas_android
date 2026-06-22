@@ -96,12 +96,13 @@ public class MyBottomSheetDialogFragment extends BottomSheetDialogFragment {
                 return;
             }
 
-            String title = getArguments().getString(ARG_TITLE);
+//            if (title != null)
+//                tvTitle.setText(title);
+
+            @SuppressWarnings("unchecked")
             List<Transaction> notifications = (List<Transaction>) getArguments()
                     .getSerializable(ARG_NOTIFICATIONS);
 
-            if (title != null)
-                tvTitle.setText(title);
             if (notifications != null) {
                 android.widget.Toast.makeText(getContext(), "Mostrando " + notifications.size() + " items",
                         android.widget.Toast.LENGTH_SHORT).show();

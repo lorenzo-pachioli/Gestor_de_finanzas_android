@@ -1,32 +1,37 @@
 package com.notificationcapture.app.views;
 
+// ARCHIVO COMPLETO: app/src/main/java/com/notificationcapture/app/views/FastChargeActivity.java
+
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.models.Cash;
 import com.notificationcapture.app.models.Credit;
 import com.notificationcapture.app.models.Debit;
 import com.notificationcapture.app.models.Transaction;
+import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.repositories.RepositoryProvider;
+import com.notificationcapture.app.repositories.WalletRepository;
 import com.notificationcapture.app.utils.CustomTypeSwitch;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 
 public class FastChargeActivity extends AppCompatActivity {
@@ -35,13 +40,15 @@ public class FastChargeActivity extends AppCompatActivity {
     private MaterialButtonToggleGroup togglePaymentMethod;
     private CustomTypeSwitch swType;
     private LinearLayout layoutInstallments;
+    private LinearLayout layoutWalletSelector;
+    private Spinner spinnerWalletsFastCharge;
     private TextView tvSuccessMessage;
+    private List<Wallets> availableWallets = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        // Inicializar RepositoryProvider en caso de que la app haya sido matada
+
         if (!RepositoryProvider.isInitialized()) {
             RepositoryProvider.initialize(getApplicationContext());
         }
@@ -54,15 +61,19 @@ public class FastChargeActivity extends AppCompatActivity {
         swType = findViewById(R.id.swFastChargeType);
         togglePaymentMethod = findViewById(R.id.togglePaymentMethod);
         layoutInstallments = findViewById(R.id.layoutInstallments);
+        layoutWalletSelector = findViewById(R.id.layoutWalletSelector);
+        spinnerWalletsFastCharge = findViewById(R.id.spinnerWalletsFastCharge);
         tvSuccessMessage = findViewById(R.id.tvSuccessMessage);
 
         Button btnCancel = findViewById(R.id.btnCancelFastCharge);
         Button btnSave = findViewById(R.id.btnSaveFastCharge);
 
-        // Lógica para mostrar campo de cuotas si se selecciona Crédito
+        setupWalletsSpinner();
+
         togglePaymentMethod.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (isChecked) {
                 layoutInstallments.setVisibility(checkedId == R.id.btnMethodCredit ? View.VISIBLE : View.GONE);
+                layoutWalletSelector.setVisibility(checkedId == R.id.btnMethodDebit ? View.VISIBLE : View.GONE);
             }
         });
 
@@ -70,7 +81,18 @@ public class FastChargeActivity extends AppCompatActivity {
         btnSave.setOnClickListener(v -> saveTransaction());
     }
 
-
+    private void setupWalletsSpinner() {
+        WalletRepository walletRepository = RepositoryProvider.getInstance().getWalletRepository();
+        availableWallets = new ArrayList<>(walletRepository.getAllWallets());
+        List<String> names = new ArrayList<>();
+        for (Wallets w : availableWallets) {
+            names.add(w.getAppName());
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, names);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerWalletsFastCharge.setAdapter(adapter);
+    }
 
     private void saveTransaction() {
         String title = etTitle.getText().toString().trim();
@@ -90,14 +112,20 @@ public class FastChargeActivity extends AppCompatActivity {
         }
 
         IngresoOEgreso type = swType.isChecked() ? IngresoOEgreso.EGRESO : IngresoOEgreso.INGRESO;
-
         int checkedMethodId = togglePaymentMethod.getCheckedButtonId();
         Transaction transaction;
         long now = System.currentTimeMillis();
         String categoryId = (type == IngresoOEgreso.INGRESO) ? "other_income" : "other_outcome";
 
         if (checkedMethodId == R.id.btnMethodDebit) {
-            transaction = new Debit(title, "Carga rápida", now, type, categoryId, null, false);
+            String walletId = null;
+            if (!availableWallets.isEmpty()) {
+                int idx = spinnerWalletsFastCharge.getSelectedItemPosition();
+                if (idx >= 0 && idx < availableWallets.size()) {
+                    walletId = availableWallets.get(idx).getId();
+                }
+            }
+            transaction = new Debit(title, "Carga rápida", now, type, categoryId, walletId, false);
         } else if (checkedMethodId == R.id.btnMethodCredit) {
             int installments = 1;
             try {
@@ -114,7 +142,6 @@ public class FastChargeActivity extends AppCompatActivity {
             RepositoryProvider.getInstance().getTransactionRepository().saveTransaction(transaction);
             runOnUiThread(() -> {
                 tvSuccessMessage.setVisibility(View.VISIBLE);
-                // Cerrar después de un breve delay para que el usuario vea el mensaje
                 new Handler(Looper.getMainLooper()).postDelayed(this::finish, 1500);
             });
         });

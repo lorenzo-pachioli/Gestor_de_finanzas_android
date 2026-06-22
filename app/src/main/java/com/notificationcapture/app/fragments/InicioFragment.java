@@ -58,9 +58,9 @@ public class InicioFragment extends Fragment {
         tvBalance = view.findViewById(R.id.tvBalance);
         tvMonthTitle = view.findViewById(R.id.tvMonthTitle);
         
-        View cardTotalDisponible = view.findViewById(R.id.cardTotalDisponible);
-        TextView tvTotalDisponible = view.findViewById(R.id.tvTotalDisponible);
-        tvDeudaCredito = view.findViewById(R.id.tvDeudaCredito);
+        View cardTotalDisponible = view.findViewById(R.id.cardTotalAvailable);
+        TextView tvTotalDisponible = view.findViewById(R.id.tvTotalAvailable);
+        TextView tvViewDetails = view.findViewById(R.id.tvViewDetails);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
@@ -73,8 +73,12 @@ public class InicioFragment extends Fragment {
             sheet.show(getParentFragmentManager(), "patrimonio_neto");
         };
 
-        tvBalance.setOnClickListener(patrimonioClickListener);
-        cardTotalDisponible.setOnClickListener(patrimonioClickListener);
+        if (tvViewDetails != null) {
+            tvViewDetails.setOnClickListener(patrimonioClickListener);
+        }
+        if (cardTotalDisponible != null) {
+            cardTotalDisponible.setOnClickListener(patrimonioClickListener);
+        }
 
         adapter = new TransactionAdapter(new ArrayList<>(), getChildFragmentManager(), item -> {
             viewModel.deleteTransaction(item.getId());
@@ -120,14 +124,10 @@ public class InicioFragment extends Fragment {
                     
                     if (isAdded() && getActivity() != null) {
                         getActivity().runOnUiThread(() -> {
-                            tvTotalDisponible.setText(formatAmount(finalLiquid));
-                            tvTotalDisponible.setTextColor(getResources().getColor(finalLiquid >= 0 ? R.color.green : R.color.red));
-                            
-                            tvDeudaCredito.setText(formatAmount(finalDeuda));
-                            if (finalDeuda > 0) {
-                                tvDeudaCredito.setTextColor(getResources().getColor(R.color.red));
-                            } else {
-                                tvDeudaCredito.setTextColor(getResources().getColor(R.color.text_secondary));
+                            if (tvTotalDisponible != null) {
+                                double available = finalLiquid - finalDeuda;
+                                tvTotalDisponible.setText(formatAmount(available));
+                                tvTotalDisponible.setTextColor(getResources().getColor(available >= 0 ? R.color.green : R.color.red));
                             }
                         });
                     }

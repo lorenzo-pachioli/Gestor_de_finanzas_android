@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- ARCHIVO COMPLETO: app/src/main/res/layout/fragment_inicio.xml -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-
-
-    <!-- Panel de Resumen Financiero -->
+    <!-- Tarjeta 1: Balance y Detalles -->
     <com.google.android.material.card.MaterialCardView
-        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/cardSummary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="4dp"
         android:elevation="4dp"
         app:cardCornerRadius="12dp"
         app:cardBackgroundColor="@color/background_card">
@@ -22,110 +21,138 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="12dp">
 
-            <TextView
-                android:id="@+id/tvMonthTitle"
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/resumen_de"
-                android:textSize="18sp"
+                android:layout_marginBottom="4dp">
+                
+                <TextView
+                    android:id="@+id/tvMonthTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:text="@string/resumen_de"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"/>
+
+                <TextView
+                    android:id="@+id/tvViewDetails"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:text="Ver detalle"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/accent_main"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground"/>
+            </RelativeLayout>
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvBalance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="$0"
+                android:textSize="28sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="12dp"/>
+                android:textColor="@color/green"
+                android:maxLines="1"
+                android:ellipsize="end"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="16sp"
+                app:autoSizeMaxTextSize="28sp"
+                app:autoSizeStepGranularity="1sp"
+                android:layout_marginBottom="8dp"/>
 
-            <LinearLayout
+            <!-- Fila Ingresos -->
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:background="@drawable/bg_card_rounded"
-                android:weightSum="3">
-
-                <!-- Ingresos -->
-                <LinearLayout
-                    android:layout_width="0dp"
+                android:layout_marginBottom="2dp">
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/ingresos"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary"
-                        android:layout_marginBottom="4dp"/>
-
-                    <TextView
-                        android:id="@+id/tvIngresos"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/default_amount"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/green"/>
-
-                </LinearLayout>
-
-                <!-- Egresos -->
-                <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_alignParentStart="true"
+                    android:text="Ingreso:"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"/>
+                <TextView
+                    android:id="@+id/tvIngresos"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
+                    android:layout_alignParentEnd="true"
+                    android:text="$0"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/green"/>
+            </RelativeLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/egresos"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary"
-                        android:layout_marginBottom="4dp"/>
-
-                    <TextView
-                        android:id="@+id/tvEgresos"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/default_amount"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/red"/>
-
-                </LinearLayout>
-
-                <!-- Balance -->
-                <LinearLayout
-                    android:layout_width="0dp"
+            <!-- Fila Egresos -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/balance"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary"
-                        android:layout_marginBottom="4dp"/>
-
-                    <TextView
-                        android:id="@+id/tvBalance"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/default_amount"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/green"/>
-
-                </LinearLayout>
-
-            </LinearLayout>
+                    android:layout_alignParentStart="true"
+                    android:text="Egreso:"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"/>
+                <TextView
+                    android:id="@+id/tvEgresos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:text="$0"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/red"/>
+            </RelativeLayout>
 
         </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
+    <!-- Tarjeta 2: Total Disponible -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardTotalAvailable"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/cardSummary"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="8dp"
+        android:elevation="2dp"
+        app:cardCornerRadius="12dp"
+        app:cardBackgroundColor="@color/background_card">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp">
+            
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="Total disponibles:"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"/>
+                
+            <TextView
+                android:id="@+id/tvTotalAvailable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:text="$0"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"/>
+        </RelativeLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <TextView
@@ -138,92 +165,11 @@
         android:textColor="#666666"
         android:visibility="visible"/>
 
-    <com.google.android.material.card.MaterialCardView
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/cardTotalDisponible"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/cardSummary"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="8dp"
-        android:elevation="2dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
-        app:cardCornerRadius="8dp"
-        app:cardBackgroundColor="@color/background_card">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="12dp">
-
-            <!-- Fila Disponible -->
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp">
-                
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:text="Total disponible"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp"/>
-
-                <TextView
-                    android:id="@+id/tvTotalDisponible"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
-                    android:text="$0"
-                    android:textStyle="bold"
-                    android:textColor="@color/green"
-                    android:textSize="14sp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:text="@string/ver_detalle"
-                    android:textColor="#3498db"
-                    android:textSize="12sp"/>
-            </RelativeLayout>
-
-            <!-- Fila Deuda Crédito -->
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp">
-                
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:text="Deuda con crédito"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp"/>
-
-                <TextView
-                    android:id="@+id/tvDeudaCredito"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
-                    android:text="$0"
-                    android:textStyle="bold"
-                    android:textColor="@color/red"
-                    android:textSize="14sp"/>
-            </RelativeLayout>
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/cardTotalDisponible"
+        android:layout_below="@id/cardTotalAvailable"
         android:layout_marginHorizontal="8dp"
         android:paddingBottom="75dp"
         android:clipToPadding="false"

@@ -193,6 +193,20 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+        <TextView
+            android:id="@+id/tvTransferLink"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="↔ Transferir entre cuentas"
+            android:textSize="14sp"
+            android:textColor="@color/accent_main"
+            android:gravity="center"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground"/>
+
         <!-- Botón Crear -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnCreate"
