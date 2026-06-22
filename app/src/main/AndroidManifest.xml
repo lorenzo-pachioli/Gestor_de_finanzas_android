@@ -18,13 +18,31 @@
 
 
         <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.NotificationCapture.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".fragments.PagoTarjetaActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false">
+            <meta-data
+                android:name="com.notificationcapture.app.database.AppInitializer"
+                android:value="androidx.startup" />
+        </provider>
 
         <service
             android:name=".listeners.NotificationListener"
@@ -34,6 +52,23 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+
+        <activity
+            android:name=".views.FastChargeActivity"
+            android:theme="@style/Theme.NotificationCapture.Transparent"
+            android:exported="false"
+            android:excludeFromRecents="true" />
+
+        <receiver
+            android:name=".widget.FastChargeWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_fast_charge_info" />
+        </receiver>
 
     </application>
 

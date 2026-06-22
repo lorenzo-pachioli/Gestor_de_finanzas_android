@@ -128,4 +128,29 @@
     <string name="nav_title_pending">Pending</string>
     <string name="nav_title_categories">Summary</string>
     <string name="nav_title_settings">Settings</string>
+
+    <string name="ver_detalle">View details</string>
+
+    <!-- Notification Permission Explanation -->
+    <string name="permiso_notificaciones_titulo">Why do we need access?</string>
+    <!-- Pago Tarjeta -->
+    <string name="pago_de_tarjeta">Payment for %s</string>
+    <string name="deuda_mes_actual">Current month debt:</string>
+    <string name="deuda_arrastrada">Carried debt:</string>
+    <string name="pagos_registrados">Previous payments:</string>
+    <string name="total_a_pagar">Total to pay:</string>
+    <string name="pagar_desde">Pay from:</string>
+    <string name="monto_a_pagar_label">Amount to pay</string>
+    <string name="monto_invalido">Invalid amount</string>
+    <string name="monto_positivo">Amount must be greater than 0</string>
+    <string name="monto_excede_deuda">Amount cannot exceed total debt</string>
+    <string name="pago_exitoso">Payment submitted successfully</string>
+    <string name="error_pago">Error processing payment</string>
+    <string name="confirmar_pago">Confirm Payment</string>
+    <string name="detalle_deuda">DEBT DETAILS</string>
+    <string name="realizar_pago">MAKE PAYMENT</string>
+
+    <string name="permiso_notificaciones_descripcion">Fluxus uses notification access permission exclusively to automatically recognize payments made through your banking apps and digital wallets.\n\n🔒 <b>Total Privacy</b>: We only process notifications related to money flows. No personal or financial information ever leaves your device; everything is stored locally and securely, without any connection to external databases.\n\nBy enabling this access, you will no longer need to record every expense manually, as we will do it for you every time you receive a payment confirmation.</string>
+    <string name="carga_rapida">Quick Charge</string>
+    <string name="guardado_exito">Saved successfully!</string>
 </resources>

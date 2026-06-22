@@ -3,12 +3,16 @@ package com.notificationcapture.app.utils;
 import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.notificationcapture.app.models.GlobalWallet;
+import com.notificationcapture.app.exceptions.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ConfigManager {
     private static ConfigManager instance;
@@ -19,9 +23,11 @@ public class ConfigManager {
     private List<String> paymentKeywords;
     private List<String> ingresoKeywords;
     private List<String> egresoKeywords;
-    private List<com.notificationcapture.app.models.Wallets> globalWallets;
-    private java.util.Map<String, String> packageToNameMap;
-    private java.util.Map<String, String> nameToPackageMap;
+    private List<GlobalWallet> globalWallets;
+    // packageName -> GlobalWallet (un entry por cada packageName alternativo)
+    private Map<String, GlobalWallet> packageToWalletMap;
+    // name -> primary packageName
+    private Map<String, String> nameToPackageMap;
 
     private ConfigManager(Context context) {
         this.context = context.getApplicationContext();
@@ -65,42 +71,30 @@ public class ConfigManager {
             is.read(buffer);
             is.close();
             String json = new String(buffer, StandardCharsets.UTF_8);
-            Type listType = new TypeToken<ArrayList<String>>() {
-            }.getType();
+            Type listType = new TypeToken<ArrayList<String>>() {}.getType();
             return gson.fromJson(json, listType);
         } catch (IOException e) {
-            e.printStackTrace();
+            AppLogger.e("ConfigManager", "Error opening asset: " + fileName, e);
+            // Dependiendo de si es crítico, podríamos lanzar ResourceNotFoundException
             return new ArrayList<>();
         }
     }
 
-    public List<String> getWalletApps() {
-        return walletApps;
-    }
+    public List<String> getWalletApps() { return walletApps; }
+    public List<String> getPaymentKeywords() { return paymentKeywords; }
+    public List<String> getIngresoKeywords() { return ingresoKeywords; }
+    public List<String> getEgresoKeywords() { return egresoKeywords; }
+    public List<GlobalWallet> getGlobalWallets() { return globalWallets; }
 
-    public List<String> getPaymentKeywords() {
-        return paymentKeywords;
-    }
-
-    public List<String> getIngresoKeywords() {
-        return ingresoKeywords;
-    }
-
-    public List<String> getEgresoKeywords() {
-        return egresoKeywords;
-    }
-
-    public List<com.notificationcapture.app.models.Wallets> getGlobalWallets() {
-        return globalWallets;
-    }
-
+    /** Busca el nombre de display para un packageName dado (cualquier alternativo). */
     public String getDefaultNameForPackage(String packageName) {
-        if (packageToNameMap != null && packageToNameMap.containsKey(packageName)) {
-            return packageToNameMap.get(packageName);
+        if (packageToWalletMap != null && packageToWalletMap.containsKey(packageName)) {
+            return packageToWalletMap.get(packageName).getName();
         }
         return null;
     }
 
+    /** Devuelve el package primario (primero de la lista) dado un nombre de wallet. */
     public String getPackageByName(String name) {
         if (nameToPackageMap != null && nameToPackageMap.containsKey(name)) {
             return nameToPackageMap.get(name);
@@ -108,12 +102,18 @@ public class ConfigManager {
         return null;
     }
 
+    /** Verifica si un packageName es reconocido por alguna wallet global. */
+    public boolean isGlobalWalletPackage(String packageName) {
+        return packageToWalletMap != null && packageToWalletMap.containsKey(packageName);
+    }
+
     private void loadGlobalWallets() {
         try {
             int resId = context.getResources().getIdentifier("wallets_global", "raw", context.getPackageName());
             if (resId == 0) {
-                globalWallets = new java.util.ArrayList<>();
-                packageToNameMap = new java.util.HashMap<>();
+                globalWallets = new ArrayList<>();
+                packageToWalletMap = new HashMap<>();
+                nameToPackageMap = new HashMap<>();
                 return;
             }
             InputStream is = context.getResources().openRawResource(resId);
@@ -122,24 +122,25 @@ public class ConfigManager {
             is.read(buffer);
             is.close();
             String json = new String(buffer, StandardCharsets.UTF_8);
-            Type listType = new TypeToken<ArrayList<com.notificationcapture.app.models.Wallets>>() {
-            }.getType();
+            Type listType = new TypeToken<ArrayList<GlobalWallet>>() {}.getType();
             globalWallets = gson.fromJson(json, listType);
 
-            // Populate Maps
-            packageToNameMap = new java.util.HashMap<>();
-            nameToPackageMap = new java.util.HashMap<>();
+            packageToWalletMap = new HashMap<>();
+            nameToPackageMap = new HashMap<>();
             if (globalWallets != null) {
-                for (com.notificationcapture.app.models.Wallets wallet : globalWallets) {
-                    packageToNameMap.put(wallet.getPackageName(), wallet.getName());
-                    nameToPackageMap.put(wallet.getName(), wallet.getPackageName());
+                for (GlobalWallet wallet : globalWallets) {
+                    // Indexar todos los packageNames alternativos
+                    for (String pkg : wallet.getPackageNames()) {
+                        packageToWalletMap.put(pkg, wallet);
+                    }
+                    nameToPackageMap.put(wallet.getName(), wallet.getPrimaryPackageName());
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            globalWallets = new java.util.ArrayList<>();
-            packageToNameMap = new java.util.HashMap<>();
-            nameToPackageMap = new java.util.HashMap<>();
+            AppLogger.e("ConfigManager", "Error reading wallets_global.raw", e);
+            globalWallets = new ArrayList<>();
+            packageToWalletMap = new HashMap<>();
+            nameToPackageMap = new HashMap<>();
         }
     }
 }

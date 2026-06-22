@@ -6,7 +6,7 @@
 
 
     <!-- Panel de Resumen Financiero -->
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/cardSummary"
         android:layout_width="match_parent"
@@ -126,7 +126,7 @@
 
         </LinearLayout>
 
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
         android:id="@+id/emptyView"
@@ -138,12 +138,95 @@
         android:textColor="#666666"
         android:visibility="visible"/>
 
+    <com.google.android.material.card.MaterialCardView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/cardTotalDisponible"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/cardSummary"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="8dp"
+        android:elevation="2dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        app:cardCornerRadius="8dp"
+        app:cardBackgroundColor="@color/background_card">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- Fila Disponible -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp">
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:text="Total disponible"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/tvTotalDisponible"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:text="$0"
+                    android:textStyle="bold"
+                    android:textColor="@color/green"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:text="@string/ver_detalle"
+                    android:textColor="#3498db"
+                    android:textSize="12sp"/>
+            </RelativeLayout>
+
+            <!-- Fila Deuda Crédito -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp">
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:text="Deuda con crédito"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/tvDeudaCredito"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:text="$0"
+                    android:textStyle="bold"
+                    android:textColor="@color/red"
+                    android:textSize="14sp"/>
+            </RelativeLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/cardSummary"
+        android:layout_below="@id/cardTotalDisponible"
         android:layout_marginHorizontal="8dp"
+        android:paddingBottom="75dp"
+        android:clipToPadding="false"
         android:visibility="gone"/>
 
 </RelativeLayout>

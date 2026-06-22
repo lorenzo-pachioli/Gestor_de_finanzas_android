@@ -7,20 +7,28 @@ import android.service.notification.StatusBarNotification;
 import android.app.Notification;
 
 import com.notificationcapture.app.models.Debit;
+import com.notificationcapture.app.models.GlobalWallet;
 import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.repositories.WalletRepository;
+import com.notificationcapture.app.exceptions.*;
+import com.notificationcapture.app.utils.AppLogger;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class NotificationListener extends NotificationListenerService {
 
     private TransactionRepository repository;
     private WalletRepository walletsRepository;
+    private final java.util.concurrent.ExecutorService ioExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
 
-    // Listas cargadas desde JSON vía ConfigManager
-    private java.util.List<String> walletApps;
-    private java.util.List<String> paymentKeywords;
-    private java.util.List<com.notificationcapture.app.models.Wallets> globalWallets;
+    // Listas cacheadas para O(1) matching
+    private Set<String> globalWalletPackagesSet;
+    private Set<String> keywordSet;
+    private List<String> walletAppsSubstring;
 
     @Override
     public void onCreate() {
@@ -31,9 +39,20 @@ public class NotificationListener extends NotificationListenerService {
         // Cargar configuraciones
         com.notificationcapture.app.utils.ConfigManager config = com.notificationcapture.app.utils.ConfigManager
                 .getInstance();
-        walletApps = config.getWalletApps();
-        paymentKeywords = config.getPaymentKeywords();
-        globalWallets = config.getGlobalWallets();
+                
+        // Optimización algorítmica: Cachear en HashSets para matching O(1)
+        // Indexa TODOS los packageNames alternativos de cada wallet global
+        globalWalletPackagesSet = new HashSet<>();
+        for (GlobalWallet w : config.getGlobalWallets()) {
+            globalWalletPackagesSet.addAll(w.getPackageNames());
+        }
+        
+        keywordSet = new HashSet<>();
+        for (String kw : config.getPaymentKeywords()) {
+            keywordSet.add(kw.toLowerCase());
+        }
+        
+        walletAppsSubstring = config.getWalletApps();
     }
 
     @Override
@@ -59,67 +78,87 @@ public class NotificationListener extends NotificationListenerService {
                 : "";
 
         // Filtrar solo notificaciones de wallets/pagos
-        if (!isPaymentRelatedNotification(packageName, title, text)) {
-            return; // Ignorar completamente las notificaciones que no son transacciones
+        try {
+            if (!isPaymentRelatedNotification(packageName, title, text)) {
+                return; // Ignorar completamente las notificaciones que no son transacciones
+            }
+        } catch (ParserException e) {
+            // Logs específicos por si queremos debugear por qué falló el parseo de un pago
+            AppLogger.d("NotificationListener", "Filtro skipping: " + e.getMessage());
+            return;
         }
 
         long timestamp = sbn.getPostTime();
-        // Crear el objeto Transaction (Debit por defecto)
-        Wallets wallet = walletsRepository.getWalletByPackageName(title, packageName); // Usamos packageName
-                                                                                       // temporalmente como nombre si
-                                                                                       // no hay
-        // mapping
-        Debit item = new Debit(
-                title != null ? title : "Sin título",
-                text,
-                timestamp,
-                wallet.getId(),
-                true);
-
-        // Guardar en la lista de notificaciones pendientes de revisión
-        repository.saveTransactionNotFiltered(item);
-
-        // Notificar a la actividad para actualizar la UI
-        Intent intent = new Intent("com.notificationcapture.NEW_NOTIFICATION");
-        sendBroadcast(intent);
+        
+        ioExecutor.execute(() -> {
+            // Crear el objeto Transaction (Debit por defecto)
+            Wallets wallet = walletsRepository.getWalletByPackageName(title, packageName); // Usamos packageName
+                                                                                           // temporalmente como nombre si
+                                                                                           // no hay
+            // mapping
+            Debit item = new Debit(
+                    title != null ? title : "Sin título",
+                    text,
+                    timestamp,
+                    wallet != null ? wallet.getId() : "1",
+                    true);
+    
+            // Guardar en la lista de notificaciones pendientes de revisión
+            repository.saveTransactionNotFiltered(item);
+    
+            // Notificar a la actividad para actualizar la UI
+            Intent intent = new Intent("com.notificationcapture.NEW_NOTIFICATION");
+            sendBroadcast(intent);
+        });
     }
 
-    boolean isPaymentRelatedNotification(String packageName, String title, String text) {
+    boolean isPaymentRelatedNotification(String packageName, String title, String text) throws ParserException {
+        if (packageName == null) return false;
 
-        // Verificar si es una app de wallet (prioridad: lista global)
-        boolean isWalletApp = false;
-
-        // 1. Verificar contra el packagename exacto en la lista global
-        for (com.notificationcapture.app.models.Wallets wallet : globalWallets) {
-            if (wallet.getPackageName().equals(packageName)) {
-                isWalletApp = true;
-                break;
-            }
-        }
-
-        // 2. Fallback: Verificar si contiene palabras clave en el packagename (compatibilidad lista anterior)
-        if (!isWalletApp) {
-            for (String wallet : walletApps) {
-                if (packageName.toLowerCase().contains(wallet)) {
-                    isWalletApp = true;
-                    break;
+        // 1. Debe pertenecer a una wallet de la lista global (o a una personalizada del usuario)
+        boolean isWallet = false;
+        if (globalWalletPackagesSet.contains(packageName)) {
+            isWallet = true;
+        } else {
+            List<com.notificationcapture.app.models.Wallets> userWallets = walletsRepository.getAllWallets();
+            if (userWallets != null) {
+                for (com.notificationcapture.app.models.Wallets userWallet : userWallets) {
+                    if (packageName.equals(userWallet.getPackageName())) {
+                        isWallet = true;
+                        break;
+                    }
                 }
             }
         }
 
-        if (!isWalletApp) {
+        if (!isWallet) {
+            // No lanzamos excepción aquí, simplemente no es de una wallet conocida, es normal
             return false;
         }
 
+        // 2. La notificación debe contener alguna palabra clave que indique que es una transacción
+        boolean hasKeyword = false;
         String fullText = (title + " " + text).toLowerCase();
-
-        for (String keyword : paymentKeywords) {
+        for (String keyword : keywordSet) {
             if (fullText.contains(keyword)) {
-                return true;
+                hasKeyword = true;
+                break;
             }
         }
 
-        return false;
+        if (!hasKeyword) {
+            // Si es una app de wallet pero no tiene palabras clave de pago, es ruido (ej. publicidad de la app)
+            return false;
+        }
+
+        // 3. Se debe reconocer el monto de la transferencia en la notificación
+        Double amount = com.notificationcapture.app.utils.StringParser.extractAmount(title, text);
+        if (amount == null || amount <= 0) {
+            // Aquí sí lanzamos excepción porque ES de una wallet y TIENE keywords, pero fallamos al parsear el monto
+            throw new AmountNotFoundException(fullText);
+        }
+
+        return true;
     }
 
     @Override

@@ -162,8 +162,9 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
         @Override
         public int getItemViewType(int position) {
             Object option = options.get(position);
-            // Wallets should always use the simple layout as per user request
-            if (option instanceof com.notificationcapture.app.models.Wallets) {
+            // Wallets and GlobalWallet always use the simple layout
+            if (option instanceof com.notificationcapture.app.models.Wallets
+                    || option instanceof com.notificationcapture.app.models.GlobalWallet) {
                 return TYPE_SIMPLE;
             }
             return (option instanceof com.notificationcapture.app.interfaces.SpinnerDisplayable) ? TYPE_CARD
@@ -196,10 +197,14 @@ public class SelectorBottomSheet extends BottomSheetDialogFragment {
 
             // Set color for highlighting (selection or global list status)
             boolean isHighlighted = false;
-            if (item instanceof com.notificationcapture.app.models.Wallets && highlightedIds != null) {
-                com.notificationcapture.app.models.Wallets wallet = (com.notificationcapture.app.models.Wallets) item;
-                if (highlightedIds.contains(wallet.getPackageName())) {
-                    isHighlighted = true;
+            if (highlightedIds != null) {
+                if (item instanceof com.notificationcapture.app.models.GlobalWallet) {
+                    com.notificationcapture.app.models.GlobalWallet gw = (com.notificationcapture.app.models.GlobalWallet) item;
+                    // Resaltado si el package primario está en highlightedIds
+                    isHighlighted = highlightedIds.contains(gw.getPrimaryPackageName());
+                } else if (item instanceof com.notificationcapture.app.models.Wallets) {
+                    com.notificationcapture.app.models.Wallets wallet = (com.notificationcapture.app.models.Wallets) item;
+                    isHighlighted = highlightedIds.contains(wallet.getPackageName());
                 }
             }
 

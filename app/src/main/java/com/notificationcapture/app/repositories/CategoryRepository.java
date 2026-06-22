@@ -5,6 +5,7 @@ import static android.content.ContentValues.TAG;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import com.notificationcapture.app.utils.AppLogger;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -20,13 +21,15 @@ public class CategoryRepository implements GsonAccess {
 
     private SharedPreferences prefs;
     private Gson gson;
+    private List<Category> cachedCategories = null; // Memory Cache
 
     public static final String OTHER_INCOME_ID = "other_income";
     public static final String OTHER_OUTCOME_ID = "other_outcome";
+    public static final String PAGO_TARJETA_ID = "pago_tarjeta";
 
     private static final String[] OUTCOME_CATEGORIES = {
             "Otros", "Comida", "Combustible", "Transporte", "Servicios",
-            "Entretenimiento", "Salud", "Educación", "Compras", "Vivienda"
+            "Entretenimiento", "Salud", "Educación", "Compras", "Vivienda", "Pago de Tarjeta"
     };
 
     private static final String[] INCOME_CATEGORIES = {
@@ -55,6 +58,8 @@ public class CategoryRepository implements GsonAccess {
             for (String name : OUTCOME_CATEGORIES) {
                 if (name.equals("Otros")) {
                     defaultCategories.add(new Category(OTHER_OUTCOME_ID, name, IngresoOEgreso.EGRESO));
+                } else if (name.equals("Pago de Tarjeta")) {
+                    defaultCategories.add(new Category(PAGO_TARJETA_ID, name, IngresoOEgreso.EGRESO));
                 } else {
                     defaultCategories.add(new Category(name, IngresoOEgreso.EGRESO));
                 }
@@ -112,6 +117,16 @@ public class CategoryRepository implements GsonAccess {
                 return c;
             }
         }
+        // Fallback para migraciones de objetos antiguos y IDs por defecto cruzados
+        if (OTHER_INCOME_ID.equals(id) || "Otros_INGRESO".equals(id)) {
+            for (Category c : all) {
+                if ("Otros".equalsIgnoreCase(c.getName()) && c.getType() == IngresoOEgreso.INGRESO) return c;
+            }
+        } else if (OTHER_OUTCOME_ID.equals(id) || "Otros_EGRESO".equals(id)) {
+            for (Category c : all) {
+                if ("Otros".equalsIgnoreCase(c.getName()) && c.getType() == IngresoOEgreso.EGRESO) return c;
+            }
+        }
         return null;
     }
 
@@ -128,6 +143,10 @@ public class CategoryRepository implements GsonAccess {
     }
 
     public List<Category> getAllCategories() {
+        if (cachedCategories != null) {
+            return new ArrayList<>(cachedCategories); // Devuelve copia rápida desde RAM O(1)
+        }
+        
         try {
             String json = prefs.getString(KEY_CATEGORIES, null);
             if (json == null)
@@ -136,15 +155,26 @@ public class CategoryRepository implements GsonAccess {
             }.getType();
             List<Category> cats = gson.fromJson(json, type);
 
-            // Migración: asegurar que todos tengan ID
+            // Migración: asegurar que todos tengan ID y existan categorías base nuevas
             boolean needsSave = false;
             if (cats != null) {
+                boolean hasPagoTarjeta = false;
                 for (Category c : cats) {
                     if (c.getId() == null) {
                         c.setId(c.getName() + "_" + c.getType());
                         needsSave = true;
                     }
+                    if (PAGO_TARJETA_ID.equals(c.getId())) {
+                        hasPagoTarjeta = true;
+                    }
                 }
+
+                // Si no existe la categoría de Pago de Tarjeta, la agregamos
+                if (!hasPagoTarjeta) {
+                    cats.add(new Category(PAGO_TARJETA_ID, "Pago de Tarjeta", IngresoOEgreso.EGRESO));
+                    needsSave = true;
+                }
+
                 if (needsSave) {
                     saveCategories(cats);
                 }
@@ -152,18 +182,20 @@ public class CategoryRepository implements GsonAccess {
                 return new ArrayList<>();
             }
 
-            return cats;
+            cachedCategories = cats;
+            return new ArrayList<>(cachedCategories);
         } catch (Exception e) {
-            Log.e(TAG, "Error getting categories: " + e.getMessage(), e);
+            AppLogger.e("CategoryRepository", "Error getting categories: " + e.getMessage(), e);
             return new ArrayList<>();
         }
     }
 
     private void saveCategories(List<Category> categories) {
         try {
+            cachedCategories = new ArrayList<>(categories); // Sincroniza caché en memoria
             prefs.edit().putString(KEY_CATEGORIES, gson.toJson(categories)).apply();
         } catch (Exception e) {
-            Log.e(TAG, "Error adding category: " + e.getMessage(), e);
+            AppLogger.e("CategoryRepository", "Error saving categories: " + e.getMessage(), e);
         }
     }
 }

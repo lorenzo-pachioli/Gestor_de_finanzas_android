@@ -196,6 +196,8 @@ public class AgregarFragment extends Fragment {
         // Generate Installment Group ID if installments > 1
         String installmentGroupId = totalInstallments > 1 ? java.util.UUID.randomUUID().toString() : null;
 
+        java.util.List<Transaction> transactionsToSave = new java.util.ArrayList<>();
+
         for (int i = 1; i <= totalInstallments; i++) {
             long itemTimestamp = calendar.getTimeInMillis();
             String itemTitle = title + (totalInstallments > 1 ? " (" + i + "/" + totalInstallments + ")" : "");
@@ -219,38 +221,44 @@ public class AgregarFragment extends Fragment {
             }
 
             transaction.setAmount(amountValue);
-            repository.saveTransaction(transaction);
+            transactionsToSave.add(transaction);
 
             // Add 1 month for next installment
             calendar.add(java.util.Calendar.MONTH, 1);
         }
 
-        // Notificar actualización
-        android.content.Intent intent = new android.content.Intent("com.notificationcapture.NEW_NOTIFICATION");
-        requireContext().sendBroadcast(intent);
+        repository.saveTransactions(transactionsToSave, result -> {
+            if (result.isSuccess()) {
+                // Notificar actualización omitida (auto por LiveData)
 
-        // Limpiar formulario
-        etTitle.setText("");
-        etAmount.setText("");
+                // Limpiar formulario
+                etTitle.setText("");
+                etAmount.setText("");
 
-        // Reset Payment Method
-        selectedMethod = PaymentMethod.EFECTIVO;
-        selectedMethodDetailId = "";
-        selectedInstallments = 1;
-        tvPaymentMethod.setText("Efectivo");
+                // Reset Payment Method
+                selectedMethod = PaymentMethod.EFECTIVO;
+                selectedMethodDetailId = "";
+                selectedInstallments = 1;
+                tvPaymentMethod.setText("Efectivo");
 
-        spinnerCategory.setSelection(0);
-        swType.setChecked(true, true); // Reset to Egreso with animation
-        updateToggleUI(true);
-        // Resetear fecha a hoy
-        selectedDateTimestamp = System.currentTimeMillis();
-        updateDateField(selectedDateTimestamp);
+                spinnerCategory.setSelection(0);
+                swType.setChecked(true, true); // Reset to Egreso with animation
+                updateToggleUI(true);
+                // Resetear fecha a hoy
+                selectedDateTimestamp = System.currentTimeMillis();
+                updateDateField(selectedDateTimestamp);
 
-        // Confirmación
-        String typeText = type == IngresoOEgreso.INGRESO ? "Ingreso" : "Egreso";
-        Toast.makeText(requireContext(),
-                "✅ " + typeText + " creado exitosamente",
-                Toast.LENGTH_SHORT).show();
+                // Confirmación
+                String typeText = type == IngresoOEgreso.INGRESO ? "Ingreso" : "Egreso";
+                Toast.makeText(requireContext(),
+                        "✅ " + typeText + " creado exitosamente",
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(requireContext(),
+                        "❌ Error al guardar: " + result.getError().getMessage(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void showPaymentMethodBottomSheet() {

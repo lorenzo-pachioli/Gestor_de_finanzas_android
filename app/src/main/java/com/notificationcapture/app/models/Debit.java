@@ -33,6 +33,7 @@ public class Debit extends Transaction {
 
     @Override
     public String getSourceName() {
-        return wallet != null ? wallet.getAppName() : "Desconocido";
+        if (wallet != null) return wallet.getAppName();
+        return walletId != null ? "Débito (" + walletId + ")" : "Débito";
     }
 }

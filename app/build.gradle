@@ -26,6 +26,12 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
 }
 
 dependencies {
@@ -37,8 +43,24 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'androidx.fragment:fragment:1.6.2'
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
+    implementation libs.androidx.room.common.jvm
+    implementation libs.room.runtime
+    implementation libs.androidx.core
+    
+    // Security Crypto for EncryptedSharedPreferences
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+    
+    // App Startup for AppInitializer
+    implementation 'androidx.startup:startup-runtime:1.1.1'
+    
+    // Lifecycle components for MVVM
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.6.2'
 
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    testImplementation libs.junit
+    testImplementation libs.robolectric
+    testImplementation libs.androidx.core
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+    annotationProcessor libs.room.compiler
 }

@@ -384,6 +384,14 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         } else if (item instanceof Cash) {
             return "Efectivo";
         }
+        
+        // Final safety fallback using the enum name if classes don't match for some reason
+        if (item.getPaymentMethod() != null) {
+            String name = item.getPaymentMethod().name();
+            // Capitalize first letter
+            return name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
+        }
+        
         return "Desconocido";
     }
 

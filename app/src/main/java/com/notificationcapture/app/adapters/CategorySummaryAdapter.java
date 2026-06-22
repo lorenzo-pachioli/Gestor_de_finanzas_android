@@ -28,7 +28,7 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
         this.categoryColors = categoryColors;
         calculateTotal();
         // Sort by amount descending
-        this.categoryList.sort((e1, e2) -> e2.getValue().compareTo(e1.getValue()));
+        java.util.Collections.sort(this.categoryList, (e1, e2) -> e2.getValue().compareTo(e1.getValue()));
         this.listener = listener;
     }
 
@@ -68,7 +68,8 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
         }
 
         // Apply Colors
-        int color = categoryColors.getOrDefault(category, android.graphics.Color.GRAY);
+        Integer colorVal = categoryColors.get(category);
+        int color = (colorVal != null) ? colorVal : android.graphics.Color.GRAY;
         holder.viewLeftBorder.setBackgroundColor(color);
         holder.viewBackgroundTint.setBackgroundColor(color);
 

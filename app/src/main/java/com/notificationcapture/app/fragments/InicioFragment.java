@@ -1,35 +1,26 @@
 package com.notificationcapture.app.fragments;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 import com.notificationcapture.app.adapters.TransactionAdapter;
+import com.notificationcapture.app.enums.PaymentMethod;
 import com.notificationcapture.app.models.Transaction;
-import com.notificationcapture.app.repositories.CategoryRepository;
-import com.notificationcapture.app.repositories.RepositoryProvider;
-import com.notificationcapture.app.repositories.TransactionRepository;
+import com.notificationcapture.app.viewmodels.MainViewModel;
 import com.notificationcapture.app.R;
-import com.notificationcapture.app.models.Category;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 
 public class InicioFragment extends Fragment {
@@ -42,9 +33,8 @@ public class InicioFragment extends Fragment {
     private TextView tvEgresos;
     private TextView tvBalance;
     private TextView tvMonthTitle;
-    private TransactionRepository repository;
-    private CategoryRepository categoryRepository;
-    private BroadcastReceiver notificationReceiver;
+    private TextView tvDeudaCredito;
+    private MainViewModel viewModel;
 
     @Nullable
     @Override
@@ -57,8 +47,8 @@ public class InicioFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        repository = RepositoryProvider.getInstance().getTransactionRepository();
-        categoryRepository = RepositoryProvider.getInstance().getCategoryRepository();
+        // Initialize ViewModel scoped to Activity so all fragments share data
+        viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
         recyclerView = view.findViewById(R.id.recyclerView);
         emptyView = view.findViewById(R.id.emptyView);
@@ -67,65 +57,83 @@ public class InicioFragment extends Fragment {
         tvEgresos = view.findViewById(R.id.tvEgresos);
         tvBalance = view.findViewById(R.id.tvBalance);
         tvMonthTitle = view.findViewById(R.id.tvMonthTitle);
+        
+        View cardTotalDisponible = view.findViewById(R.id.cardTotalDisponible);
+        TextView tvTotalDisponible = view.findViewById(R.id.tvTotalDisponible);
+        tvDeudaCredito = view.findViewById(R.id.tvDeudaCredito);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        adapter = new TransactionAdapter(new ArrayList<>(), getChildFragmentManager(), item -> {
-            repository.deleteTransaction(item.getId());
-            loadNotifications();
-        }, null, false); // showAddButton = false para transacciones aprobadas
-        recyclerView.setAdapter(adapter);
-
-        loadNotifications();
-
-        notificationReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                loadNotifications();
-            }
+        // Patrimonio Neto Trigger mensual (si corresponde) o global
+        View.OnClickListener patrimonioClickListener = v -> {
+            MyBottomSheetDialogFragment sheet = new MyBottomSheetDialogFragment();
+            Bundle args = new Bundle();
+            args.putString("modo", "patrimonio_neto");
+            sheet.setArguments(args);
+            sheet.show(getParentFragmentManager(), "patrimonio_neto");
         };
 
-        IntentFilter filter = new IntentFilter("com.notificationcapture.NEW_NOTIFICATION");
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            requireContext().registerReceiver(notificationReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        }
-    }
+        tvBalance.setOnClickListener(patrimonioClickListener);
+        cardTotalDisponible.setOnClickListener(patrimonioClickListener);
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        loadNotifications();
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (notificationReceiver != null) {
-            requireContext().unregisterReceiver(notificationReceiver);
-        }
-    }
-
-    private void loadNotifications() {
-        List<Transaction> allNotifications = repository.getAllTransactions();
-
-        // Filtrar solo las notificaciones del mes actual
-        List<Transaction> currentMonthNotifications = getCurrentMonthNotifications(allNotifications);
-        adapter.updateData(currentMonthNotifications);
-
-        if (currentMonthNotifications.isEmpty()) {
-            emptyView.setVisibility(View.VISIBLE);
-            recyclerView.setVisibility(View.GONE);
-        } else {
-            emptyView.setVisibility(View.GONE);
-            recyclerView.setVisibility(View.VISIBLE);
-        }
+        adapter = new TransactionAdapter(new ArrayList<>(), getChildFragmentManager(), item -> {
+            viewModel.deleteTransaction(item.getId());
+        }, null, false); // showAddButton = false para transacciones aprobadas
+        recyclerView.setAdapter(adapter);
 
         // Actualizar el título del mes
         String monthName = getMonthName();
         tvMonthTitle.setText(getString(R.string.resumen_de, monthName));
 
-        // Actualizar el resumen financiero
-        updateFinancialSummary(currentMonthNotifications);
+        // Setup observer for unidirectional data flow
+        viewModel.getAllApprovedTransactions().observe(getViewLifecycleOwner(), allNotifications -> {
+            List<Transaction> currentMonthNotifications = getCurrentMonthNotifications(allNotifications);
+            adapter.updateData(currentMonthNotifications);
+
+            if (currentMonthNotifications.isEmpty()) {
+                emptyView.setVisibility(View.VISIBLE);
+                recyclerView.setVisibility(View.GONE);
+            } else {
+                emptyView.setVisibility(View.GONE);
+                recyclerView.setVisibility(View.VISIBLE);
+            }
+
+            // 1. Actualizar el resumen financiero del mes (Ingresos/Egresos/Balance)
+            updateFinancialSummary(currentMonthNotifications);
+
+            // 2. Actualizar disponibilidad y deuda global usando los saldos de cada cuenta
+            viewModel.getSaldosPorCuenta(result -> {
+                if (result.isSuccess() && result.getData() != null) {
+                    double totalLiquid = 0;
+                    double totalDeuda = 0;
+                    for (com.notificationcapture.app.models.SaldoCuenta sc : result.getData()) {
+                        if ("CREDITO".equals(sc.getTipoCuenta())) {
+                            // En el repositorio, el saldo de crédito se devuelve como positivo si hay deuda
+                            totalDeuda += sc.getSaldo();
+                        } else {
+                            totalLiquid += sc.getSaldo();
+                        }
+                    }
+                    
+                    final double finalLiquid = totalLiquid;
+                    final double finalDeuda = totalDeuda;
+                    
+                    if (isAdded() && getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            tvTotalDisponible.setText(formatAmount(finalLiquid));
+                            tvTotalDisponible.setTextColor(getResources().getColor(finalLiquid >= 0 ? R.color.green : R.color.red));
+                            
+                            tvDeudaCredito.setText(formatAmount(finalDeuda));
+                            if (finalDeuda > 0) {
+                                tvDeudaCredito.setTextColor(getResources().getColor(R.color.red));
+                            } else {
+                                tvDeudaCredito.setTextColor(getResources().getColor(R.color.text_secondary));
+                            }
+                        });
+                    }
+                }
+            });
+        });
     }
 
     private List<Transaction> getCurrentMonthNotifications(List<Transaction> allNotifications) {
@@ -169,10 +177,14 @@ public class InicioFragment extends Fragment {
 
         for (Transaction item : currentMonthNotifications) {
             if (item.hasAmount()) {
-                if (item.getType() == IngresoOEgreso.INGRESO) {
-                    totalIngresos += item.getAmount();
-                } else {
-                    totalEgresos += item.getAmount();
+                // CASH FLOW: Ignorar gastos con tarjeta en el resumen mensual de egresos
+                // Solo cuentan si son ingresos o egresos de billetera (Efectivo/Débito)
+                if (item.getPaymentMethod() != PaymentMethod.CREDITO) {
+                    if (item.getType() == IngresoOEgreso.INGRESO) {
+                        totalIngresos += item.getAmount();
+                    } else {
+                        totalEgresos += item.getAmount();
+                    }
                 }
             }
         }

@@ -21,6 +21,8 @@ import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
+import com.notificationcapture.app.viewmodels.CategoriasViewModel;
+import androidx.lifecycle.ViewModelProvider;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.models.Category;
@@ -49,6 +51,8 @@ public class CategoriasFragment extends Fragment {
     private TransactionAdapter detailsAdapter;
     private TransactionRepository repository;
     private CategoryRepository categoryRepository;
+    private CategoriasViewModel viewModel;
+    private List<Transaction> currentTransactions = new ArrayList<>();
 
     // Period handling
     private List<Calendar> periodList;
@@ -79,12 +83,21 @@ public class CategoriasFragment extends Fragment {
         initViews(view);
         setupAdapters();
         setupPeriodSpinner();
+        
+        viewModel = new ViewModelProvider(this).get(CategoriasViewModel.class);
+        viewModel.getAllTransactions().observe(getViewLifecycleOwner(), transactions -> {
+            if (transactions != null) {
+                currentTransactions = transactions;
+                updateYearsSpinnerIfNeeded();
+                refreshData();
+            }
+        });
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        refreshData();
+        // Removed sync refresh; handled automatically by LiveData observer
     }
 
     private void initViews(View view) {
@@ -159,11 +172,30 @@ public class CategoriasFragment extends Fragment {
         spinnerMonth.setSelection(Calendar.getInstance().get(Calendar.MONTH));
 
         // --- Setup Year Spinner ---
+        updateYearsSpinnerIfNeeded();
+
+        // --- Listeners ---
+        AdapterView.OnItemSelectedListener periodChangeListener = new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                refreshData();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        };
+
+        spinnerMonth.setOnItemSelectedListener(periodChangeListener);
+        spinnerYear.setOnItemSelectedListener(periodChangeListener);
+    }
+
+    private void updateYearsSpinnerIfNeeded() {
+        if (spinnerYear == null || getActivity() == null) return;
         List<String> years = new ArrayList<>();
-        List<Transaction> allNotifications = repository.getAllTransactions();
         Calendar cal = Calendar.getInstance();
 
-        for (Transaction item : allNotifications) {
+        for (Transaction item : currentTransactions) {
             cal.setTimeInMillis(item.getTimestamp());
             String year = String.valueOf(cal.get(Calendar.YEAR));
             if (!years.contains(year)) {
@@ -178,44 +210,24 @@ public class CategoriasFragment extends Fragment {
         }
         Collections.sort(years, Collections.reverseOrder());
 
+        String previousSelectedYear = (String) spinnerYear.getSelectedItem();
+
         UniversalSpinnerAdapter<String> yearAdapter = new UniversalSpinnerAdapter<>(requireContext(), years);
         spinnerYear.setAdapter(yearAdapter);
 
-        // Select current year if present
-        String currentYear = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-        int yearIndex = years.indexOf(currentYear);
+        String targetYear = previousSelectedYear != null ? previousSelectedYear : String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+        int yearIndex = years.indexOf(targetYear);
         if (yearIndex != -1) {
             spinnerYear.setSelection(yearIndex);
+        } else {
+            spinnerYear.setSelection(0);
         }
-
-        // --- Listeners ---
-        AdapterView.OnItemSelectedListener periodChangeListener = new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                int selectedMonth = spinnerMonth.getSelectedItemPosition();
-                String selectedYearStr = (String) spinnerYear.getSelectedItem();
-                if (selectedYearStr != null) {
-                    loadDataForPeriod(selectedMonth, Integer.parseInt(selectedYearStr));
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        };
-
-        spinnerMonth.setOnItemSelectedListener(periodChangeListener);
-        spinnerYear.setOnItemSelectedListener(periodChangeListener);
     }
 
     private void loadDataForPeriod(int month, int year) {
-        if (repository == null)
-            repository = RepositoryProvider.getInstance().getTransactionRepository();
-        List<Transaction> allNotifications = repository.getAllTransactions();
-
         Map<String, Double> categoryTotals = new HashMap<>();
 
-        for (Transaction item : allNotifications) {
+        for (Transaction item : currentTransactions) {
             // Filter by date
             Calendar itemCal = Calendar.getInstance();
             itemCal.setTimeInMillis(item.getTimestamp());
@@ -230,7 +242,8 @@ public class CategoriasFragment extends Fragment {
                     }
 
                     Double amount = item.getAmount();
-                    categoryTotals.put(category, categoryTotals.getOrDefault(category, 0.0) + amount);
+                    Double current = categoryTotals.get(category);
+                    categoryTotals.put(category, (current != null ? current : 0.0) + amount);
                 }
             }
         }
@@ -254,10 +267,9 @@ public class CategoriasFragment extends Fragment {
 
         int year = Integer.parseInt(selectedYearStr);
 
-        List<Transaction> allNotifications = repository.getAllTransactions();
         List<Transaction> filteredList = new ArrayList<>();
 
-        for (Transaction item : allNotifications) {
+        for (Transaction item : currentTransactions) {
             Calendar itemCal = Calendar.getInstance();
             itemCal.setTimeInMillis(item.getTimestamp());
 

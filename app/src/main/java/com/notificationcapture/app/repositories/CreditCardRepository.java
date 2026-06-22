@@ -16,6 +16,7 @@ public class CreditCardRepository implements GsonAccess {
 
     private SharedPreferences prefs;
     private Gson gson;
+    private List<CreditCard> cachedCreditCards = null; // Memory cache
 
     public CreditCardRepository(Context context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -23,12 +24,23 @@ public class CreditCardRepository implements GsonAccess {
     }
 
     public List<CreditCard> getCreditCards() {
+        if (cachedCreditCards != null) {
+            return new ArrayList<>(cachedCreditCards); // Devuelve copia rápida desde RAM O(1)
+        }
+        
         String json = prefs.getString(KEY_CREDIT_CARDS, null);
         if (json == null)
             return new ArrayList<>();
         Type type = new TypeToken<List<CreditCard>>() {
         }.getType();
-        return gson.fromJson(json, type);
+        
+        List<CreditCard> list = gson.fromJson(json, type);
+        cachedCreditCards = list != null ? list : new ArrayList<>();
+        return new ArrayList<>(cachedCreditCards);
+    }
+
+    public List<CreditCard> getAllCreditCards() {
+        return getCreditCards();
     }
 
     public void addCreditCard(com.notificationcapture.app.models.CreditCard card) {
@@ -70,6 +82,7 @@ public class CreditCardRepository implements GsonAccess {
     }
 
     private void saveCreditCards(List<com.notificationcapture.app.models.CreditCard> cards) {
+        cachedCreditCards = new ArrayList<>(cards); // Sincroniza caché en memoria
         prefs.edit().putString(KEY_CREDIT_CARDS, gson.toJson(cards)).apply();
     }
 }

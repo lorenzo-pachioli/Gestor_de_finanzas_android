@@ -24,7 +24,9 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import static android.content.Context.MODE_PRIVATE;
+import androidx.lifecycle.ViewModelProvider;
+import com.notificationcapture.app.utils.SecurityPreferencesManager;
+import com.notificationcapture.app.viewmodels.SettingsViewModel;
 import static android.view.View.VISIBLE;
 
 import com.notificationcapture.app.enums.CatColors;
@@ -99,9 +101,11 @@ public class PerfilFragment extends Fragment {
         btnAddWallet.setOnClickListener(v -> showGlobalWalletSelectionDialog());
         btnAddCreditCard.setOnClickListener(v -> showAddCreditCardDialog());
 
+        SecurityPreferencesManager prefsManager = new SecurityPreferencesManager(requireContext());
+        SettingsViewModel settingsViewModel = new ViewModelProvider(requireActivity()).get(SettingsViewModel.class);
+
         // Setup Dark Mode Switch
-        android.content.SharedPreferences prefs = requireContext().getSharedPreferences("app_settings", MODE_PRIVATE);
-        int nightMode = prefs.getInt("night_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        int nightMode = prefsManager.getNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
         if (nightMode == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
             int currentNightMode = getResources().getConfiguration().uiMode
                     & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
@@ -112,37 +116,34 @@ public class PerfilFragment extends Fragment {
 
         swDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
             int mode = isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
-            AppCompatDelegate.setDefaultNightMode(mode);
-            prefs.edit().putInt("night_mode", mode).apply();
+            settingsViewModel.setNightMode(mode);
+            prefsManager.saveNightMode(mode);
         });
 
         // Setup Language Switch - Load saved language
-        String savedLanguage = prefs.getString("app_language", "es"); // Default to Spanish
+        String savedLanguage = prefsManager.getLanguage("es"); // Default to Spanish
         swLanguage.setChecked(savedLanguage.equals("en"), false);
 
-        swCatType.setOnCheckedChangeListener(this::updateCategoryTypeUI);
+        swCatType.setOnCheckedChangeListener(isChecked -> updateCategoryTypeUI(isChecked));
 
         // Setup Language Switch
         swLanguage.setOnCheckedChangeListener(isChecked -> {
             String newLanguage = isChecked ? "en" : "es";
-            String currentLanguage = prefs.getString("app_language", "es");
+            String currentLanguage = prefsManager.getLanguage("es");
 
             if (!newLanguage.equals(currentLanguage)) {
-                // Save new language preference
-                prefs.edit().putString("app_language", newLanguage).apply();
+                // Save new language preference securely
+                prefsManager.saveLanguage(newLanguage);
+                // Report to activity for localized context propagation
+                settingsViewModel.setLanguage(newLanguage);
 
-                // Change locale and recreate activity
-                setLocale(newLanguage);
                 requireActivity().recreate();
             }
 
             updateLanguageUI(isChecked);
         });
 
-        // Initial state for language switch
-        String currentLang = prefs.getString("app_language", "es");
-        swLanguage.setChecked(currentLang.equals("en"), false);
-        updateLanguageUI(currentLang.equals("en"));
+        updateLanguageUI(savedLanguage.equals("en"));
 
         // Setup Spinner Listeners
         setupSpinnerListeners();
@@ -159,22 +160,6 @@ public class PerfilFragment extends Fragment {
         // Switch handles its own UI
     }
 
-    private void setLocale(String languageCode) {
-        java.util.Locale locale = new java.util.Locale(languageCode);
-        java.util.Locale.setDefault(locale);
-
-        android.content.res.Resources resources = requireContext().getResources();
-        android.content.res.Configuration config = new android.content.res.Configuration(resources.getConfiguration());
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            config.setLocale(locale);
-            requireContext().createConfigurationContext(config);
-        } else {
-            config.locale = locale;
-        }
-
-        resources.updateConfiguration(config, resources.getDisplayMetrics());
-    }
 
     private void setupSpinnerListeners() {
         spinnerCategories.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
@@ -321,43 +306,51 @@ public class PerfilFragment extends Fragment {
     }
 
     private void showGlobalWalletSelectionDialog() {
-        List<com.notificationcapture.app.models.Wallets> globalWallets = com.notificationcapture.app.utils.ConfigManager.getInstance().getGlobalWallets();
+        List<com.notificationcapture.app.models.GlobalWallet> globalWallets = com.notificationcapture.app.utils.ConfigManager.getInstance().getGlobalWallets();
         List<com.notificationcapture.app.models.Wallets> userWallets = walletRepository.getAllWallets();
-        
+
+        // Construir conjunto de packages del usuario para highlight
         List<String> userWalletPackages = new ArrayList<>();
         for (com.notificationcapture.app.models.Wallets w : userWallets) {
             userWalletPackages.add(w.getPackageName());
         }
 
+        // Convertir GlobalWallet a lista Serializable para el BottomSheet
+        // El BottomSheet usa SpinnerDisplayable — GlobalWallet ya lo implementa
+        List<com.notificationcapture.app.models.GlobalWallet> globalList = new ArrayList<>(globalWallets);
+
+        // highlighted: packageName primario de cada global wallet que ya tiene el usuario
+        List<String> highlightedPrimaries = new ArrayList<>();
+        for (com.notificationcapture.app.models.GlobalWallet gw : globalWallets) {
+            for (String userPkg : userWalletPackages) {
+                if (gw.matchesPackage(userPkg)) {
+                    highlightedPrimaries.add(gw.getPrimaryPackageName());
+                    break;
+                }
+            }
+        }
+
         SelectorBottomSheet bottomSheet = SelectorBottomSheet.newInstance(
                 "Seleccionar Billetera",
-                globalWallets,
+                globalList,
                 "",
-                userWalletPackages
+                highlightedPrimaries
         );
 
         bottomSheet.setOnOptionSelectedListener(optionName -> {
-            // Find the selected wallet in the global list
-            for (com.notificationcapture.app.models.Wallets globalWallet : globalWallets) {
+            for (com.notificationcapture.app.models.GlobalWallet globalWallet : globalWallets) {
                 if (globalWallet.getName().equals(optionName)) {
-                    // Check if already exists to avoid duplicates
+                    // Verificar si ya existe (matchea cualquier package alternativo)
                     boolean exists = false;
                     for (com.notificationcapture.app.models.Wallets uw : userWallets) {
-                        if (uw.getPackageName().equals(globalWallet.getPackageName())) {
+                        if (globalWallet.matchesPackage(uw.getPackageName())) {
                             exists = true;
                             break;
                         }
                     }
 
                     if (!exists) {
-                        // Create a NEW object to ensure a unique ID if needed, 
-                        // but here we might want to preserve the global ID prefix or just create new
-                        com.notificationcapture.app.models.Wallets newWallet = new com.notificationcapture.app.models.Wallets(
-                                globalWallet.getId(),
-                                globalWallet.getName(),
-                                globalWallet.getPackageName()
-                        );
-                        walletRepository.addWallet(newWallet);
+                        walletRepository.addWallet(globalWallet.toUserWallet());
                         loadWallets();
                         Toast.makeText(requireContext(), "Billetera '" + optionName + "' agregada", Toast.LENGTH_SHORT).show();
                     } else {
@@ -415,6 +408,7 @@ public class PerfilFragment extends Fragment {
 
         EditText etName = dialogView.findViewById(R.id.etCardName);
         EditText etClosingDate = dialogView.findViewById(R.id.etClosingDate);
+        EditText etLast4 = dialogView.findViewById(R.id.etLast4);
         LinearLayout containerColors = dialogView.findViewById(R.id.containerCardColors);
 
         // Populate Colors (use same logic as categories or a separate palette?)
@@ -431,6 +425,8 @@ public class PerfilFragment extends Fragment {
         btnCreate.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             String closingDateStr = etClosingDate.getText().toString().trim();
+            String last4 = etLast4.getText().toString().trim();
+            
             int closingDate = 1;
             try {
                 closingDate = Integer.parseInt(closingDateStr);
@@ -441,7 +437,7 @@ public class PerfilFragment extends Fragment {
             }
 
             if (!name.isEmpty()) {
-                CreditCard newCard = new CreditCard(name, closingDate, selectedColor);
+                CreditCard newCard = new CreditCard(name, closingDate, selectedColor, last4.isEmpty() ? "0000" : last4);
                 creditCardRepository.addCreditCard(newCard);
                 loadCreditCards();
                 Toast.makeText(requireContext(), "Tarjeta agregada", Toast.LENGTH_SHORT).show();
@@ -590,10 +586,12 @@ public class PerfilFragment extends Fragment {
 
         EditText etName = dialogView.findViewById(R.id.etCardName);
         EditText etClosingDate = dialogView.findViewById(R.id.etClosingDate);
+        EditText etLast4 = dialogView.findViewById(R.id.etLast4);
         LinearLayout containerColors = dialogView.findViewById(R.id.containerCardColors);
 
         etName.setText(card.getName());
         etClosingDate.setText(String.valueOf(card.getClosingDate()));
+        etLast4.setText(card.getLast4());
         selectedColor = card.getColor();
 
         int[] colors = CatColors.getIntEgresosColors();
@@ -612,6 +610,8 @@ public class PerfilFragment extends Fragment {
         btnCreate.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             String closingDateStr = etClosingDate.getText().toString().trim();
+            String last4 = etLast4.getText().toString().trim();
+            
             int closingDate = 1;
             try {
                 closingDate = Integer.parseInt(closingDateStr);
@@ -624,6 +624,7 @@ public class PerfilFragment extends Fragment {
                 card.setName(name);
                 card.setClosingDate(closingDate);
                 card.setColor(selectedColor);
+                card.setLast4(last4.isEmpty() ? "0000" : last4);
                 creditCardRepository.updateCreditCard(card);
                 loadCreditCards();
                 Toast.makeText(requireContext(), "Tarjeta actualizada", Toast.LENGTH_SHORT).show();

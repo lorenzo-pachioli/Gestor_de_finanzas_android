@@ -2,367 +2,533 @@ package com.notificationcapture.app.repositories;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.widget.Toast;
+import android.database.Cursor;
+import android.os.Handler;
+import android.os.Looper;
+
+import androidx.sqlite.db.SupportSQLiteDatabase;
+
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Transformations;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.notificationcapture.app.database.AppDatabase;
+import com.notificationcapture.app.database.TransactionDao;
+import com.notificationcapture.app.database.TransactionEntity;
 import com.notificationcapture.app.interfaces.GsonAccess;
 import com.notificationcapture.app.models.Cash;
 import com.notificationcapture.app.models.Credit;
-import com.notificationcapture.app.models.Debit;
+import com.notificationcapture.app.models.ResumenDeudaTarjeta;
 import com.notificationcapture.app.models.Transaction;
-import com.notificationcapture.app.utils.Dialog;
+import com.notificationcapture.app.mappers.TransactionMapper;
+import com.notificationcapture.app.exceptions.*;
+import com.notificationcapture.app.utils.AppLogger;
+import com.notificationcapture.app.utils.AppResult;
+
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
+import java.util.Calendar;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class TransactionRepository implements GsonAccess {
 
-    private SharedPreferences prefs;
-    private Gson gson;
-    private Gson plainGson; // Plain Gson to avoid recursion in adapter
-    private Context context;
+    private final SharedPreferences prefs;
+    private final Context context;
+    private final TransactionDao dao;
+    private final ExecutorService executor;
+    private final Handler mainHandler;
+    private final Gson gson;
+
+    private static final int MAX_RECORDS = 5000;
+
+    private static final String PREF_MIGRATED = "sqlite_migrated";
+    private static final String PREF_MIGRATION_IN_PROGRESS = "sqlite_migration_in_progress";
+    private static final String PREF_LAST_MAINTENANCE_MONTH = "last_maintenance_month";
+
+    public interface RepositoryCallback<T> {
+        void onResult(AppResult<T> result);
+    }
 
     public TransactionRepository(Context context) {
-        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+
         this.context = context.getApplicationContext();
 
-        // Initialize plain Gson first
-        this.plainGson = new Gson();
+        SharedPreferences securePrefs;
+        try {
+            MasterKey masterKey = new MasterKey.Builder(context)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build();
+            securePrefs = EncryptedSharedPreferences.create(
+                    context,
+                    "encrypted_secure_prefs",
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Fallback for extreme cases mapping to an unencrypted pref just to not crash
+            // completely,
+            // though normally it should just fail securely.
+            securePrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        }
+        this.prefs = securePrefs;
 
-        // Initialize main Gson with the adapter
-        this.gson = new com.google.gson.GsonBuilder()
-                .registerTypeAdapter(Transaction.class, new TransactionAdapter())
-                .create();
+        this.dao = AppDatabase.getDatabase(context).transactionDao();
+        this.executor = Executors.newSingleThreadExecutor();
+        this.mainHandler = new Handler(Looper.getMainLooper());
+        this.gson = new Gson();
+
+        performMonthlyMaintenance();
+        checkAndPerformMigration();
+    }
+
+    private void performMonthlyMaintenance() {
+        executor.execute(() -> {
+            try {
+                Calendar cal = Calendar.getInstance();
+                int currentMonthYear = cal.get(Calendar.YEAR) * 100 + cal.get(Calendar.MONTH);
+                int lastMonthYear = prefs.getInt(PREF_LAST_MAINTENANCE_MONTH, -1);
+
+                if (currentMonthYear != lastMonthYear) {
+                    cal.set(Calendar.DAY_OF_MONTH, 1);
+                    cal.set(Calendar.HOUR_OF_DAY, 0);
+                    cal.set(Calendar.MINUTE, 0);
+                    cal.set(Calendar.SECOND, 0);
+                    cal.set(Calendar.MILLISECOND, 0);
+
+                    // Delete all PENDING records from previous months
+                    dao.deleteOldPending(cal.getTimeInMillis());
+
+                    prefs.edit().putInt(PREF_LAST_MAINTENANCE_MONTH, currentMonthYear).apply();
+                }
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error in monthly maintenance", e);
+            }
+        });
+    }
+
+    private void checkAndPerformMigration() {
+        if (!prefs.getBoolean(PREF_MIGRATED, false)) {
+            executor.execute(() -> {
+                try {
+                    prefs.edit().putBoolean(PREF_MIGRATION_IN_PROGRESS, true).apply();
+                    migrateLegacyList(KEY_NOTIFICATIONS);
+                    migrateLegacyList(KEY_NOTIFICATIONS_NOT_FILTERED);
+                    prefs.edit().putBoolean(PREF_MIGRATED, true).remove(PREF_MIGRATION_IN_PROGRESS).apply();
+                } catch (Exception e) {
+                    AppLogger.e("TransactionRepository", "Migration failed", e);
+                    prefs.edit().putBoolean(PREF_MIGRATION_IN_PROGRESS, false).apply();
+                }
+            });
+        }
+    }
+
+    public void shutdown() {
+        executor.shutdownNow();
+    }
+
+    private long getEndOfCurrentMonth() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTimeInMillis();
+    }
+
+    private void migrateLegacyList(String key) {
+        String json = prefs.getString(key, null);
+        if (json != null && !json.isEmpty()) {
+            try {
+                // Deserializamos como JsonArray para poder inspeccionar cada objeto
+                // individualmente
+                // y decidir su clase concreta (Credit, Cash, Debit) basándonos en
+                // paymentMethod.
+                JsonArray array = gson.fromJson(json, JsonArray.class);
+                if (array != null) {
+                    List<TransactionEntity> entities = new ArrayList<>();
+                    String status = KEY_NOTIFICATIONS.equals(key) ? TransactionEntity.STATUS_APPROVED
+                            : TransactionEntity.STATUS_PENDING;
+
+                    for (JsonElement element : array) {
+                        JsonObject obj = element.getAsJsonObject();
+                        String method = obj.has("paymentMethod") ? obj.get("paymentMethod").getAsString() : "DEBITO";
+
+                        Transaction t;
+                        if ("CREDITO".equals(method)) {
+                            t = gson.fromJson(obj, com.notificationcapture.app.models.Credit.class);
+                        } else if ("EFECTIVO".equals(method)) {
+                            t = gson.fromJson(obj, com.notificationcapture.app.models.Cash.class);
+                        } else {
+                            t = gson.fromJson(obj, com.notificationcapture.app.models.Debit.class);
+                        }
+
+                        if (t != null) {
+                            entities.add(TransactionMapper.toEntity(t, status));
+                        }
+                    }
+                    if (!entities.isEmpty()) {
+                        dao.insertAll(entities);
+                    }
+                    prefs.edit().remove(key).apply();
+                }
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error migrating legacy list: " + key, e);
+            }
+        }
     }
 
     public void saveTransactionNotFiltered(Transaction transaction) {
-        List<Transaction> notifications = getAllTransactionNotFiltered();
-
-        // Agregar al inicio de la lista
-        notifications.add(0, transaction);
-
-        // Limitar el número de notificaciones guardadas
-        if (notifications.size() > MAX_NOTIFICATIONS) {
-            notifications = notifications.subList(0, MAX_NOTIFICATIONS);
-        }
-
-        // Guardar en SharedPreferences
-        String json = gson.toJson(notifications);
-        prefs.edit().putString(KEY_NOTIFICATIONS_NOT_FILTERED, json).apply();
+        executor.execute(() -> {
+            try {
+                TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_PENDING);
+                dao.insert(entity);
+                checkCleanup();
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error saving non-filtered transaction", e);
+            }
+        });
     }
 
     public void saveTransaction(Transaction transaction) {
-        try {
-            List<Transaction> transactionList = getAllTransactions();
-
-            // Agregar al inicio de la lista
-            transactionList.add(0, transaction);
-
-            // Limitar el número de notificaciones guardadas
-            if (transactionList.size() > MAX_NOTIFICATIONS) {
-                transactionList = transactionList.subList(0, MAX_NOTIFICATIONS);
+        executor.execute(() -> {
+            try {
+                TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_APPROVED);
+                dao.insert(entity);
+                checkCleanup();
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error saving transaction", e);
             }
+        });
+    }
 
-            // Guardar en SharedPreferences
-            String json = gson.toJson(transactionList);
-            prefs.edit().putString(KEY_NOTIFICATIONS, json).apply();
-        } catch (Exception e) {
-            // Toast.makeText(context, "Error: " + e.getMessage(), 5);
-            Dialog.show("Error: " + e.getMessage());
+    public void saveTransactions(List<Transaction> transactions, RepositoryCallback<Void> callback) {
+        executor.execute(() -> {
+            try {
+                List<TransactionEntity> entities = new ArrayList<>();
+                for (Transaction t : transactions) {
+                    if (t != null) {
+                        entities.add(TransactionMapper.toEntity(t, TransactionEntity.STATUS_APPROVED));
+                    }
+                }
+                dao.insertAll(entities);
+                checkCleanup();
+                if (callback != null)
+                    mainHandler.post(() -> callback.onResult(AppResult.success(null)));
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error saving transactions", e);
+                if (callback != null)
+                    mainHandler.post(() -> callback
+                            .onResult(AppResult.failure(new DatabaseException("Fallo al guardar transacciones", e))));
+            }
+        });
+    }
+
+    public void updateTransaction(Transaction transaction) {
+        executor.execute(() -> {
+            try {
+                TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_APPROVED);
+                dao.update(entity);
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error updating transaction", e);
+            }
+        });
+    }
+
+    private void checkCleanup() {
+        if (dao.getCount() > MAX_RECORDS) {
+            Long oldest = dao.getOldestRecordTimestamp();
+            if (oldest != null) {
+                Calendar cal = Calendar.getInstance();
+                cal.setTimeInMillis(oldest);
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                long start = cal.getTimeInMillis();
+                cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                long end = cal.getTimeInMillis();
+                dao.deleteRecordsInRange(start, end);
+            }
         }
     }
 
     public List<Transaction> getAllTransactionNotFiltered() {
-        String json = prefs.getString(KEY_NOTIFICATIONS_NOT_FILTERED, null);
-
-        if (json == null || json.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        Type type = new TypeToken<List<Transaction>>() {
-        }.getType();
-        List<Transaction> transactionList = gson.fromJson(json, type);
-
-        if (transactionList != null) {
-            transactionList.removeIf(java.util.Objects::isNull);
-            return transactionList;
-        }
-        return new ArrayList<>();
+        return getByStatusBlocking(TransactionEntity.STATUS_PENDING);
     }
 
     public List<Transaction> getAllTransactions() {
+        return getByStatusBlocking(TransactionEntity.STATUS_APPROVED);
+    }
+
+    public LiveData<List<Transaction>> getAllTransactionsLiveData() {
+        return Transformations.map(dao.getAllByStatusLiveData(TransactionEntity.STATUS_APPROVED),
+                TransactionMapper::fromEntityList);
+    }
+
+    public LiveData<List<Transaction>> getAllTransactionNotFilteredLiveData() {
+        return Transformations.map(dao.getAllByStatusLiveData(TransactionEntity.STATUS_PENDING),
+                TransactionMapper::fromEntityList);
+    }
+
+    private List<Transaction> getByStatusBlocking(String status) {
         try {
-            String json = prefs.getString(KEY_NOTIFICATIONS, null);
-
-            if (json == null || json.isEmpty()) {
-                return new ArrayList<>();
-            }
-
-            Type type = new TypeToken<List<Transaction>>() {
-            }.getType();
-            List<Transaction> transactionList = gson.fromJson(json, type);
-
-            if (transactionList != null) {
-                // Filter out nulls that might have occurred during deserialization
-                List<Transaction> cleanList = new ArrayList<>();
-                for (Transaction t : transactionList) {
-                    if (t != null) {
-                        cleanList.add(t);
-                    }
+            return executor.submit(() -> {
+                Calendar cal = Calendar.getInstance();
+                long start = 0;
+                long end = Long.MAX_VALUE;
+                if (TransactionEntity.STATUS_PENDING.equals(status)) { // Only current month for Pending
+                    cal.set(Calendar.DAY_OF_MONTH, 1);
+                    cal.set(Calendar.HOUR_OF_DAY, 0);
+                    cal.set(Calendar.MINUTE, 0);
+                    cal.set(Calendar.SECOND, 0);
+                    start = cal.getTimeInMillis();
                 }
-                return cleanList;
-            }
-            return new ArrayList<>();
+                List<TransactionEntity> entities = dao.getByMonthAndStatus(start, end, status);
+                return TransactionMapper.fromEntityList(entities);
+            }).get();
         } catch (Exception e) {
-            Toast.makeText(context, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            AppLogger.e("TransactionRepository", "Error in blocking getByStatus", e);
             return new ArrayList<>();
         }
     }
 
-    public void deleteTransaction(String id) {
-        List<Transaction> transactionList = getAllTransactions();
-
-        // Find the transaction to be deleted first to check for group ID
-        String groupId = null;
-        for (Transaction transaction : transactionList) {
-            if (transaction.getId().equals(id)) {
-                if (transaction instanceof Credit c)
-                    groupId = c.getInstallmentGroupId();
-                break;
+    public void getAllTransactions(RepositoryCallback<List<Transaction>> callback) {
+        executor.execute(() -> {
+            try {
+                List<TransactionEntity> entities = dao.getByMonthAndStatus(0, Long.MAX_VALUE,
+                        TransactionEntity.STATUS_APPROVED);
+                List<Transaction> result = TransactionMapper.fromEntityList(entities);
+                mainHandler.post(() -> callback.onResult(AppResult.success(result)));
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error getting all transactions", e);
+                mainHandler.post(() -> callback
+                        .onResult(AppResult.failure(new DatabaseException("Error al obtener transacciones", e))));
             }
-        }
-
-        // Filtrar removiendo la transaction con el ID especificado o todas las del
-        // grupo
-        List<Transaction> updatedList = new ArrayList<>();
-        for (Transaction transaction : transactionList) {
-            boolean shouldDelete = false;
-
-            if (groupId != null) {
-                if (transaction instanceof Credit c) {
-                    if (c.getInstallmentGroupId() != null && groupId.equals(c.getInstallmentGroupId())) {
-                        // If part of the same group, delete it
-                        shouldDelete = true;
-                    }
-                }
-            } else if (transaction.getId().equals(id)) {
-                // Standard single deletion
-                shouldDelete = true;
-            }
-
-            if (!shouldDelete) {
-                updatedList.add(transaction);
-            }
-        }
-
-        // Guardar la lista actualizada
-        String json = gson.toJson(updatedList);
-        prefs.edit().putString(KEY_NOTIFICATIONS, json).apply();
+        });
     }
 
     public void deleteTransactionNotFiltered(String id) {
-        List<Transaction> transactionList = getAllTransactionNotFiltered();
-
-        // Find the transaction to be deleted first to check for group ID
-        String groupId = null;
-        for (Transaction transaction : transactionList) {
-            if (transaction.getId().equals(id)) {
-                if (transaction instanceof Credit c)
-                    groupId = c.getInstallmentGroupId();
-                break;
-            }
-        }
-
-        // Filtrar removiendo la notificación con el ID especificado o todas las del
-        // grupo
-        List<Transaction> updatedList = new ArrayList<>();
-        for (Transaction transaction : transactionList) {
-            boolean shouldDelete = false;
-
-            if (groupId != null) {
-                if (transaction instanceof Credit c) {
-                    if (c.getInstallmentGroupId() != null && groupId.equals(c.getInstallmentGroupId())) {
-                        // If part of the same group, delete it
-                        shouldDelete = true;
-                    }
-                }
-            } else if (transaction.getId().equals(id)) {
-                shouldDelete = true;
-            }
-
-            if (!shouldDelete) {
-                updatedList.add(transaction);
-            }
-        }
-
-        // Guardar la lista actualizada
-        String json = gson.toJson(updatedList);
-        prefs.edit().putString(KEY_NOTIFICATIONS_NOT_FILTERED, json).apply();
-    }
-
-    public void updateTransaction(Transaction updatedTransaction) {
-        boolean updatedInApproved = updateTransactionInSpecificList(KEY_NOTIFICATIONS, updatedTransaction);
-        boolean updatedInNotFiltered = updateTransactionInSpecificList(KEY_NOTIFICATIONS_NOT_FILTERED,
-                updatedTransaction);
-
-        if (!updatedInApproved && !updatedInNotFiltered) {
-            // Optional: Log or handle case where transaction wasn't found in either list
-        }
-    }
-
-    private boolean updateTransactionInSpecificList(String key, Transaction updatedTransaction) {
-        List<Transaction> transactionList;
-        if (KEY_NOTIFICATIONS.equals(key)) {
-            transactionList = getAllTransactions();
-        } else {
-            transactionList = getAllTransactionNotFiltered();
-        }
-
-        String groupId = updatedTransaction instanceof Credit c ? c.getInstallmentGroupId() : null;
-        boolean found = false;
-
-        for (int i = 0; i < transactionList.size(); i++) {
-            Transaction current = transactionList.get(i);
-
-            if (groupId != null && current instanceof Credit c && groupId.equals(c.getInstallmentGroupId())) {
-                // It's part of the same group (or the transaction itself)
-                Credit updatedCredit = (Credit) updatedTransaction;
-
-                // Update shared fields
-                c.setText(updatedCredit.getText());
-                c.setCategoryId(updatedTransaction.getCategoryId());
-                c.setAmount(updatedCredit.getAmount());
-                c.setType(updatedCredit.getType());
-                c.setPaymentMethod(updatedCredit.getPaymentMethod());
-                c.setCreditCardId(updatedCredit.getCreditCardId());
-                c.setInstallments(updatedCredit.getInstallments());
-                c.setNotification(updatedCredit.isNotification());
-                // Preserved fields: Id, Timestamp, CurrentInstallment
-
-                found = true;
-            } else if (groupId == null && current.getId().equals(updatedTransaction.getId())) {
-                // Standard single update (not a credit group or no group ID)
-                transactionList.set(i, updatedTransaction);
-                found = true;
-                break; // Unique ID match, we can stop if not updating a group
-            }
-        }
-
-        if (found) {
-            String json = gson.toJson(transactionList);
-            prefs.edit().putString(key, json).apply();
-        }
-        return found;
-    }
-
-    public void clearAllTransaction() {
-        prefs.edit().remove(KEY_NOTIFICATIONS).apply();
+        deleteTransaction(id);
     }
 
     public void moveTransactionToApproved(String id) {
-        List<Transaction> notFilteredList = getAllTransactionNotFiltered();
-        List<Transaction> approvedList = getAllTransactions();
-
-        // Find the transaction and check for group ID
-        String groupId = null;
-        for (Transaction transaction : notFilteredList) {
-            if (transaction.getId().equals(id)) {
-                if (transaction instanceof Credit c)
-                    groupId = c.getInstallmentGroupId();
-                break;
-            }
-        }
-
-        // Move transaction(s) from not filtered to approved
-        List<Transaction> remainingNotFiltered = new ArrayList<>();
-        for (Transaction transaction : notFilteredList) {
-            boolean shouldMove = false;
-
-            if (groupId != null) {
-                // If it's a credit with group, move all in the group
-                if (transaction instanceof Credit c) {
-                    if (c.getInstallmentGroupId() != null && groupId.equals(c.getInstallmentGroupId())) {
-                        shouldMove = true;
-                    }
-                }
-            } else if (transaction.getId().equals(id)) {
-                // Standard single move
-                shouldMove = true;
-            }
-
-            if (shouldMove) {
-                // Set isNotification to true before adding to approved list
-                transaction.setNotification(true);
-                approvedList.add(0, transaction); // Add to approved list
-            } else {
-                remainingNotFiltered.add(transaction); // Keep in not filtered
-            }
-        }
-
-        // Save both lists
-        String notFilteredJson = gson.toJson(remainingNotFiltered);
-        prefs.edit().putString(KEY_NOTIFICATIONS_NOT_FILTERED, notFilteredJson).apply();
-
-        String approvedJson = gson.toJson(approvedList);
-        prefs.edit().putString(KEY_NOTIFICATIONS, approvedJson).apply();
+        executor.execute(() -> dao.updateStatus(id, TransactionEntity.STATUS_APPROVED));
     }
 
     public void clearAllTransactionNotFiltered() {
-        prefs.edit().remove(KEY_NOTIFICATIONS_NOT_FILTERED).apply();
+        executor.execute(dao::deleteAllPending);
     }
 
-    // Custom Adapter for Polymorphic Transaction
-    private class TransactionAdapter implements JsonDeserializer<Transaction>, JsonSerializer<Transaction> {
-
-        @Override
-        public JsonElement serialize(Transaction src, Type typeOfSrc, JsonSerializationContext context) {
-            JsonObject result = new JsonObject();
-            // Use plainGson to avoid recursion
-            result.add("properties", plainGson.toJsonTree(src));
-            result.addProperty("type", src.getPaymentMethod().toString());
-            return result;
-        }
-
-        @Override
-        public Transaction deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-                throws JsonParseException {
-            JsonObject jsonObject = json.getAsJsonObject(); // The element we are looking at
-            JsonElement actualData = json; // The data we will actually deserialize (properties or the object itself)
-            String type = "DEBITO"; // Default fallback
-
-            // 1. Determine if it's a wrapper or flat
-            if (jsonObject.has("properties") && jsonObject.has("type")) {
-                actualData = jsonObject.get("properties");
+    public void getTransactionsByMonth(long start, long end, RepositoryCallback<List<Transaction>> callback) {
+        executor.execute(() -> {
+            try {
+                List<TransactionEntity> entities = dao.getByMonth(start, end);
+                List<Transaction> result = TransactionMapper.fromEntityList(entities);
+                mainHandler.post(() -> callback.onResult(AppResult.success(result)));
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error getting transactions by month", e);
+                mainHandler.post(() -> callback.onResult(
+                        AppResult.failure(new DatabaseException("Error al obtener transacciones del mes", e))));
             }
+        });
+    }
 
-            // 2. Try to find paymentMethod in the actual data (Preferred source of truth)
-            if (actualData.isJsonObject() && actualData.getAsJsonObject().has("paymentMethod")) {
-                type = actualData.getAsJsonObject().get("paymentMethod").getAsString();
-            } else if (jsonObject.has("type")) {
-                // Fallback to wrapper type if paymentMethod is missing in the data but present
-                // in wrapper
-                type = jsonObject.get("type").getAsString();
-            }
+    public void deleteTransaction(String id) {
+        executor.execute(() -> dao.deleteById(id));
+    }
 
-            // 3. Deserialize based on type
-            switch (type) {
-                case "CREDITO":
-                    return plainGson.fromJson(actualData, Credit.class);
-                case "EFECTIVO":
-                    return plainGson.fromJson(actualData, Cash.class);
-                case "DEBITO":
-                default:
-                    return plainGson.fromJson(actualData, Debit.class);
-            }
+    public double getDatabaseSizeMb() {
+        try {
+            return executor.submit(() -> {
+                SupportSQLiteDatabase db = AppDatabase.getDatabase(context).getOpenHelper().getReadableDatabase();
+                long pageCount = db.compileStatement("PRAGMA page_count").simpleQueryForLong();
+                long pageSize = db.compileStatement("PRAGMA page_size").simpleQueryForLong();
+
+                return (pageCount * pageSize) / (1024.0 * 1024.0);
+            }).get();
+        } catch (Exception e) {
+            AppLogger.e("TransactionRepository", "Error getting database size", e);
+            return 0.0;
         }
     }
+
+    public void getSaldosPorCuenta(
+            RepositoryCallback<java.util.List<com.notificationcapture.app.models.SaldoCuenta>> callback) {
+        executor.execute(() -> {
+            try {
+                long endOfMonth = getEndOfCurrentMonth();
+                java.util.List<com.notificationcapture.app.models.SaldoCuenta> result = dao
+                        .getSaldosPorCuenta(endOfMonth);
+
+                // Set human readable names instead of UUIDs for wallets
+                com.notificationcapture.app.repositories.WalletRepository walletRepo = com.notificationcapture.app.repositories.RepositoryProvider
+                        .getInstance().getWalletRepository();
+                com.notificationcapture.app.repositories.CreditCardRepository creditCardRepo = com.notificationcapture.app.repositories.RepositoryProvider
+                        .getInstance().getCreditCardRepository();
+
+                java.util.Map<String, String> walletNames = new java.util.HashMap<>();
+                for (com.notificationcapture.app.models.Wallets w : walletRepo.getAllWallets()) {
+                    walletNames.put(w.getId(), w.getName());
+                }
+
+                java.util.Map<String, String> cardNames = new java.util.HashMap<>();
+                for (com.notificationcapture.app.models.CreditCard c : creditCardRepo.getAllCreditCards()) {
+                    cardNames.put(c.getId(), c.getName() + " (*" + c.getLast4() + ")");
+                }
+
+                java.util.List<com.notificationcapture.app.models.SaldoCuenta> finalResult = new java.util.ArrayList<>();
+                for (com.notificationcapture.app.models.SaldoCuenta sc : result) {
+                    String finalName = sc.getNombreCuenta();
+                    double saldo = sc.getSaldo();
+
+                    if ("DEBITO".equals(sc.getTipoCuenta())) {
+                        if (walletNames.containsKey(sc.getSourceId())) {
+                            finalName = walletNames.get(sc.getSourceId());
+                        } else if (sc.getSourceId() == null || "EFECTIVO".equals(sc.getSourceId())) {
+                            finalName = "Efectivo";
+                        } else {
+                            finalName = "Billetera (" + sc.getSourceId() + ")";
+                        }
+                    } else if ("CREDITO".equals(sc.getTipoCuenta())) {
+                        if (cardNames.containsKey(sc.getSourceId())) {
+                            finalName = cardNames.get(sc.getSourceId());
+                        } else {
+                            finalName = "Tarjeta (" + sc.getSourceId() + ")";
+                        }
+
+                    } else if ("EFECTIVO".equals(sc.getTipoCuenta())) {
+                        finalName = "Efectivo";
+                    }
+                    finalResult.add(new com.notificationcapture.app.models.SaldoCuenta(finalName, sc.getTipoCuenta(),
+                            saldo, sc.getSourceId()));
+                }
+
+                mainHandler.post(() -> callback.onResult(AppResult.success(finalResult)));
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error getting saldos por cuenta", e);
+                mainHandler.post(() -> callback
+                        .onResult(AppResult.failure(new DatabaseException("Error al obtener saldos", e))));
+            }
+        });
+    }
+
+    public void efectuarPagoTarjeta(com.notificationcapture.app.database.CreditCardPaymentEntity pago,
+            TransactionEntity gastoDeBilletera,
+            RepositoryCallback<Void> callback) {
+        executor.execute(() -> {
+            try {
+                AppDatabase.getDatabase(context).runInTransaction(() -> {
+                    AppDatabase.getDatabase(context).creditCardPaymentDao().insert(pago);
+                    dao.insert(gastoDeBilletera);
+                });
+                mainHandler.post(() -> callback.onResult(AppResult.success(null)));
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error al procesar el pago de la tarjeta", e);
+                mainHandler.post(
+                        () -> callback.onResult(AppResult.failure(new DatabaseException("Error procesando pago", e))));
+            }
+        });
+    }
+
+    /**
+     * Fuente de verdad para el cálculo del arrastre histórico (deuda no pagada).
+     * Arrastre = (Egresos con timestamp < InicioMes) - (Pagos con startTimestamp < InicioMes)
+     */
+    public double getArrastreHistoricoBlocking(String creditCardId, long startOfMonth) {
+        try {
+            // 1. Gastos totales antes de este período
+            Double gastosAnteriores = dao.getMontoResumen(creditCardId, 0, startOfMonth - 1);
+            double totalGastado = gastosAnteriores == null ? 0.0 : gastosAnteriores;
+
+            // 2. Pagos totales asignados a períodos anteriores
+            double totalPagado = AppDatabase.getDatabase(context)
+                    .creditCardPaymentDao()
+                    .getPagosAnteriores(creditCardId, startOfMonth);
+
+            double balance = totalGastado - totalPagado;
+            return Math.max(0, balance); // No devolvemos deuda negativa (crédito a favor) como arrastre por ahora
+        } catch (Exception e) {
+            AppLogger.e("TransactionRepository", "Error calculando arrastre historico", e);
+            return 0.0;
+        }
+    }
+
+    public void getResumenDeudaTarjeta(String creditCardId, String cardName,
+            long start, long end,
+            RepositoryCallback<ResumenDeudaTarjeta> callback) {
+        executor.execute(() -> {
+            try {
+                // Normalizar a precisión de segundos pero asegurar el rango completo
+                long cleanStart = (start / 1000) * 1000;
+                long cleanEnd = ((end / 1000) * 1000) + 999;
+
+                // 1. Gastos reales del mes
+                Double gastos = dao.getMontoResumen(creditCardId, cleanStart, cleanEnd);
+                double gastosDelMes = gastos == null ? 0.0 : gastos;
+
+                // 2. Arrastre dinámico (Fuente de Verdad)
+                double arrastre = getArrastreHistoricoBlocking(creditCardId, cleanStart);
+
+                // 3. Pagos registrados para este período específico
+                double pagos = AppDatabase.getDatabase(context)
+                        .creditCardPaymentDao()
+                        .getTotalPagadoEnPeriodo(creditCardId, cleanStart);
+
+                ResumenDeudaTarjeta resumen = new ResumenDeudaTarjeta(
+                        creditCardId, cardName,
+                        gastosDelMes, arrastre, pagos,
+                        cleanStart, cleanEnd);
+
+                mainHandler.post(() -> callback.onResult(AppResult.success(resumen)));
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error al calcular resumen deuda", e);
+                mainHandler.post(() -> callback.onResult(
+                        AppResult.failure(new DatabaseException("Error al calcular deuda", e))));
+            }
+        });
+    }
+
+    public void getMontoResumenTarjeta(String creditCardId, long start, long end, RepositoryCallback<Double> callback) {
+        executor.execute(() -> {
+            try {
+                Double total = dao.getMontoResumen(creditCardId, start, end);
+                mainHandler.post(() -> callback.onResult(AppResult.success(total == null ? 0.0 : total)));
+            } catch (Exception e) {
+                mainHandler.post(() -> callback
+                        .onResult(AppResult.failure(new DatabaseException("Error al cargar resumen", e))));
+            }
+        });
+    }
+
+    public void getTotalPagadoTarjeta(String creditCardId, long start, long end, RepositoryCallback<Double> callback) {
+        executor.execute(() -> {
+            try {
+                double total = AppDatabase.getDatabase(context).creditCardPaymentDao()
+                        .getTotalPagadoEnPeriodo(creditCardId, start);
+                mainHandler.post(() -> callback.onResult(AppResult.success(total)));
+            } catch (Exception e) {
+                mainHandler.post(() -> callback
+                        .onResult(AppResult.failure(new DatabaseException("Error al ver pagos resúmen", e))));
+            }
+        });
+    }
+
 }

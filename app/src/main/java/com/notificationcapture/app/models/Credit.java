@@ -68,6 +68,7 @@ public class Credit extends Transaction {
 
     @Override
     public String getSourceName() {
-        return creditCard != null ? creditCard.getName() : "Tarjeta de Crédito";
+        if (creditCard != null) return creditCard.getName();
+        return (creditCardId != null && !creditCardId.isEmpty()) ? "Crédito (" + creditCardId + ")" : "Crédito";
     }
 }
