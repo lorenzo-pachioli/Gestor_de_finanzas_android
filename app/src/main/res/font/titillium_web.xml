@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<font-family xmlns:app="http://schemas.android.com/apk/res-auto"
+             xmlns:tools="http://schemas.android.com/tools"
+             tools:ignore="UnusedAttribute">
+    <font
+        app:fontProviderAuthority="com.google.android.gms.fonts"
+        app:fontProviderPackage="com.google.android.gms"
+        app:fontProviderQuery="name=Titillium Web&amp;weight=400"
+        app:fontProviderCerts="@array/com_google_android_gms_fonts_certs"
+        app:fontStyle="normal"
+        app:fontWeight="400" />
+    <font
+        app:fontProviderAuthority="com.google.android.gms.fonts"
+        app:fontProviderPackage="com.google.android.gms"
+        app:fontProviderQuery="name=Titillium Web&amp;weight=700"
+        app:fontProviderCerts="@array/com_google_android_gms_fonts_certs"
+        app:fontStyle="normal"
+        app:fontWeight="700" />
+</font-family>

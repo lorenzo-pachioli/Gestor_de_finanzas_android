@@ -41,7 +41,7 @@
                 android:layout_height="40dp"
                 android:layout_marginTop="6dp"
                 android:text="@string/app_slogan"
-                android:fontFamily="@font/sf_pro"
+                android:fontFamily="@font/titillium_web"
                 android:textSize="18sp"
                 android:textColor="@color/secondary_main"
                 android:letterSpacing="0.02"/>

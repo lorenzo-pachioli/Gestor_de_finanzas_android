@@ -44,8 +44,8 @@
         <item name="android:spinnerStyle">@style/Widget.App.Spinner</item>
 
         <!-- Global Typography -->
-        <item name="android:fontFamily">@font/sf_pro</item>
-        <item name="fontFamily">@font/sf_pro</item>
+        <item name="android:fontFamily">@font/titillium_web</item>
+        <item name="fontFamily">@font/titillium_web</item>
 
     </style>
 
