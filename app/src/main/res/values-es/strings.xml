@@ -117,6 +117,14 @@
     <string name="seleccionar_billetera">Seleccionar Billetera</string>
     <string name="seleccionar_tarjeta">Seleccionar Tarjeta</string>
 
+    <!-- Transfer Bottom Sheet -->
+    <string name="transfer_amount_hint">0</string>
+    <string name="origen_label">Desde</string>
+    <string name="destino_label">Hacia</string>
+    <string name="btn_mover">Mover</string>
+    <string name="transfer_success">Transferencia registrada exitosamente</string>
+    <string name="same_account_error">Origen y destino no pueden ser iguales</string>
+
     <!-- Historial Fragment -->
     <string name="historial_pendiente">Pendiente de Revisión</string>
     <string name="borrar_todo">Borrar Todo</string>

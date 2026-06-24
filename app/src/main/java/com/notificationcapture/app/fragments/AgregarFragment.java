@@ -98,13 +98,20 @@ public class AgregarFragment extends Fragment {
         TextView tvTransferLink = view.findViewById(R.id.tvTransferLink);
         if (tvTransferLink != null) {
             tvTransferLink.setOnClickListener(v -> {
-                requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right,
-                                android.R.anim.slide_in_left, android.R.anim.slide_out_right)
-                        .replace(R.id.viewPager, new TransferenciaFragment())
-                        .addToBackStack(null)
-                        .commit();
+                TransferBottomSheet bottomSheet = new TransferBottomSheet();
+                bottomSheet.setListener((origenId, destinoId, monto) -> {
+                    long timestamp = System.currentTimeMillis();
+                    repository.saveTransfer(origenId, destinoId, monto, timestamp, result -> {
+                        if (result.isSuccess()) {
+                            Toast.makeText(requireContext(),
+                                    "✅ " + getString(R.string.transfer_success) + " ($" + MoneyTextWatcher.format(monto) + ")",
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(requireContext(), "❌ Error al registrar la transferencia", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                });
+                bottomSheet.show(getParentFragmentManager(), "TransferBottomSheet");
             });
         }
 

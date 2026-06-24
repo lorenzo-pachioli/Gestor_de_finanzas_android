@@ -118,6 +118,14 @@
     <string name="seleccionar_billetera">Select Wallet</string>
     <string name="seleccionar_tarjeta">Select Card</string>
 
+    <!-- Transfer Bottom Sheet -->
+    <string name="transfer_amount_hint">0</string>
+    <string name="origen_label">From</string>
+    <string name="destino_label">To</string>
+    <string name="btn_mover">Move</string>
+    <string name="transfer_success">Transfer registered successfully</string>
+    <string name="same_account_error">Source and destination cannot be the same</string>
+
     <!-- Historial Fragment -->
     <string name="historial_pendiente">Pending Review</string>
     <string name="borrar_todo">Clear All</string>
