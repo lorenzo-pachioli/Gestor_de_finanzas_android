@@ -1,7 +1,5 @@
 package com.notificationcapture.app.views;
 
-// ARCHIVO COMPLETO: app/src/main/java/com/notificationcapture/app/views/FastChargeActivity.java
-
 import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,11 +25,13 @@ import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.repositories.RepositoryProvider;
+import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.repositories.WalletRepository;
 import com.notificationcapture.app.utils.CustomTypeSwitch;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class FastChargeActivity extends AppCompatActivity {
@@ -44,6 +44,10 @@ public class FastChargeActivity extends AppCompatActivity {
     private Spinner spinnerWalletsFastCharge;
     private TextView tvSuccessMessage;
     private List<Wallets> availableWallets = new ArrayList<>();
+
+    // Executor compartido para toda la Activity — no se crea uno nuevo por cada guardado.
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +85,12 @@ public class FastChargeActivity extends AppCompatActivity {
         btnSave.setOnClickListener(v -> saveTransaction());
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        executor.shutdown();
+    }
+
     private void setupWalletsSpinner() {
         WalletRepository walletRepository = RepositoryProvider.getInstance().getWalletRepository();
         availableWallets = new ArrayList<>(walletRepository.getAllWallets());
@@ -113,10 +123,10 @@ public class FastChargeActivity extends AppCompatActivity {
 
         IngresoOEgreso type = swType.isChecked() ? IngresoOEgreso.EGRESO : IngresoOEgreso.INGRESO;
         int checkedMethodId = togglePaymentMethod.getCheckedButtonId();
-        Transaction transaction;
         long now = System.currentTimeMillis();
         String categoryId = (type == IngresoOEgreso.INGRESO) ? "other_income" : "other_outcome";
 
+        Transaction transaction;
         if (checkedMethodId == R.id.btnMethodDebit) {
             String walletId = null;
             if (!availableWallets.isEmpty()) {
@@ -131,18 +141,21 @@ public class FastChargeActivity extends AppCompatActivity {
             try {
                 installments = Integer.parseInt(etInstallments.getText().toString());
             } catch (Exception ignored) {}
-            transaction = new Credit(title, "Carga rápida", now, type, categoryId, null, installments, installments, null, false);
+            transaction = new Credit(title, "Carga rápida", now, type, categoryId, null,
+                    installments, installments, null, false);
         } else {
             transaction = new Cash(title, "Carga rápida", now, type, categoryId, false);
         }
 
         transaction.setAmount(amount);
 
-        Executors.newSingleThreadExecutor().execute(() -> {
-            RepositoryProvider.getInstance().getTransactionRepository().saveTransaction(transaction);
-            runOnUiThread(() -> {
+        // Usar el executor compartido de la Activity en lugar de crear uno desechable.
+        final Transaction finalTransaction = transaction;
+        executor.execute(() -> {
+            RepositoryProvider.getInstance().getTransactionRepository().saveTransaction(finalTransaction);
+            mainHandler.post(() -> {
                 tvSuccessMessage.setVisibility(View.VISIBLE);
-                new Handler(Looper.getMainLooper()).postDelayed(this::finish, 1500);
+                mainHandler.postDelayed(this::finish, 1500);
             });
         });
     }

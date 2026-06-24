@@ -156,7 +156,9 @@ public class AgregarFragment extends Fragment {
         
         if (!found) {
             for (int i = 0; i < categories.size(); i++) {
-                if ("other".equals(categories.get(i).getId()) || "Otros".equalsIgnoreCase(categories.get(i).getName())) {
+                if (CategoryRepository.OTHER_INCOME_ID.equals(categories.get(i).getId())
+                        || CategoryRepository.OTHER_OUTCOME_ID.equals(categories.get(i).getId())
+                        || "Otros".equalsIgnoreCase(categories.get(i).getName())) {
                     spinnerCategory.setSelection(i);
                     break;
                 }

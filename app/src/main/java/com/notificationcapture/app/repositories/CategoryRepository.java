@@ -23,8 +23,8 @@ public class CategoryRepository implements GsonAccess {
     private Gson gson;
     private List<Category> cachedCategories = null; // Memory Cache
 
-    public static final String OTHER_INCOME_ID = "other";
-    public static final String OTHER_OUTCOME_ID = "other";
+    public static final String OTHER_INCOME_ID = "other_income";
+    public static final String OTHER_OUTCOME_ID = "other_outcome";
     public static final String PAGO_TARJETA_ID = "pago_tarjeta";
     public static final String TRANSFER_OUT_ID = "transfer_out";
     public static final String TRANSFER_IN_ID  = "transfer_in";
@@ -122,7 +122,12 @@ public class CategoryRepository implements GsonAccess {
             }
         }
         // Fallback para migraciones de objetos antiguos y IDs por defecto cruzados
-        if (OTHER_INCOME_ID.equals(id) || "Otros_INGRESO".equals(id)) {
+        if ("other".equals(id)) {
+            // ID antiguo sin tipo - fallback genérico, buscar primero por tipo después
+            for (Category c : all) {
+                if ("Otros".equalsIgnoreCase(c.getName()) && c.getType() == IngresoOEgreso.INGRESO) return c;
+            }
+        } else if (OTHER_INCOME_ID.equals(id) || "Otros_INGRESO".equals(id)) {
             for (Category c : all) {
                 if ("Otros".equalsIgnoreCase(c.getName()) && c.getType() == IngresoOEgreso.INGRESO) return c;
             }
@@ -168,8 +173,17 @@ public class CategoryRepository implements GsonAccess {
                         c.setId(c.getName() + "_" + c.getType());
                         needsSave = true;
                     }
-                    if ("other_income".equals(c.getId()) || "other_outcome".equals(c.getId()) || "Otros_INGRESO".equals(c.getId()) || "Otros_EGRESO".equals(c.getId())) {
-                        c.setId("other");
+                    // Migrar IDs antiguos: "other" debe convertirse según el tipo
+                    if ("other".equals(c.getId())) {
+                        String correctId = c.getType() == IngresoOEgreso.INGRESO ? OTHER_INCOME_ID : OTHER_OUTCOME_ID;
+                        c.setId(correctId);
+                        needsSave = true;
+                    }
+                    if ("other_income".equals(c.getId()) || "Otros_INGRESO".equals(c.getId())) {
+                        c.setId(OTHER_INCOME_ID);
+                        needsSave = true;
+                    } else if ("other_outcome".equals(c.getId()) || "Otros_EGRESO".equals(c.getId())) {
+                        c.setId(OTHER_OUTCOME_ID);
                         needsSave = true;
                     }
                     if (PAGO_TARJETA_ID.equals(c.getId())) {

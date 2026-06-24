@@ -18,6 +18,7 @@ import java.util.List;
 
 import com.notificationcapture.app.adapters.TransactionAdapter;
 import com.notificationcapture.app.enums.PaymentMethod;
+import com.notificationcapture.app.models.SaldoCuenta;
 import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.viewmodels.MainViewModel;
 import com.notificationcapture.app.R;
@@ -47,7 +48,6 @@ public class InicioFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Initialize ViewModel scoped to Activity so all fragments share data
         viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
         recyclerView = view.findViewById(R.id.recyclerView);
@@ -57,14 +57,13 @@ public class InicioFragment extends Fragment {
         tvEgresos = view.findViewById(R.id.tvEgresos);
         tvBalance = view.findViewById(R.id.tvBalance);
         tvMonthTitle = view.findViewById(R.id.tvMonthTitle);
-        
+
         View cardTotalDisponible = view.findViewById(R.id.cardTotalAvailable);
         TextView tvTotalDisponible = view.findViewById(R.id.tvTotalAvailable);
         TextView tvViewDetails = view.findViewById(R.id.tvViewDetails);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        // Patrimonio Neto Trigger mensual (si corresponde) o global
         View.OnClickListener patrimonioClickListener = v -> {
             MyBottomSheetDialogFragment sheet = new MyBottomSheetDialogFragment();
             Bundle args = new Bundle();
@@ -73,135 +72,96 @@ public class InicioFragment extends Fragment {
             sheet.show(getParentFragmentManager(), "patrimonio_neto");
         };
 
-        if (tvViewDetails != null) {
-            tvViewDetails.setOnClickListener(patrimonioClickListener);
-        }
-        if (cardTotalDisponible != null) {
-            cardTotalDisponible.setOnClickListener(patrimonioClickListener);
-        }
+        if (tvViewDetails != null) tvViewDetails.setOnClickListener(patrimonioClickListener);
+        if (cardTotalDisponible != null) cardTotalDisponible.setOnClickListener(patrimonioClickListener);
 
         adapter = new TransactionAdapter(new ArrayList<>(), getChildFragmentManager(), item -> {
             viewModel.deleteTransaction(item.getId());
-        }, null, false); // showAddButton = false para transacciones aprobadas
+        }, null, false);
         recyclerView.setAdapter(adapter);
 
-        // Actualizar el título del mes
-        String monthName = getMonthName();
-        tvMonthTitle.setText(getString(R.string.resumen_de, monthName));
+        tvMonthTitle.setText(getString(R.string.resumen_de, getMonthName()));
 
-        // Setup observer for unidirectional data flow
-        viewModel.getAllApprovedTransactions().observe(getViewLifecycleOwner(), allNotifications -> {
-            List<Transaction> currentMonthNotifications = getCurrentMonthNotifications(allNotifications);
-            adapter.updateData(currentMonthNotifications);
+        // Observer 1: transacciones del mes actual
+        viewModel.getAllApprovedTransactions().observe(getViewLifecycleOwner(), allTransactions -> {
+            List<Transaction> currentMonth = getCurrentMonthTransactions(allTransactions);
+            adapter.updateData(currentMonth);
 
-            if (currentMonthNotifications.isEmpty()) {
-                emptyView.setVisibility(View.VISIBLE);
-                recyclerView.setVisibility(View.GONE);
-            } else {
-                emptyView.setVisibility(View.GONE);
-                recyclerView.setVisibility(View.VISIBLE);
+            emptyView.setVisibility(currentMonth.isEmpty() ? View.VISIBLE : View.GONE);
+            recyclerView.setVisibility(currentMonth.isEmpty() ? View.GONE : View.VISIBLE);
+
+            updateFinancialSummary(currentMonth);
+        });
+
+        // Observer 2: saldos por cuenta — LiveData separado, siempre en hilo principal.
+        // Reemplaza el callback anidado con runOnUiThread que existía antes.
+        viewModel.getSaldosPorCuenta().observe(getViewLifecycleOwner(), saldos -> {
+            if (saldos == null || tvTotalDisponible == null) return;
+
+            double totalLiquid = 0;
+            double totalDeuda = 0;
+            for (SaldoCuenta sc : saldos) {
+                if ("CREDITO".equals(sc.getTipoCuenta())) {
+                    totalDeuda += sc.getSaldo();
+                } else {
+                    totalLiquid += sc.getSaldo();
+                }
             }
 
-            // 1. Actualizar el resumen financiero del mes (Ingresos/Egresos/Balance)
-            updateFinancialSummary(currentMonthNotifications);
-
-            // 2. Actualizar disponibilidad y deuda global usando los saldos de cada cuenta
-            viewModel.getSaldosPorCuenta(result -> {
-                if (result.isSuccess() && result.getData() != null) {
-                    double totalLiquid = 0;
-                    double totalDeuda = 0;
-                    for (com.notificationcapture.app.models.SaldoCuenta sc : result.getData()) {
-                        if ("CREDITO".equals(sc.getTipoCuenta())) {
-                            // En el repositorio, el saldo de crédito se devuelve como positivo si hay deuda
-                            totalDeuda += sc.getSaldo();
-                        } else {
-                            totalLiquid += sc.getSaldo();
-                        }
-                    }
-                    
-                    final double finalLiquid = totalLiquid;
-                    final double finalDeuda = totalDeuda;
-                    
-                    if (isAdded() && getActivity() != null) {
-                        getActivity().runOnUiThread(() -> {
-                            if (tvTotalDisponible != null) {
-                                double available = finalLiquid - finalDeuda;
-                                tvTotalDisponible.setText(formatAmount(available));
-                                tvTotalDisponible.setTextColor(getResources().getColor(available >= 0 ? R.color.green : R.color.red));
-                            }
-                        });
-                    }
-                }
-            });
+            double available = totalLiquid - totalDeuda;
+            tvTotalDisponible.setText(formatAmount(available));
+            tvTotalDisponible.setTextColor(
+                    getResources().getColor(available >= 0 ? R.color.green : R.color.red));
         });
     }
 
-    private List<Transaction> getCurrentMonthNotifications(List<Transaction> allNotifications) {
+    private List<Transaction> getCurrentMonthTransactions(List<Transaction> all) {
         Calendar now = Calendar.getInstance();
         int currentMonth = now.get(Calendar.MONTH);
         int currentYear = now.get(Calendar.YEAR);
 
-        List<Transaction> currentMonthNotifications = new ArrayList<>();
-
-        for (Transaction item : allNotifications) {
+        List<Transaction> result = new ArrayList<>();
+        for (Transaction item : all) {
             Calendar itemDate = Calendar.getInstance();
             itemDate.setTimeInMillis(item.getTimestamp());
-
-            // Verificar si es del mes y año actual
-            if (itemDate.get(Calendar.MONTH) == currentMonth &&
-                    itemDate.get(Calendar.YEAR) == currentYear) {
-                currentMonthNotifications.add(item);
+            if (itemDate.get(Calendar.MONTH) == currentMonth
+                    && itemDate.get(Calendar.YEAR) == currentYear) {
+                result.add(item);
             }
         }
-
-        return currentMonthNotifications;
+        return result;
     }
 
     private String getMonthName() {
-        Calendar now = Calendar.getInstance();
-        int currentMonth = now.get(Calendar.MONTH);
-
+        int currentMonth = Calendar.getInstance().get(Calendar.MONTH);
         int[] monthResIds = {
                 R.string.enero, R.string.febrero, R.string.marzo,
                 R.string.abril, R.string.mayo, R.string.junio,
                 R.string.julio, R.string.agosto, R.string.septiembre,
                 R.string.octubre, R.string.noviembre, R.string.diciembre
         };
-
         return getString(monthResIds[currentMonth]);
     }
 
-    private void updateFinancialSummary(List<Transaction> currentMonthNotifications) {
+    private void updateFinancialSummary(List<Transaction> transactions) {
         double totalIngresos = 0;
         double totalEgresos = 0;
 
-        for (Transaction item : currentMonthNotifications) {
-            if (item.hasAmount()) {
-                // CASH FLOW: Ignorar gastos con tarjeta en el resumen mensual de egresos
-                // Solo cuentan si son ingresos o egresos de billetera (Efectivo/Débito)
-                if (item.getPaymentMethod() != PaymentMethod.CREDITO) {
-                    if (item.getType() == IngresoOEgreso.INGRESO) {
-                        totalIngresos += item.getAmount();
-                    } else {
-                        totalEgresos += item.getAmount();
-                    }
+        for (Transaction item : transactions) {
+            if (item.hasAmount() && item.getPaymentMethod() != PaymentMethod.CREDITO) {
+                if (item.getType() == IngresoOEgreso.INGRESO) {
+                    totalIngresos += item.getAmount();
+                } else {
+                    totalEgresos += item.getAmount();
                 }
             }
         }
 
         double balance = totalIngresos - totalEgresos;
-
-        // Formatear y mostrar
         tvIngresos.setText(formatAmount(totalIngresos));
         tvEgresos.setText(formatAmount(totalEgresos));
         tvBalance.setText(formatAmount(Math.abs(balance)));
-
-        // Cambiar color del balance según sea positivo o negativo
-        if (balance >= 0) {
-            tvBalance.setTextColor(getResources().getColor(R.color.green));
-        } else {
-            tvBalance.setTextColor(getResources().getColor(R.color.red));
-        }
+        tvBalance.setTextColor(getResources().getColor(balance >= 0 ? R.color.green : R.color.red));
     }
 
     private String formatAmount(double amount) {

@@ -157,9 +157,10 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 }
                 
                 if (!foundEquivalent) {
-                    holder.selectedCategory = categoryRepo.getCategoryById("other");
+                    String otherId = isIngresoNow ? CategoryRepository.OTHER_INCOME_ID : CategoryRepository.OTHER_OUTCOME_ID;
+                    holder.selectedCategory = categoryRepo.getCategoryById(otherId);
                     if (holder.selectedCategory == null) {
-                        holder.selectedCategory = new Category("other", "Otros", newType);
+                        holder.selectedCategory = new Category(otherId, "Otros", newType);
                     }
                 }
                 

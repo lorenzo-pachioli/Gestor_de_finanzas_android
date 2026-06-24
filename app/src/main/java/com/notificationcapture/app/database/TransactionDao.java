@@ -96,7 +96,9 @@ public interface TransactionDao {
            "    + COALESCE((SELECT SUM(cp.montoPagado) FROM credit_card_payments cp WHERE cp.creditCardId = t.creditCardId AND cp.timestampPago <= :maxTimestamp), 0) AS REAL) AS saldo " +
            "  FROM transactions t " +
            "  WHERE t.status = 'APPROVED' AND t.timestamp <= :maxTimestamp " +
-           "  GROUP BY t.paymentMethod, t.walletId, t.creditCardId" +
+           "  GROUP BY t.paymentMethod, " +
+           "    CASE WHEN t.paymentMethod = 'DEBITO' THEN IFNULL(t.walletId, 'Desconocida') ELSE NULL END, " +
+           "    CASE WHEN t.paymentMethod = 'CREDITO' THEN IFNULL(t.creditCardId, 'Desconocida') ELSE NULL END " +
            ") WHERE ROUND(saldo, 2) != 0 " +
            "ORDER BY tipoCuenta, nombreCuenta")
     List<SaldoCuenta> getSaldosPorCuenta(long maxTimestamp);

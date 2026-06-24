@@ -1,19 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Font family para Titillium Web.
+    Incluye archivos TTF locales como fuente primaria para garantizar
+    disponibilidad offline. El provider de Google Fonts se mantiene
+    como comentario de referencia si se prefiere esa estrategia.
+
+    Archivos requeridos en res/font/:
+      - titillium_web_regular.ttf   (weight 400)
+      - titillium_web_semibold.ttf  (weight 600)
+      - titillium_web_bold.ttf      (weight 700)
+
+    Fuente: https://fonts.google.com/specimen/Titillium+Web
+    Licencia: SIL Open Font License 1.1
+-->
 <font-family xmlns:app="http://schemas.android.com/apk/res-auto"
              xmlns:tools="http://schemas.android.com/tools"
              tools:ignore="UnusedAttribute">
+
     <font
-        app:fontProviderAuthority="com.google.android.gms.fonts"
-        app:fontProviderPackage="com.google.android.gms"
-        app:fontProviderQuery="name=Titillium Web&amp;weight=400"
-        app:fontProviderCerts="@array/com_google_android_gms_fonts_certs"
+        app:font="@font/titillium_web_regular"
         app:fontStyle="normal"
         app:fontWeight="400" />
+
     <font
-        app:fontProviderAuthority="com.google.android.gms.fonts"
-        app:fontProviderPackage="com.google.android.gms"
-        app:fontProviderQuery="name=Titillium Web&amp;weight=700"
-        app:fontProviderCerts="@array/com_google_android_gms_fonts_certs"
+        app:font="@font/titillium_web_semibold"
+        app:fontStyle="normal"
+        app:fontWeight="600" />
+
+    <font
+        app:font="@font/titillium_web_bold"
         app:fontStyle="normal"
         app:fontWeight="700" />
+
 </font-family>
