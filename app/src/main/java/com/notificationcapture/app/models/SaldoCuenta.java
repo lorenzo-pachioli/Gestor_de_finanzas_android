@@ -1,15 +1,16 @@
 package com.notificationcapture.app.models;
 
 import androidx.room.Ignore;
+import java.math.BigDecimal;
 
 public class SaldoCuenta {
     private String nombreCuenta;
     private String tipoCuenta;
-    private double saldo;
+    private BigDecimal saldo;
 
     private String sourceId;
 
-    public SaldoCuenta(String nombreCuenta, String tipoCuenta, double saldo, String sourceId) {
+    public SaldoCuenta(String nombreCuenta, String tipoCuenta, BigDecimal saldo, String sourceId) {
         this.nombreCuenta = nombreCuenta;
         this.tipoCuenta = tipoCuenta;
         this.saldo = saldo;
@@ -17,7 +18,7 @@ public class SaldoCuenta {
     }
 
     @Ignore
-    public SaldoCuenta(String nombreCuenta, String tipoCuenta, double saldo) {
+    public SaldoCuenta(String nombreCuenta, String tipoCuenta, BigDecimal saldo) {
         this(nombreCuenta, tipoCuenta, saldo, null);
     }
 
@@ -45,11 +46,11 @@ public class SaldoCuenta {
         this.tipoCuenta = tipoCuenta;
     }
 
-    public double getSaldo() {
+    public BigDecimal getSaldo() {
         return saldo;
     }
 
-    public void setSaldo(double saldo) {
+    public void setSaldo(BigDecimal saldo) {
         this.saldo = saldo;
     }
 }

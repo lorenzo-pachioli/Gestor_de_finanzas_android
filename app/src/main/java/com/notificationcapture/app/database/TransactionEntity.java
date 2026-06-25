@@ -6,6 +6,7 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.enums.PaymentMethod;
+import java.math.BigDecimal;
 
 @Entity(tableName = "transactions", 
         indices = {@Index(value = {"timestamp"}), @Index(value = {"status"}), @Index(value = {"creditCardId"})})
@@ -22,7 +23,7 @@ public class TransactionEntity {
     private String title;
     private String text;
     private long timestamp;
-    private Double amount;
+    private BigDecimal amount;
     private IngresoOEgreso type;
     private String categoryId;
     private boolean isNotification; // UI flag only
@@ -40,7 +41,7 @@ public class TransactionEntity {
     private String rawNotification;
 
     public TransactionEntity(@NonNull String id, PaymentMethod paymentMethod, String title, String text, 
-                             long timestamp, Double amount, IngresoOEgreso type, String categoryId, 
+                             long timestamp, BigDecimal amount, IngresoOEgreso type, String categoryId, 
                              boolean isNotification, String status) {
         this.id = id;
         this.paymentMethod = paymentMethod;
@@ -71,8 +72,8 @@ public class TransactionEntity {
     public long getTimestamp() { return timestamp; }
     public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
 
-    public Double getAmount() { return amount; }
-    public void setAmount(Double amount) { this.amount = amount; }
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
 
     public IngresoOEgreso getType() { return type; }
     public void setType(IngresoOEgreso type) { this.type = type; }

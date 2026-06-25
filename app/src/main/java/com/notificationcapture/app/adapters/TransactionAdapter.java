@@ -13,11 +13,18 @@ import androidx.core.content.ContextCompat;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 
 import com.notificationcapture.app.enums.CatColors;
 import com.notificationcapture.app.enums.IngresoOEgreso;
@@ -79,68 +86,68 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         Transaction item = transactions.get(position);
         Context context = holder.itemView.getContext();
 
-        // Configurar visibilidad según estado de expansión
+        // Configure visibility based on expanded state
         if (item.isExpanded()) {
-            holder.layoutSummary.setVisibility(View.GONE);
-            holder.layoutEdit.setVisibility(View.VISIBLE);
+            holder.getLayoutSummary().setVisibility(View.GONE);
+            holder.getLayoutEdit().setVisibility(View.VISIBLE);
 
-            // Cargar datos en el formulario
-            holder.etTitle.setText(item.getTitle());
-            holder.etText.setText(item.getText());
+            // Load data in the form
+            holder.getEtTitle().setText(item.getTitle());
+            holder.getEtText().setText(item.getText());
 
             if (item.getAmount() != null) {
                 // Format initially to EU style so it looks correct immediately
                 java.text.DecimalFormat formatter = (java.text.DecimalFormat) java.text.DecimalFormat
                         .getInstance(java.util.Locale.GERMANY);
                 formatter.applyPattern("#,###.##");
-                String initialAmount = formatter.format(item.getAmount());
-                holder.etAmount.setText(initialAmount);
+                String initialAmount = formatter.format(item.getAmount().doubleValue());
+                holder.getEtAmount().setText(initialAmount);
             } else {
-                holder.etAmount.setText("");
+                holder.getEtAmount().setText("");
             }
 
             // Remove previous watcher if exists to avoid stacking
             if (holder.currentWatcher != null) {
-                holder.etAmount.removeTextChangedListener(holder.currentWatcher);
+                holder.getEtAmount().removeTextChangedListener(holder.currentWatcher);
             }
-            holder.currentWatcher = new com.notificationcapture.app.utils.MoneyTextWatcher(holder.etAmount);
-            holder.etAmount.addTextChangedListener(holder.currentWatcher);
+            holder.currentWatcher = new com.notificationcapture.app.utils.MoneyTextWatcher(holder.getEtAmount());
+            holder.getEtAmount().addTextChangedListener(holder.currentWatcher);
 
-            // Configurar Switch de Tipo
+            // Configure Type Switch
             boolean isIngreso = item.getType() == IngresoOEgreso.INGRESO;
-            holder.switchType.setChecked(!isIngreso, true); // checked = Egreso, unchecked = Ingreso
+            holder.getSwitchType().setChecked(!isIngreso, true); // checked = Egreso, unchecked = Ingreso
 
-            // *** NUEVO: Inicializar la categoría seleccionada ***
+            // *** NEW: Initialize selected category ***
             Category currentCat = categoryRepo.getCategoryById(item.getCategoryId());
             if (currentCat == null) {
                 currentCat = new Category("Otros", item.getType() != null ? item.getType() : IngresoOEgreso.EGRESO);
             }
-            holder.selectedCategory = currentCat;
+            holder.setSelectedCategory(currentCat);
 
-            // Configurar UI inicial
+            // Configure initial UI
             updateToggleUI(holder, !isIngreso);
 
-            // Configurar Selectores iniciales
-            holder.tvCategorySelector.setText(currentCat.getName());
+            // Configure initial selectors
+            holder.getTvCategorySelector().setText(currentCat.getName());
 
             String paymentText = getPaymentMethodText(item);
-            holder.tvPaymentMethod.setText(paymentText);
+            holder.getTvPaymentMethod().setText(paymentText);
 
-            // Configurar Switch isNotification
-            holder.switchIsNotification.setChecked(item.isNotification());
+            // Configure isNotification switch
+            holder.getSwitchIsNotification().setChecked(item.isNotification());
 
-            // *** MODIFICADO: Pasar holder en lugar de solo el TextView ***
-            holder.tvCategorySelector.setOnClickListener(v -> {
-                boolean currentIsIngreso = !holder.switchType.isChecked();
+            // *** MODIFIED: Pass holder instead of just TextView ***
+            holder.getTvCategorySelector().setOnClickListener(v -> {
+                boolean currentIsIngreso = !holder.getSwitchType().isChecked();
                 showCategorySelector(context, holder, currentIsIngreso);
             });
 
-            holder.tvPaymentMethod.setOnClickListener(v -> {
+            holder.getTvPaymentMethod().setOnClickListener(v -> {
                 showPaymentMethodSelector(context, holder, item);
             });
 
-            // *** MODIFICADO: Resetear categoría cuando cambia el tipo ***
-            holder.switchType.setOnCheckedChangeListener(isChecked -> {
+            // *** MODIFIED: Reset category when type changes ***
+            holder.getSwitchType().setOnCheckedChangeListener(isChecked -> {
                 updateToggleUI(holder, isChecked);
 
                 boolean isIngresoNow = !isChecked;
@@ -148,38 +155,40 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 
                 boolean foundEquivalent = false;
                 List<Category> newTypeCategories = categoryRepo.getCategories(newType);
+                Map<String, Category> categoryMap = new HashMap<>();
                 for (Category c : newTypeCategories) {
-                    if (c.getName().equalsIgnoreCase(holder.selectedCategory.getName())) {
-                        holder.selectedCategory = c;
-                        foundEquivalent = true;
-                        break;
-                    }
+                    categoryMap.put(c.getName().toLowerCase(), c);
+                }
+                Category found = categoryMap.get(holder.getSelectedCategory().getName().toLowerCase());
+                if (found != null) {
+                    holder.setSelectedCategory(found);
+                    foundEquivalent = true;
                 }
                 
                 if (!foundEquivalent) {
                     String otherId = isIngresoNow ? CategoryRepository.OTHER_INCOME_ID : CategoryRepository.OTHER_OUTCOME_ID;
-                    holder.selectedCategory = categoryRepo.getCategoryById(otherId);
-                    if (holder.selectedCategory == null) {
-                        holder.selectedCategory = new Category(otherId, "Otros", newType);
+                    holder.setSelectedCategory(categoryRepo.getCategoryById(otherId));
+                    if (holder.getSelectedCategory() == null) {
+                        holder.setSelectedCategory(new Category(otherId, "Otros", newType));
                     }
                 }
                 
-                holder.tvCategorySelector.setText(holder.selectedCategory.getName());
+                holder.getTvCategorySelector().setText(holder.getSelectedCategory().getName());
             });
 
-            // *** MODIFICADO: Usar selectedCategory en lugar de crear nueva ***
-            holder.btnSave.setOnClickListener(v -> {
-                item.setTitle(holder.etTitle.getText().toString());
-                item.setText(holder.etText.getText().toString());
+            // *** MODIFIED: Use selectedCategory instead of creating new ***
+            holder.getBtnSave().setOnClickListener(v -> {
+                item.setTitle(holder.getEtTitle().getText().toString());
+                item.setText(holder.getEtText().getText().toString());
 
-                // Guardar tipo
-                boolean isEgresoSelected = holder.switchType.isChecked();
+                // Save type
+                boolean isEgresoSelected = holder.getSwitchType().isChecked();
                 item.setType(IngresoOEgreso.getTransactionType(isEgresoSelected));
 
-                // *** USAR selectedCategory ID ***
-                item.setCategoryId(holder.selectedCategory.getId());
+                // *** USE selectedCategory ID ***
+                item.setCategoryId(holder.getSelectedCategory().getId());
 
-                item.setNotification(holder.switchIsNotification.isChecked());
+                item.setNotification(holder.getSwitchIsNotification().isChecked());
 
                 if (item instanceof Debit d) {
                     item.setPaymentMethod(PaymentMethod.DEBITO);
@@ -189,13 +198,13 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                     item.setPaymentMethod(PaymentMethod.CREDITO);
                 }
 
-                String amountStr = holder.etAmount.getText().toString();
+                String amountStr = holder.getEtAmount().getText().toString();
                 if (!amountStr.isEmpty()) {
                     try {
                         String clean = amountStr.replace(".", "").replace(",", ".");
-                        item.setAmount(Double.parseDouble(clean));
+                        item.setAmount(new BigDecimal(clean));
                     } catch (NumberFormatException e) {
-                        // Ignorar formato inválido
+                        // Ignore invalid format
                     }
                 } else {
                     item.setAmount(null);
@@ -206,7 +215,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 notifyItemChanged(holder.getAdapterPosition());
             });
 
-            holder.btnCancel.setOnClickListener(v -> {
+            holder.getBtnCancel().setOnClickListener(v -> {
                 item.setExpanded(false);
                 notifyItemChanged(holder.getAdapterPosition());
             });
@@ -214,53 +223,53 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         } else
 
         {
-            holder.layoutSummary.setVisibility(View.VISIBLE);
-            holder.layoutEdit.setVisibility(View.GONE);
+            holder.getLayoutSummary().setVisibility(View.VISIBLE);
+            holder.getLayoutEdit().setVisibility(View.GONE);
 
-            // Cargar datos en el resumen
-            holder.tvAppName.setText(resolveSourceName(item));
+            // Load data in summary
+            holder.getTvAppName().setText(resolveSourceName(item));
             Category displayCat = categoryRepo.getCategoryById(item.getCategoryId());
             if (displayCat == null) {
                 displayCat = new Category("Otros", item.getType() != null ? item.getType() : IngresoOEgreso.EGRESO);
             }
-            holder.tvCategory.setText(displayCat.getName());
-            holder.tvTitle.setText(item.getTitle());
+            holder.getTvCategory().setText(displayCat.getName());
+            holder.getTvTitle().setText(item.getTitle());
             if (item.getText() == null || item.getText().trim().isEmpty()) {
-                holder.tvText.setVisibility(View.GONE);
+                holder.getTvText().setVisibility(View.GONE);
             } else {
-                holder.tvText.setVisibility(View.VISIBLE);
-                holder.tvText.setText(item.getText());
+                holder.getTvText().setVisibility(View.VISIBLE);
+                holder.getTvText().setText(item.getText());
             }
 
-            // Mostrar/Ocultar tag de notificación
-            holder.tvNotificacion.setVisibility(item.isNotification() ? View.VISIBLE : View.GONE);
+            // Show/hide notification tag
+            holder.getTvNotificacion().setVisibility(item.isNotification() ? View.VISIBLE : View.GONE);
 
             String formattedDate = dateFormat.format(new Date(item.getTimestamp()));
-            holder.tvTimestamp.setText(formattedDate);
+            holder.getTvTimestamp().setText(formattedDate);
 
-            // Mostrar el monto si existe
+            // Show amount if exists
             if (item.hasAmount()) {
-                holder.tvAmount.setVisibility(View.VISIBLE);
-                holder.tvAmount
+                holder.getTvAmount().setVisibility(View.VISIBLE);
+                holder.getTvAmount()
                         .setText(IngresoOEgreso.getTypeIndicator(item.getType()) + " " + item.getFormattedAmount());
-                holder.tvAmount.setTextColor(CatColors.getOneIntColorByType(item.getType(), 0));
+                holder.getTvAmount().setTextColor(CatColors.getOneIntColorByType(item.getType(), 0));
             } else {
-                holder.tvAmount.setVisibility(View.GONE);
+                holder.getTvAmount().setVisibility(View.GONE);
             }
 
             // Show/hide add button based on context
             if (showAddButton) {
-                holder.btnAdd.setVisibility(View.VISIBLE);
-                holder.btnAdd.setOnClickListener(v -> {
+                holder.getBtnAdd().setVisibility(View.VISIBLE);
+                holder.getBtnAdd().setOnClickListener(v -> {
                     if (addListener != null) {
                         addListener.onAddClick(item);
                     }
                 });
             } else {
-                holder.btnAdd.setVisibility(View.GONE);
+                holder.getBtnAdd().setVisibility(View.GONE);
             }
 
-            holder.btnDelete.setOnClickListener(v -> {
+            holder.getBtnDelete().setOnClickListener(v -> {
                 Dialog.show(
                         "¿Estás seguro de que deseas eliminar esta transacción?",
                         DialogType.CONFIRMATION,
@@ -271,8 +280,8 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                         });
             });
 
-            // Click para expandir
-            holder.layoutSummary.setOnClickListener(v -> {
+            // Click to expand
+            holder.getLayoutSummary().setOnClickListener(v -> {
                 item.setExpanded(true);
                 notifyItemChanged(holder.getAdapterPosition());
             });
@@ -280,7 +289,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             // Set Border Color
             Category borderCat = categoryRepo.getCategoryById(item.getCategoryId());
             int categoryColor = (borderCat != null) ? borderCat.getDisplayColor() : android.graphics.Color.LTGRAY;
-            holder.viewNotificationBorder.setBackgroundColor(categoryColor);
+            holder.getViewNotificationBorder().setBackgroundColor(categoryColor);
         }
     }
 
@@ -288,7 +297,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         // Switch handles its own UI now
     }
 
-    // *** MODIFICADO: Recibe ViewHolder para actualizar selectedCategory ***
+    // *** MODIFIED: Receives ViewHolder to update selectedCategory ***
     private void showCategorySelector(Context context, ViewHolder holder, boolean isIngreso) {
         List<Category> options = categoryRepo
                 .getCategories(isIngreso ? IngresoOEgreso.INGRESO : IngresoOEgreso.EGRESO);
@@ -296,17 +305,17 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         SelectorBottomSheet sheet = SelectorBottomSheet.newInstance(
                 "Seleccionar Categoría",
                 options,
-                holder.tvCategorySelector.getText().toString());
+                holder.getTvCategorySelector().getText().toString());
 
         sheet.setOnOptionSelectedListener(option -> {
-            // *** BUSCAR LA CATEGORÍA COMPLETA PARA PRESERVAR EL COLOR ***
+            // *** FIND COMPLETE CATEGORY TO PRESERVE COLOR ***
             for (Category cat : options) {
                 if (cat.getName().equals(option)) {
-                    holder.selectedCategory = cat;
+                    holder.setSelectedCategory(cat);
                     break;
                 }
             }
-            holder.tvCategorySelector.setText(option);
+            holder.getTvCategorySelector().setText(option);
         });
 
         if (fragmentManager != null) {
@@ -323,19 +332,19 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         }
 
         bottomSheet.setListener((method, detailId, installments) -> {
-            // Leer valores actuales de la UI para no perder cambios no guardados
-            String currentTitle = holder.etTitle.getText().toString();
-            String currentText = holder.etText.getText().toString();
-            boolean currentIsEgreso = holder.switchType.isChecked();
+            // Read current UI values to not lose unsaved changes
+            String currentTitle = holder.getEtTitle().getText().toString();
+            String currentText = holder.getEtText().getText().toString();
+            boolean currentIsEgreso = holder.getSwitchType().isChecked();
             IngresoOEgreso currentType = currentIsEgreso ? IngresoOEgreso.EGRESO : IngresoOEgreso.INGRESO;
-            boolean currentIsNotification = holder.switchIsNotification.isChecked();
+            boolean currentIsNotification = holder.getSwitchIsNotification().isChecked();
 
-            String amountStr = holder.etAmount.getText().toString();
-            Double currentAmount = null;
+            String amountStr = holder.getEtAmount().getText().toString();
+            BigDecimal currentAmount = null;
             if (!amountStr.isEmpty()) {
                 try {
                     String clean = amountStr.replace(".", "").replace(",", ".");
-                    currentAmount = Double.parseDouble(clean);
+                    currentAmount = new BigDecimal(clean);
                 } catch (Exception e) {
                 }
             }
@@ -343,25 +352,25 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             Transaction newItem;
             if (method == PaymentMethod.EFECTIVO) {
                 newItem = new Cash(currentTitle, currentText, item.getTimestamp(), currentType,
-                        holder.selectedCategory.getId(), currentIsNotification);
+                        holder.getSelectedCategory().getId(), currentIsNotification);
             } else if (method == PaymentMethod.DEBITO) {
                 newItem = new Debit(currentTitle, currentText, item.getTimestamp(), currentType,
-                        holder.selectedCategory.getId(), detailId, currentIsNotification);
+                        holder.getSelectedCategory().getId(), detailId, currentIsNotification);
             } else {
-                // CREDITO
+                // CREDIT
                 String groupId = (item instanceof Credit) ? ((Credit) item).getInstallmentGroupId() : null;
                 int currentInstallment = (item instanceof Credit) ? ((Credit) item).getCurrentInstallment() : 1;
                 newItem = new Credit(currentTitle, currentText, item.getTimestamp(), currentType,
-                        holder.selectedCategory.getId(), detailId, installments, currentInstallment, groupId,
+                        holder.getSelectedCategory().getId(), detailId, installments, currentInstallment, groupId,
                         currentIsNotification);
             }
 
-            // Preservar ID y monto procesado
+            // Preserve ID and processed amount
             newItem.setId(item.getId());
             newItem.setAmount(currentAmount);
             newItem.setExpanded(true);
 
-            // Reemplazar en la lista
+            // Replace in list
             int index = transactions.indexOf(item);
             if (index != -1) {
                 transactions.set(index, newItem);
@@ -383,7 +392,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         } else if (item instanceof Debit) {
             return "Débito - " + (detail != null ? detail : "");
         } else {
-            return "Efectivo";
+            return PaymentMethod.DISPLAY_CASH;
         }
     }
 
@@ -399,7 +408,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 return card.getName();
             return c.getSourceName(); // Fallback to migration object name
         } else if (item instanceof Cash) {
-            return "Efectivo";
+            return PaymentMethod.DISPLAY_CASH;
         }
         
         // Final safety fallback using the enum name if classes don't match for some reason
@@ -418,39 +427,83 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     }
 
     public void updateData(List<Transaction> newNotifications) {
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new TransactionDiffCallback(this.transactions, newNotifications));
         this.transactions = newNotifications;
-        notifyDataSetChanged();
+        diffResult.dispatchUpdatesTo(this);
+    }
+
+    static class TransactionDiffCallback extends DiffUtil.Callback {
+        private final List<Transaction> oldList;
+        private final List<Transaction> newList;
+
+        TransactionDiffCallback(List<Transaction> oldList, List<Transaction> newList) {
+            this.oldList = oldList != null ? oldList : new ArrayList<>();
+            this.newList = newList != null ? newList : new ArrayList<>();
+        }
+
+        @Override
+        public int getOldListSize() {
+            return oldList.size();
+        }
+
+        @Override
+        public int getNewListSize() {
+            return newList.size();
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            Transaction oldItem = oldList.get(oldItemPosition);
+            Transaction newItem = newList.get(newItemPosition);
+            return oldItem != null && newItem != null && oldItem.getId() != null && oldItem.getId().equals(newItem.getId());
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            Transaction oldItem = oldList.get(oldItemPosition);
+            Transaction newItem = newList.get(newItemPosition);
+            if (oldItem == null || newItem == null) return oldItem == newItem;
+            if (!Objects.equals(oldItem.getTitle(), newItem.getTitle())) return false;
+            if (!Objects.equals(oldItem.getText(), newItem.getText())) return false;
+            if (oldItem.getTimestamp() != newItem.getTimestamp()) return false;
+            if (!Objects.equals(oldItem.getAmount(), newItem.getAmount())) return false;
+            if (oldItem.getType() != newItem.getType()) return false;
+            if (!Objects.equals(oldItem.getCategoryId(), newItem.getCategoryId())) return false;
+            if (oldItem.getPaymentMethod() != newItem.getPaymentMethod()) return false;
+            if (oldItem.isNotification() != newItem.isNotification()) return false;
+            return true;
+        }
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        View layoutSummary;
-        View layoutEdit;
-        View viewNotificationBorder;
+        private View layoutSummary;
+        private View layoutEdit;
+        private View viewNotificationBorder;
 
-        TextView tvAppName;
-        TextView tvCategory;
-        TextView tvTitle;
-        TextView tvText;
-        TextView tvAmount;
-        TextView tvTimestamp;
-        TextView tvNotificacion;
-        View btnAdd;
-        View btnDelete;
+        private TextView tvAppName;
+        private TextView tvCategory;
+        private TextView tvTitle;
+        private TextView tvText;
+        private TextView tvAmount;
+        private TextView tvTimestamp;
+        private TextView tvNotificacion;
+        private View btnAdd;
+        private View btnDelete;
 
         public android.text.TextWatcher currentWatcher;
 
-        EditText etTitle;
-        EditText etText;
-        EditText etAmount;
-        CustomTypeSwitch switchType;
-        TextView tvCategorySelector;
-        TextView tvPaymentMethod;
-        SwitchCompat switchIsNotification;
-        Button btnSave;
-        Button btnCancel;
+        private EditText etTitle;
+        private EditText etText;
+        private EditText etAmount;
+        private CustomTypeSwitch switchType;
+        private TextView tvCategorySelector;
+        private TextView tvPaymentMethod;
+        private SwitchCompat switchIsNotification;
+        private Button btnSave;
+        private Button btnCancel;
 
         // *** NUEVO: Campo para mantener la categoría seleccionada ***
-        Category selectedCategory;
+        private Category selectedCategory;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -477,6 +530,98 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             switchIsNotification = itemView.findViewById(R.id.switchIsNotification);
             btnSave = itemView.findViewById(R.id.btnSave);
             btnCancel = itemView.findViewById(R.id.btnCancel);
+        }
+
+        public View getLayoutSummary() {
+            return layoutSummary;
+        }
+
+        public View getLayoutEdit() {
+            return layoutEdit;
+        }
+
+        public View getViewNotificationBorder() {
+            return viewNotificationBorder;
+        }
+
+        public TextView getTvAppName() {
+            return tvAppName;
+        }
+
+        public TextView getTvCategory() {
+            return tvCategory;
+        }
+
+        public TextView getTvTitle() {
+            return tvTitle;
+        }
+
+        public TextView getTvText() {
+            return tvText;
+        }
+
+        public TextView getTvAmount() {
+            return tvAmount;
+        }
+
+        public TextView getTvTimestamp() {
+            return tvTimestamp;
+        }
+
+        public TextView getTvNotificacion() {
+            return tvNotificacion;
+        }
+
+        public View getBtnAdd() {
+            return btnAdd;
+        }
+
+        public View getBtnDelete() {
+            return btnDelete;
+        }
+
+        public EditText getEtTitle() {
+            return etTitle;
+        }
+
+        public EditText getEtText() {
+            return etText;
+        }
+
+        public EditText getEtAmount() {
+            return etAmount;
+        }
+
+        public CustomTypeSwitch getSwitchType() {
+            return switchType;
+        }
+
+        public TextView getTvCategorySelector() {
+            return tvCategorySelector;
+        }
+
+        public TextView getTvPaymentMethod() {
+            return tvPaymentMethod;
+        }
+
+        public SwitchCompat getSwitchIsNotification() {
+            return switchIsNotification;
+        }
+
+        public Button getBtnSave() {
+            return btnSave;
+        }
+
+        public Button getBtnCancel() {
+            return btnCancel;
+        }
+
+        public Category getSelectedCategory() {
+            return selectedCategory;
+        }
+
+        public void setSelectedCategory(Category selectedCategory) {
+            this.selectedCategory = selectedCategory;
         }
     }
 }

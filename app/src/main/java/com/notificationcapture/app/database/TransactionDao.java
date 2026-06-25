@@ -9,6 +9,7 @@ import androidx.room.Update;
 import androidx.lifecycle.LiveData;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.models.SaldoCuenta;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Dao
@@ -51,10 +52,10 @@ public interface TransactionDao {
     List<String> getAvailableMonths();
 
     @Query("SELECT SUM(amount) FROM transactions WHERE timestamp BETWEEN :start AND :end AND type = :type AND status = 'APPROVED'")
-    Double getSumByMonthAndType(long start, long end, IngresoOEgreso type);
+    BigDecimal getSumByMonthAndType(long start, long end, IngresoOEgreso type);
 
     @Query("SELECT SUM(amount) FROM transactions WHERE timestamp BETWEEN :start AND :end AND status = 'APPROVED'")
-    Double getTotalByMonth(long start, long end);
+    BigDecimal getTotalByMonth(long start, long end);
 
     @Query("SELECT MIN(timestamp) FROM transactions")
     Long getOldestRecordTimestamp();
@@ -63,10 +64,10 @@ public interface TransactionDao {
     void deleteRecordsInRange(long start, long end);
 
     @Query("SELECT SUM(amount) FROM transactions WHERE creditCardId = :creditCardId AND timestamp BETWEEN :start AND :end AND type = 'EGRESO' AND status = 'APPROVED'")
-    Double getMontoResumen(String creditCardId, long start, long end);
+    BigDecimal getMontoResumen(String creditCardId, long start, long end);
 
     @Query("SELECT SUM(amount) FROM transactions WHERE creditCardId = :creditCardId AND timestamp BETWEEN :start AND :end AND type = 'EGRESO' AND status = 'APPROVED'")
-    LiveData<Double> getMontoResumenLiveData(String creditCardId, long start, long end);
+    LiveData<BigDecimal> getMontoResumenLiveData(String creditCardId, long start, long end);
 
     @Query("DELETE FROM transactions WHERE id = :id")
     void deleteById(String id);
@@ -92,14 +93,14 @@ public interface TransactionDao {
            "    WHEN t.paymentMethod = 'CREDITO' THEN t.creditCardId " +
            "    ELSE NULL " +
            "  END AS sourceId, " +
-           "  CAST(SUM(CASE WHEN t.type = 'INGRESO' THEN t.amount ELSE -t.amount END) " +
-           "    + COALESCE((SELECT SUM(cp.montoPagado) FROM credit_card_payments cp WHERE cp.creditCardId = t.creditCardId AND cp.timestampPago <= :maxTimestamp), 0) AS REAL) AS saldo " +
+           "  SUM(CASE WHEN t.type = 'INGRESO' THEN t.amount ELSE -t.amount END) " +
+           "    + COALESCE((SELECT SUM(cp.montoPagado) FROM credit_card_payments cp WHERE cp.creditCardId = t.creditCardId AND cp.timestampPago <= :maxTimestamp), 0) AS saldo " +
            "  FROM transactions t " +
            "  WHERE t.status = 'APPROVED' AND t.timestamp <= :maxTimestamp " +
            "  GROUP BY t.paymentMethod, " +
            "    CASE WHEN t.paymentMethod = 'DEBITO' THEN IFNULL(t.walletId, 'Desconocida') ELSE NULL END, " +
            "    CASE WHEN t.paymentMethod = 'CREDITO' THEN IFNULL(t.creditCardId, 'Desconocida') ELSE NULL END " +
-           ") WHERE ROUND(saldo, 2) != 0 " +
+           ") WHERE saldo != 0 " +
            "ORDER BY tipoCuenta, nombreCuenta")
     List<SaldoCuenta> getSaldosPorCuenta(long maxTimestamp);
 }

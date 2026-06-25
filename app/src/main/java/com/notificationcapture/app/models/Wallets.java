@@ -3,6 +3,8 @@ package com.notificationcapture.app.models;
 import com.notificationcapture.app.interfaces.SpinnerDisplayable;
 
 import java.io.Serializable;
+import java.util.Objects;
+import java.util.UUID;
 
 public class Wallets implements Serializable, SpinnerDisplayable {
 
@@ -23,7 +25,7 @@ public class Wallets implements Serializable, SpinnerDisplayable {
     }
 
     private String generateId() {
-        return System.currentTimeMillis() + "_" + (int) (Math.random() * 10000);
+        return UUID.randomUUID().toString();
     }
 
     public String getId() {
@@ -47,6 +49,9 @@ public class Wallets implements Serializable, SpinnerDisplayable {
     }
 
     public String getAppName() {
+        if (packageName == null) {
+            return "";
+        }
         if (name != null && !name.isEmpty()) {
             return name;
         }
@@ -73,5 +78,18 @@ public class Wallets implements Serializable, SpinnerDisplayable {
     @Override
     public Integer getDisplayColor() {
         return 0;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Wallets wallets = (Wallets) o;
+        return Objects.equals(id, wallets.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

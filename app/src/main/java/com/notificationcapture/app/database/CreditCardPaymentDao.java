@@ -6,6 +6,8 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.lifecycle.LiveData;
 
+import java.math.BigDecimal;
+
 @Dao
 public interface CreditCardPaymentDao {
 
@@ -15,20 +17,20 @@ public interface CreditCardPaymentDao {
     @Query("SELECT COALESCE(SUM(montoPagado), 0) FROM credit_card_payments " +
             "WHERE creditCardId = :creditCardId " +
             "AND startTimestamp >= :start - 1000 AND startTimestamp <= :start + 1000")
-    double getTotalPagadoEnPeriodo(String creditCardId, long start);
+    BigDecimal getTotalPagadoEnPeriodo(String creditCardId, long start);
 
     @Query("SELECT COALESCE(SUM(montoPagado), 0) FROM credit_card_payments " +
             "WHERE creditCardId = :creditCardId " +
             "AND startTimestamp < :start")
-    double getPagosAnteriores(String creditCardId, long start);
+    BigDecimal getPagosAnteriores(String creditCardId, long start);
 
     @Query("SELECT COALESCE(SUM(montoPagado), 0) FROM credit_card_payments " +
             "WHERE creditCardId = :creditCardId " +
             "AND startTimestamp >= :start - 1000 AND startTimestamp <= :start + 1000")
-    LiveData<Double> getTotalPagadoEnPeriodoLiveData(String creditCardId, long start);
+    LiveData<BigDecimal> getTotalPagadoEnPeriodoLiveData(String creditCardId, long start);
 
     @Query("SELECT COALESCE(SUM(montoPagado), 0) FROM credit_card_payments " +
             "WHERE creditCardId = :creditCardId " +
             "AND startTimestamp < :start")
-    LiveData<Double> getPagosAnterioresLiveData(String creditCardId, long start);
+    LiveData<BigDecimal> getPagosAnterioresLiveData(String creditCardId, long start);
 }

@@ -2,6 +2,7 @@ package com.notificationcapture.app.utils;
 
 import com.notificationcapture.app.enums.IngresoOEgreso;
 
+import java.math.BigDecimal;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,9 +40,9 @@ public class StringParser {
      * Extrae el monto del texto de la notificación
      * Busca primero en el título y luego en el texto
      */
-    public static Double extractAmount(String title, String text) {
+    public static BigDecimal extractAmount(String title, String text) {
         // Intentar extraer del título primero
-        Double amount = extractAmountFromString(title);
+        BigDecimal amount = extractAmountFromString(title);
 
         // Si no se encontró en el título, buscar en el texto
         if (amount == null) {
@@ -54,7 +55,7 @@ public class StringParser {
     /**
      * Extrae el monto de una cadena de texto
      */
-    public static Double extractAmountFromString(String input) {
+    public static BigDecimal extractAmountFromString(String input) {
         if (input == null || input.isEmpty()) {
             return null;
         }
@@ -80,6 +81,9 @@ public class StringParser {
 
             if (matcher.find()) {
                 String amountStr = matcher.group(1);
+                if (amountStr == null) {
+                    continue;
+                }
                 try {
                     if (amountStr.contains(".") && amountStr.contains(",")) {
                         amountStr = amountStr.replace(".", "").replace(",", ".");
@@ -92,7 +96,7 @@ public class StringParser {
                         amountStr = amountStr.replace(".", "");
                     }
 
-                    return Double.parseDouble(amountStr);
+                    return new BigDecimal(amountStr);
                 } catch (NumberFormatException e) {
                     // Continuar
                 }

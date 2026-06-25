@@ -19,7 +19,7 @@ public class WalletRepository implements GsonAccess {
 
     private SharedPreferences prefs;
     private Gson gson;
-    private List<Wallets> cachedWallets = null; // Memory Cache
+    private List<Wallets> cachedWallets = null; // Memory cache
 
     public WalletRepository(Context context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -43,22 +43,22 @@ public class WalletRepository implements GsonAccess {
                     throw new ResourceNotFoundException("raw/wallets.json");
                 }
 
-                java.io.InputStream is = context.getResources().openRawResource(resId);
-                java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(is));
-                StringBuilder jsonBuilder = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    jsonBuilder.append(line);
-                }
-                is.close();
+                try (java.io.InputStream is = context.getResources().openRawResource(resId);
+                     java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(is))) {
+                    StringBuilder jsonBuilder = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        jsonBuilder.append(line);
+                    }
 
-                Type type = new TypeToken<List<Wallets>>() {
-                }.getType();
-                List<Wallets> defaultWallets = gson.fromJson(jsonBuilder.toString(), type);
+                    Type type = new TypeToken<List<Wallets>>() {
+                    }.getType();
+                    List<Wallets> defaultWallets = gson.fromJson(jsonBuilder.toString(), type);
 
-                if (defaultWallets != null && !defaultWallets.isEmpty()) {
-                    saveWallets(defaultWallets);
-                    AppLogger.d("WalletRepository", "Loaded " + defaultWallets.size() + " default wallets.");
+                    if (defaultWallets != null && !defaultWallets.isEmpty()) {
+                        saveWallets(defaultWallets);
+                        AppLogger.d("WalletRepository", "Loaded " + defaultWallets.size() + " default wallets.");
+                    }
                 }
             } catch (Exception e) {
                 AppLogger.e("WalletRepository", "Error loading default wallets", e);
@@ -68,7 +68,7 @@ public class WalletRepository implements GsonAccess {
 
     public List<Wallets> getAllWallets() {
         if (cachedWallets != null) {
-            return new ArrayList<>(cachedWallets); // Devuelve copia rápida desde RAM O(1)
+            return new ArrayList<>(cachedWallets); // Quick copy from RAM O(1)
         }
         
         String json = prefs.getString(KEY_WALLETS, null);
@@ -141,7 +141,7 @@ public class WalletRepository implements GsonAccess {
     }
 
     private void saveWallets(List<Wallets> wallets) {
-        cachedWallets = new ArrayList<>(wallets); // Sincroniza caché en memoria
+        cachedWallets = new ArrayList<>(wallets); // Sync memory cache
         prefs.edit().putString(KEY_WALLETS, gson.toJson(wallets)).apply();
     }
 
@@ -149,14 +149,14 @@ public class WalletRepository implements GsonAccess {
         if (packageName == null) return null;
         
         List<Wallets> walletsList = getAllWallets();
-        // 1. Check if user already has an exact match
+// 1. Check if user already has an exact match
         for (Wallets wallet : walletsList) {
             String pName = wallet.getPackageName();
             if (pName != null && pName.equals(packageName)) {
                 return wallet;
             }
         }
-        
+
         // 2. Check if it matches any global wallet (by exact or substring)
         com.notificationcapture.app.utils.ConfigManager config = com.notificationcapture.app.utils.ConfigManager.getInstance();
         for (com.notificationcapture.app.models.GlobalWallet gw : config.getGlobalWallets()) {
@@ -165,7 +165,7 @@ public class WalletRepository implements GsonAccess {
                 matches = true;
             } else {
                 for (String pkg : gw.getPackageNames()) {
-                    // Prevenir matches demasiado genéricos con substrings muy cortos o vacíos
+                    // Prevent overly generic matches with short or empty substrings
                     if (pkg.length() > 2 && packageName.toLowerCase().contains(pkg.toLowerCase())) {
                         matches = true;
                         break;
@@ -174,13 +174,13 @@ public class WalletRepository implements GsonAccess {
             }
 
             if (matches) {
-                // Verificar si el usuario ya la tiene con su nombre primario
+                // Check if user already has it with primary name
                 for (Wallets wallet : walletsList) {
                     if (wallet.getPackageName().equals(gw.getPrimaryPackageName())) {
                         return wallet;
                     }
                 }
-                // Si no, autogenerar la wallet oficial
+                // If not, auto-generate the official wallet
                 Wallets newGlobalWallet = gw.toUserWallet();
                 walletsList.add(newGlobalWallet);
                 saveWallets(walletsList);
@@ -188,8 +188,8 @@ public class WalletRepository implements GsonAccess {
             }
         }
 
-        // 3. Unknown app, NO CREAR NUEVA BILLETERA. 
-        // Retornar null para que asigne walletId="1" y ponga "Desconocido".
+        // 3. Unknown app, DO NOT CREATE NEW WALLET.
+        // Return null to assign walletId="1" and put "Desconocido".
         return null;
     }
 

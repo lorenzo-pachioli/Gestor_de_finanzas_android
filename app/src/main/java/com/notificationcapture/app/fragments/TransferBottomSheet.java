@@ -23,6 +23,7 @@ import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.WalletRepository;
 import com.notificationcapture.app.utils.MoneyTextWatcher;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -207,10 +208,10 @@ public class TransferBottomSheet extends BottomSheetDialogFragment {
             return;
         }
 
-        double monto;
+        BigDecimal monto;
         try {
-            monto = Double.parseDouble(amountStr.replace(".", "").replace(",", "."));
-            if (monto <= 0) {
+            monto = new BigDecimal(amountStr.replace(".", "").replace(",", "."));
+            if (monto.compareTo(BigDecimal.ZERO) <= 0) {
                 Toast.makeText(requireContext(), R.string.monto_positivo, Toast.LENGTH_SHORT).show();
                 etAmount.requestFocus();
                 return;

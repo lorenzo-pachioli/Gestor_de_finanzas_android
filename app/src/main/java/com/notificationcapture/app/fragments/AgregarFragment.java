@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
 import java.text.SimpleDateFormat;
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -194,11 +195,11 @@ public class AgregarFragment extends Fragment {
             return;
         }
 
-        double amountValue;
+        BigDecimal amountValue;
         try {
             String cleanAmount = amountStr.replace(".", "").replace(",", ".");
-            amountValue = Double.parseDouble(cleanAmount);
-            if (amountValue <= 0) {
+            amountValue = new BigDecimal(cleanAmount);
+            if (amountValue.compareTo(BigDecimal.ZERO) <= 0) {
                 Toast.makeText(requireContext(), "El monto debe ser mayor a 0", Toast.LENGTH_SHORT).show();
                 etAmount.requestFocus();
                 return;
@@ -264,7 +265,7 @@ public class AgregarFragment extends Fragment {
             this.selectedInstallments = installments;
             String displayText;
             if (method == PaymentMethod.EFECTIVO) {
-                displayText = "Efectivo";
+                displayText = PaymentMethod.DISPLAY_CASH;
             } else if (method == PaymentMethod.DEBITO) {
                 Wallets w = walletRepository.getWalletById(selectedMethodDetailId);
                 displayText = "Débito - " + (w != null ? w.getAppName() : "Wallet");

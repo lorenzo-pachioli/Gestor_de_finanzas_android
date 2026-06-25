@@ -16,6 +16,6 @@ public class Cash extends Transaction {
 
     @Override
     public String getSourceName() {
-        return "Efectivo";
+        return PaymentMethod.DISPLAY_CASH;
     }
 }

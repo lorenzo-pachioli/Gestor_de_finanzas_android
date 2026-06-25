@@ -24,6 +24,7 @@ import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.repositories.WalletRepository;
 import com.notificationcapture.app.utils.MoneyTextWatcher;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -104,10 +105,10 @@ public class TransferenciaFragment extends Fragment {
             return;
         }
 
-        double monto;
+        BigDecimal monto;
         try {
-            monto = Double.parseDouble(amountStr.replace(".", "").replace(",", "."));
-            if (monto <= 0) {
+            monto = new BigDecimal(amountStr.replace(".", "").replace(",", "."));
+            if (monto.compareTo(BigDecimal.ZERO) <= 0) {
                 Toast.makeText(requireContext(), "El monto debe ser mayor a 0", Toast.LENGTH_SHORT).show();
                 return;
             }

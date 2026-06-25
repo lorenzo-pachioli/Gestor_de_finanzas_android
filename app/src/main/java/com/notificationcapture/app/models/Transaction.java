@@ -7,6 +7,9 @@ import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.enums.PaymentMethod;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.UUID;
+import java.util.Objects;
 
 public abstract class Transaction implements Serializable {
     private String id;
@@ -14,7 +17,7 @@ public abstract class Transaction implements Serializable {
     private String title;
     private String text;
     private long timestamp;
-    private Double amount;
+    private BigDecimal amount;
     private IngresoOEgreso type;
     private String categoryId;
     private Category category; // Mantener para migración de datos viejos
@@ -50,7 +53,7 @@ public abstract class Transaction implements Serializable {
     }
 
     private String generateId() {
-        return System.currentTimeMillis() + "_" + (int) (Math.random() * 10000);
+        return UUID.randomUUID().toString();
     }
 
     public String getId() {
@@ -93,11 +96,11 @@ public abstract class Transaction implements Serializable {
         this.timestamp = timestamp;
     }
 
-    public Double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
@@ -143,12 +146,29 @@ public abstract class Transaction implements Serializable {
             return null;
         }
 
+        return formatAmount(amount);
+    }
+
+    private String formatAmount(java.math.BigDecimal amount) {
         return "$" + com.notificationcapture.app.utils.MoneyTextWatcher.format(amount);
     }
 
     public boolean hasAmount() {
-        return amount != null && amount > 0;
+        return amount != null && amount.compareTo(BigDecimal.ZERO) > 0;
     }
 
     public abstract String getSourceName();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Transaction that = (Transaction) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

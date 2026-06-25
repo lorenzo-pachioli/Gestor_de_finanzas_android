@@ -4,6 +4,8 @@ import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
+import java.math.BigDecimal;
+
 @Entity(tableName = "credit_card_payments",
         indices = {@Index(value = {"creditCardId"}), @Index(value = {"startTimestamp"})})
 public class CreditCardPaymentEntity {
@@ -14,14 +16,14 @@ public class CreditCardPaymentEntity {
     private String creditCardId;
     private long startTimestamp;
     private long endTimestamp;
-    private double montoTotalResumen;
-    private double montoPagado;
+    private BigDecimal montoTotalResumen;
+    private BigDecimal montoPagado;
     private String walletIdPago;
     private long timestampPago;
 
     // Constuctor
-    public CreditCardPaymentEntity(String creditCardId, long startTimestamp, long endTimestamp, 
-                                   double montoTotalResumen, double montoPagado, 
+    public CreditCardPaymentEntity(String creditCardId, long startTimestamp, long endTimestamp,
+                                   BigDecimal montoTotalResumen, BigDecimal montoPagado,
                                    String walletIdPago, long timestampPago) {
         this.creditCardId = creditCardId;
         this.startTimestamp = startTimestamp;
@@ -45,11 +47,11 @@ public class CreditCardPaymentEntity {
     public long getEndTimestamp() { return endTimestamp; }
     public void setEndTimestamp(long endTimestamp) { this.endTimestamp = endTimestamp; }
 
-    public double getMontoTotalResumen() { return montoTotalResumen; }
-    public void setMontoTotalResumen(double montoTotalResumen) { this.montoTotalResumen = montoTotalResumen; }
+    public BigDecimal getMontoTotalResumen() { return montoTotalResumen; }
+    public void setMontoTotalResumen(BigDecimal montoTotalResumen) { this.montoTotalResumen = montoTotalResumen; }
 
-    public double getMontoPagado() { return montoPagado; }
-    public void setMontoPagado(double montoPagado) { this.montoPagado = montoPagado; }
+    public BigDecimal getMontoPagado() { return montoPagado; }
+    public void setMontoPagado(BigDecimal montoPagado) { this.montoPagado = montoPagado; }
 
     public String getWalletIdPago() { return walletIdPago; }
     public void setWalletIdPago(String walletIdPago) { this.walletIdPago = walletIdPago; }

@@ -10,6 +10,8 @@ import com.notificationcapture.app.R;
 import com.notificationcapture.app.models.SaldoCuenta;
 import com.notificationcapture.app.utils.MoneyTextWatcher;
 import java.util.List;
+import java.math.BigDecimal;
+
 
 public class SaldoCuentaAdapter extends RecyclerView.Adapter<SaldoCuentaAdapter.ViewHolder> {
 
@@ -39,17 +41,16 @@ public class SaldoCuentaAdapter extends RecyclerView.Adapter<SaldoCuentaAdapter.
         holder.tvNombreCuenta.setText(saldo.getNombreCuenta());
         holder.tvTipoCuenta.setText(saldo.getTipoCuenta());
         
-        holder.tvSaldo.setText("$" + MoneyTextWatcher.format(Math.abs(saldo.getSaldo())));
+        holder.tvSaldo.setText("$" + MoneyTextWatcher.format(saldo.getSaldo().abs()));
 
-        if (saldo.getSaldo() >= 0) {
+        if (saldo.getSaldo().compareTo(BigDecimal.ZERO) >= 0) {
             holder.tvSaldo.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.green));
         } else {
             holder.tvSaldo.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.red));
-            holder.tvSaldo.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.red));
-            holder.tvSaldo.setText("-$" + MoneyTextWatcher.format(Math.abs(saldo.getSaldo())));
+            holder.tvSaldo.setText("-$" + MoneyTextWatcher.format(saldo.getSaldo().abs()));
         }
 
-        if ("CREDITO".equalsIgnoreCase(saldo.getTipoCuenta()) && saldo.getSaldo() < 0) {
+        if ("CREDITO".equalsIgnoreCase(saldo.getTipoCuenta()) && saldo.getSaldo().compareTo(BigDecimal.ZERO) < 0) {
             holder.btnPagar.setVisibility(View.VISIBLE);
             holder.btnPagar.setOnClickListener(v -> {
                 if (listener != null) {

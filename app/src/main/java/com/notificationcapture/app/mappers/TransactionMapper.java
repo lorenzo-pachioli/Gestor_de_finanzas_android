@@ -57,6 +57,9 @@ public class TransactionMapper {
      */
     public static Transaction fromEntity(TransactionEntity e) {
         if (e == null) return null;
+        if (e.getPaymentMethod() == null) {
+            throw new IllegalArgumentException("paymentMethod cannot be null");
+        }
 
         Transaction t;
         switch (e.getPaymentMethod()) {

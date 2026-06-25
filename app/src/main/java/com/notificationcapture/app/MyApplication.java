@@ -3,18 +3,33 @@ package com.notificationcapture.app;
 import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
+import android.os.Process;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class MyApplication extends Application implements Application.ActivityLifecycleCallbacks {
 
-    private static Activity currentActivity;
+    private static volatile Activity currentActivity;
 
     @Override
     public void onCreate() {
         super.onCreate();
         com.notificationcapture.app.utils.ConfigManager.init(this);
         registerActivityLifecycleCallbacks(this);
+    }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+        if (com.notificationcapture.app.repositories.RepositoryProvider.isInitialized()) {
+            try {
+                com.notificationcapture.app.repositories.RepositoryProvider.getInstance().getTransactionRepository().shutdown();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        Process.killProcess(Process.myPid());
+        System.exit(1);
     }
 
     public static Activity getCurrentActivity() {

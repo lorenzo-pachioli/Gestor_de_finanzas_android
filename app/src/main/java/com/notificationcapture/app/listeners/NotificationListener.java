@@ -18,6 +18,7 @@ import com.notificationcapture.app.utils.AppLogger;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.math.BigDecimal;
 
 public class NotificationListener extends NotificationListenerService {
 
@@ -152,8 +153,8 @@ public class NotificationListener extends NotificationListenerService {
         }
 
         // 3. Se debe reconocer el monto de la transferencia en la notificación
-        Double amount = com.notificationcapture.app.utils.StringParser.extractAmount(title, text);
-        if (amount == null || amount <= 0) {
+        BigDecimal amount = com.notificationcapture.app.utils.StringParser.extractAmount(title, text);
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             // Aquí sí lanzamos excepción porque ES de una wallet y TIENE keywords, pero fallamos al parsear el monto
             throw new AmountNotFoundException(fullText);
         }
@@ -164,5 +165,11 @@ public class NotificationListener extends NotificationListenerService {
     @Override
     public void onNotificationRemoved(StatusBarNotification sbn) {
         // Opcional: manejar cuando se elimina una notificación
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        ioExecutor.shutdown();
     }
 }

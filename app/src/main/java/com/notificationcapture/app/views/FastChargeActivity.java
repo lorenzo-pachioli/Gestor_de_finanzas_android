@@ -17,6 +17,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButtonToggleGroup;
+import java.math.BigDecimal;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.models.Cash;
 import com.notificationcapture.app.models.Credit;
@@ -113,9 +114,9 @@ public class FastChargeActivity extends AppCompatActivity {
             return;
         }
 
-        double amount;
+        BigDecimal amount;
         try {
-            amount = Double.parseDouble(amountStr);
+            amount = new BigDecimal(amountStr);
         } catch (NumberFormatException e) {
             Toast.makeText(this, "Monto inválido", Toast.LENGTH_SHORT).show();
             return;

@@ -21,12 +21,14 @@ import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
+import com.notificationcapture.app.utils.MoneyTextWatcher;
 import com.notificationcapture.app.viewmodels.CategoriasViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.models.Category;
 
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
@@ -225,7 +227,7 @@ public class CategoriasFragment extends Fragment {
     }
 
     private void loadDataForPeriod(int month, int year) {
-        Map<String, Double> categoryTotals = new HashMap<>();
+        Map<String, BigDecimal> categoryTotals = new HashMap<>();
 
         for (Transaction item : currentTransactions) {
             // Filter by date
@@ -241,9 +243,9 @@ public class CategoriasFragment extends Fragment {
                         category = cat.getDisplayName();
                     }
 
-                    Double amount = item.getAmount();
-                    Double current = categoryTotals.get(category);
-                    categoryTotals.put(category, (current != null ? current : 0.0) + amount);
+                    BigDecimal amount = item.getAmount();
+                    BigDecimal current = categoryTotals.get(category);
+                    categoryTotals.put(category, (current != null ? current : BigDecimal.ZERO).add(amount));
                 }
             }
         }
@@ -258,7 +260,7 @@ public class CategoriasFragment extends Fragment {
         summaryAdapter.updateData(categoryTotals, colorMap);
     }
 
-    private void onCategoryClick(String category, Double totalAmount) {
+    private void onCategoryClick(String category, BigDecimal totalAmount) {
         // Filter transactions for this category and current period
         int month = spinnerMonth.getSelectedItemPosition();
         String selectedYearStr = (String) spinnerYear.getSelectedItem();
@@ -295,7 +297,7 @@ public class CategoriasFragment extends Fragment {
             colorMap.put(c.getName(), c.getDisplayColor());
         }
 
-        String formattedAmount = "$" + com.notificationcapture.app.utils.MoneyTextWatcher.format(totalAmount);
+        String formattedAmount = "$" + MoneyTextWatcher.format(totalAmount);
         String title = category + " - Total: " + formattedAmount;
 
         android.widget.Toast.makeText(getContext(), "Abriendo detalle: " + category, android.widget.Toast.LENGTH_SHORT)

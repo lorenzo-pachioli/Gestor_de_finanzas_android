@@ -7,6 +7,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,13 +17,13 @@ import com.notificationcapture.app.interfaces.OnCategoryClickListener;
 
 public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummaryAdapter.ViewHolder> {
 
-    private List<Map.Entry<String, Double>> categoryList;
+    private List<Map.Entry<String, BigDecimal>> categoryList;
     private Map<String, Integer> categoryColors;
     private OnCategoryClickListener listener;
 
-    private int totalPeriodAmount;
+    private BigDecimal totalPeriodAmount;
 
-    public CategorySummaryAdapter(Map<String, Double> categoryData, Map<String, Integer> categoryColors,
+    public CategorySummaryAdapter(Map<String, BigDecimal> categoryData, Map<String, Integer> categoryColors,
             OnCategoryClickListener listener) {
         this.categoryList = new ArrayList<>(categoryData.entrySet());
         this.categoryColors = categoryColors;
@@ -33,9 +34,9 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
     }
 
     private void calculateTotal() {
-        totalPeriodAmount = 0;
-        for (Map.Entry<String, Double> entry : categoryList) {
-            totalPeriodAmount += entry.getValue();
+        totalPeriodAmount = BigDecimal.ZERO;
+        for (Map.Entry<String, BigDecimal> entry : categoryList) {
+            totalPeriodAmount = totalPeriodAmount.add(entry.getValue());
         }
     }
 
@@ -49,9 +50,9 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Map.Entry<String, Double> entry = categoryList.get(position);
+        Map.Entry<String, BigDecimal> entry = categoryList.get(position);
         String category = entry.getKey();
-        Double total = entry.getValue();
+        BigDecimal total = entry.getValue();
 
         holder.tvCategoryName.setText(category);
 
@@ -59,9 +60,9 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
         holder.tvTotalAmount.setText(formattedAmount);
 
         // Percentage Calculation
-        if (totalPeriodAmount > 0) {
-            int percentage = (int) Math.round((total / totalPeriodAmount) * 100);
-            holder.tvCategoryPercentage.setText(percentage + "%");
+        if (totalPeriodAmount.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal percentage = total.multiply(BigDecimal.valueOf(100)).divide(totalPeriodAmount, 0, BigDecimal.ROUND_HALF_UP);
+            holder.tvCategoryPercentage.setText(percentage.intValue() + "%");
             holder.tvCategoryPercentage.setVisibility(View.VISIBLE);
         } else {
             holder.tvCategoryPercentage.setVisibility(View.GONE);
@@ -85,7 +86,7 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
         return categoryList.size();
     }
 
-    public void updateData(Map<String, Double> newCategoryData, Map<String, Integer> newColors) {
+    public void updateData(Map<String, BigDecimal> newCategoryData, Map<String, Integer> newColors) {
         this.categoryList = new ArrayList<>(newCategoryData.entrySet());
         if (newColors != null) {
             this.categoryColors = newColors;

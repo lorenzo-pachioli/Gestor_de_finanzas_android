@@ -1,12 +1,18 @@
 package com.notificationcapture.app.database;
 
 import android.content.Context;
+
+import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.TypeConverters;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
-@Database(entities = {TransactionEntity.class, CreditCardPaymentEntity.class}, version = 4, exportSchema = true)
-@androidx.room.TypeConverters({Converters.class})
+
+@Database(entities = {TransactionEntity.class, CreditCardPaymentEntity.class}, version = 5, exportSchema = true)
+@TypeConverters({Converters.class})
 public abstract class AppDatabase extends RoomDatabase {
 
     private static volatile AppDatabase INSTANCE;
@@ -19,7 +25,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class, "notification_database")
-                            .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                             .build();
                 }
             }
@@ -27,9 +33,9 @@ public abstract class AppDatabase extends RoomDatabase {
         return INSTANCE;
     }
 
-    static final androidx.room.migration.Migration MIGRATION_2_3 = new androidx.room.migration.Migration(2, 3) {
+    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
         @Override
-        public void migrate(@androidx.annotation.NonNull androidx.sqlite.db.SupportSQLiteDatabase database) {
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
             // 1. Crear la nueva tabla
             database.execSQL(
                     "CREATE TABLE IF NOT EXISTS credit_card_arrastres (" +
@@ -53,9 +59,9 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
-    static final androidx.room.migration.Migration MIGRATION_3_4 = new androidx.room.migration.Migration(3, 4) {
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
         @Override
-        public void migrate(@androidx.annotation.NonNull androidx.sqlite.db.SupportSQLiteDatabase database) {
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
             // 1. Eliminar la tabla de arrastres ya no necesaria
             database.execSQL("DROP TABLE IF EXISTS credit_card_arrastres");
             
@@ -63,6 +69,71 @@ public abstract class AppDatabase extends RoomDatabase {
             database.execSQL("CREATE INDEX IF NOT EXISTS index_transactions_creditCardId ON transactions(creditCardId)");
             database.execSQL("CREATE INDEX IF NOT EXISTS index_credit_card_payments_creditCardId ON credit_card_payments(creditCardId)");
             database.execSQL("CREATE INDEX IF NOT EXISTS index_credit_card_payments_startTimestamp ON credit_card_payments(startTimestamp)");
+        }
+    };
+
+    static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            // Migrar credit_card_payments: columnas de monto a TEXT
+            database.execSQL("ALTER TABLE credit_card_payments RENAME TO credit_card_payments_old");
+            database.execSQL(
+                    "CREATE TABLE credit_card_payments (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                            "creditCardId TEXT, " +
+                            "startTimestamp INTEGER NOT NULL, " +
+                            "endTimestamp INTEGER NOT NULL, " +
+                            "montoTotalResumen TEXT NOT NULL, " +
+                            "montoPagado TEXT NOT NULL, " +
+                            "walletIdPago TEXT, " +
+                            "timestampPago INTEGER NOT NULL)"
+            );
+            database.execSQL(
+                    "INSERT INTO credit_card_payments " +
+                            "SELECT id, creditCardId, startTimestamp, endTimestamp, " +
+                            "CAST(montoTotalResumen AS TEXT), CAST(montoPagado AS TEXT), " +
+                            "walletIdPago, timestampPago FROM credit_card_payments_old"
+            );
+            database.execSQL("DROP TABLE credit_card_payments_old");
+
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_credit_card_payments_creditCardId ON credit_card_payments(creditCardId)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_credit_card_payments_startTimestamp ON credit_card_payments(startTimestamp)");
+
+            // Migrar transactions: columnas amount a TEXT
+            database.execSQL("ALTER TABLE transactions RENAME TO transactions_old");
+            database.execSQL(
+                    "CREATE TABLE transactions (" +
+                            "id TEXT PRIMARY KEY NOT NULL, " +
+                            "paymentMethod TEXT, " +
+                            "title TEXT, " +
+                            "text TEXT, " +
+                            "timestamp INTEGER NOT NULL, " +
+                            "amount TEXT NOT NULL, " +
+                            "type TEXT, " +
+                            "categoryId TEXT, " +
+                            "isNotification INTEGER, " +
+                            "status TEXT, " +
+                            "expanded INTEGER, " +
+                            "creditCardId TEXT, " +
+                            "installments INTEGER, " +
+                            "currentInstallment INTEGER, " +
+                            "installmentGroupId TEXT, " +
+                            "walletId TEXT, " +
+                            "rawNotification TEXT" +
+                            ")"
+            );
+            database.execSQL(
+                    "INSERT INTO transactions " +
+                            "SELECT id, paymentMethod, title, text, timestamp, " +
+                            "CAST(amount AS TEXT), type, categoryId, isNotification, status, " +
+                            "expanded, creditCardId, installments, currentInstallment, installmentGroupId, " +
+                            "walletId, rawNotification FROM transactions_old"
+            );
+            database.execSQL("DROP TABLE transactions_old");
+
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_transactions_timestamp ON transactions(timestamp)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_transactions_status ON transactions(status)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_transactions_creditCardId ON transactions(creditCardId)");
         }
     };
     

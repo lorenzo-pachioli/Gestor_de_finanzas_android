@@ -1,6 +1,6 @@
 package com.notificationcapture.app.fragments;
 
-import android.content.Intent;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -30,6 +30,7 @@ import com.notificationcapture.app.repositories.WalletRepository;
 import com.notificationcapture.app.utils.AppLogger;
 import com.notificationcapture.app.viewmodels.ResumenDeudaViewModel;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -112,38 +113,39 @@ public class PagoTarjetaActivity extends AppCompatActivity {
 
         tvGastosDelMes.setText(formatCurrency(resumen.getGastosDelMes()));
         
-        double arrastre = resumen.getArrastreAnterior();
+        BigDecimal arrastre = resumen.getArrastreAnterior();
 //        Toast.makeText(PagoTarjetaActivity.this, "Arrastre " + arrastre, Toast.LENGTH_SHORT).show();
 //        tvArrastre.setText(formatCurrency(arrastre));
 //        layoutArrastre.setVisibility(View.VISIBLE);
 //
-//        double pagos = resumen.getPagosDelMes();
+//        BigDecimal pagos = resumen.getPagosDelMes();
 //        Toast.makeText(PagoTarjetaActivity.this, "Pagos " + pagos, Toast.LENGTH_SHORT).show();
 //
 //        tvPagosRegistrados.setText("-" + formatCurrency(pagos));
 //        layoutPagosRegistrados.setVisibility(View.VISIBLE);
 
-        if (Math.abs(arrastre) > 0.001) {
+        if (arrastre.compareTo(new BigDecimal("0.001")) > 0) {
             tvArrastre.setText(formatCurrency(arrastre));
             layoutArrastre.setVisibility(View.VISIBLE);
         } else {
             layoutArrastre.setVisibility(View.GONE);
         }
 
-        if (resumen.getPagosDelMes() > 0) {
+        if (resumen.getPagosDelMes().compareTo(BigDecimal.ZERO) > 0) {
             tvPagosRegistrados.setText("-" + formatCurrency(resumen.getPagosDelMes()));
             layoutPagosRegistrados.setVisibility(View.VISIBLE);
         } else {
             layoutPagosRegistrados.setVisibility(View.GONE);
         }
 
-        double total = resumen.getDeudaTotal();
+        BigDecimal total = resumen.getDeudaTotal();
         tvTotalAPagar.setText(formatCurrency(total));
-        etMontoPago.setHint(String.format("%.2f", total).replace(",", "."));
-        btnConfirmar.setEnabled(total > 0.01);
+        etMontoPago.setHint(String.format(java.util.Locale.US, "%.2f", total));
+        btnConfirmar.setEnabled(total.compareTo(new BigDecimal("0.01")) > 0);
     }
 
-    private String formatCurrency(double value) {
+    @SuppressLint("DefaultLocale")
+    private String formatCurrency(BigDecimal value) {
         return String.format("$%.2f", value);
     }
 
@@ -155,13 +157,14 @@ public class PagoTarjetaActivity extends AppCompatActivity {
         }
 
         try {
-            double monto = Double.parseDouble(montoStr.replace(",", "."));
-            if (monto <= 0) {
+            BigDecimal monto = new BigDecimal(montoStr.replace(",", "."));
+            if (monto.compareTo(BigDecimal.ZERO) <= 0) {
                 Toast.makeText(this, getString(R.string.monto_positivo), Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            if (monto > resumen.getDeudaTotal() + 0.05) {
+            BigDecimal deudaTotal = resumen.getDeudaTotal();
+            if (monto.compareTo(deudaTotal.add(new BigDecimal("0.05"))) > 0) {
                 Toast.makeText(this, getString(R.string.monto_excede_deuda), Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -177,7 +180,7 @@ public class PagoTarjetaActivity extends AppCompatActivity {
         }
     }
 
-    private void executePayment(double montoAPagar) {
+    private void executePayment(BigDecimal montoAPagar) {
         int selectedIndex = spinnerCuentas.getSelectedItemPosition();
         Wallets selectedWallet = availableWallets.get(selectedIndex);
         PaymentMethod paymentMethod = "EFECTIVO".equals(selectedWallet.getId())
@@ -188,7 +191,7 @@ public class PagoTarjetaActivity extends AppCompatActivity {
         CreditCardPaymentEntity pago = new CreditCardPaymentEntity(
                 resumen.getCreditCardId(),
                 resumen.getMesStart(), resumen.getMesEnd(),
-                resumen.getGastosDelMes() + resumen.getArrastreAnterior(),
+                resumen.getGastosDelMes().add(resumen.getArrastreAnterior()),
                 montoAPagar, walletId, now
         );
 

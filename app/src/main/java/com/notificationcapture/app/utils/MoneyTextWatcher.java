@@ -7,7 +7,6 @@ import android.widget.EditText;
 import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
 public class MoneyTextWatcher implements TextWatcher {
@@ -121,7 +120,7 @@ public class MoneyTextWatcher implements TextWatcher {
         editText.addTextChangedListener(this);
     }
 
-    public static String format(Double amount) {
+    public static String format(BigDecimal amount) {
         if (amount == null)
             return "0,00";
         DecimalFormat formatter = (DecimalFormat) DecimalFormat.getInstance(Locale.GERMANY);

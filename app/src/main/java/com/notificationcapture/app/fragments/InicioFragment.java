@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -20,6 +21,7 @@ import com.notificationcapture.app.adapters.TransactionAdapter;
 import com.notificationcapture.app.enums.PaymentMethod;
 import com.notificationcapture.app.models.SaldoCuenta;
 import com.notificationcapture.app.models.Transaction;
+import com.notificationcapture.app.utils.MoneyTextWatcher;
 import com.notificationcapture.app.viewmodels.MainViewModel;
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.enums.IngresoOEgreso;
@@ -98,20 +100,20 @@ public class InicioFragment extends Fragment {
         viewModel.getSaldosPorCuenta().observe(getViewLifecycleOwner(), saldos -> {
             if (saldos == null || tvTotalDisponible == null) return;
 
-            double totalLiquid = 0;
-            double totalDeuda = 0;
+            BigDecimal totalLiquid = BigDecimal.ZERO;
+            BigDecimal totalDeuda = BigDecimal.ZERO;
             for (SaldoCuenta sc : saldos) {
                 if ("CREDITO".equals(sc.getTipoCuenta())) {
-                    totalDeuda += sc.getSaldo();
+                    totalDeuda = totalDeuda.add(sc.getSaldo());
                 } else {
-                    totalLiquid += sc.getSaldo();
+                    totalLiquid = totalLiquid.add(sc.getSaldo());
                 }
             }
 
-            double available = totalLiquid - totalDeuda;
+            BigDecimal available = totalLiquid.subtract(totalDeuda);
             tvTotalDisponible.setText(formatAmount(available));
             tvTotalDisponible.setTextColor(
-                    getResources().getColor(available >= 0 ? R.color.green : R.color.red));
+                    getResources().getColor(available.compareTo(BigDecimal.ZERO) >= 0 ? R.color.green : R.color.red));
         });
     }
 
@@ -144,27 +146,30 @@ public class InicioFragment extends Fragment {
     }
 
     private void updateFinancialSummary(List<Transaction> transactions) {
-        double totalIngresos = 0;
-        double totalEgresos = 0;
+        BigDecimal totalIngresos = BigDecimal.ZERO;
+        BigDecimal totalEgresos = BigDecimal.ZERO;
 
         for (Transaction item : transactions) {
             if (item.hasAmount() && item.getPaymentMethod() != PaymentMethod.CREDITO) {
-                if (item.getType() == IngresoOEgreso.INGRESO) {
-                    totalIngresos += item.getAmount();
-                } else {
-                    totalEgresos += item.getAmount();
+                BigDecimal amount = item.getAmount();
+                if (amount != null) {
+                    if (item.getType() == IngresoOEgreso.INGRESO) {
+                        totalIngresos = totalIngresos.add(amount);
+                    } else {
+                        totalEgresos = totalEgresos.add(amount);
+                    }
                 }
             }
         }
 
-        double balance = totalIngresos - totalEgresos;
+        BigDecimal balance = totalIngresos.subtract(totalEgresos);
         tvIngresos.setText(formatAmount(totalIngresos));
         tvEgresos.setText(formatAmount(totalEgresos));
-        tvBalance.setText(formatAmount(Math.abs(balance)));
-        tvBalance.setTextColor(getResources().getColor(balance >= 0 ? R.color.green : R.color.red));
+        tvBalance.setText(formatAmount(balance.abs()));
+        tvBalance.setTextColor(getResources().getColor(balance.compareTo(BigDecimal.ZERO) >= 0 ? R.color.green : R.color.red));
     }
 
-    private String formatAmount(double amount) {
-        return "$" + com.notificationcapture.app.utils.MoneyTextWatcher.format(amount);
+    private String formatAmount(BigDecimal amount) {
+        return "$" + MoneyTextWatcher.format(amount);
     }
 }

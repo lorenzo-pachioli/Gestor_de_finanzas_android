@@ -20,28 +20,35 @@ import com.notificationcapture.app.database.AppDatabase;
 import com.notificationcapture.app.database.TransactionDao;
 import com.notificationcapture.app.database.TransactionEntity;
 import com.notificationcapture.app.interfaces.GsonAccess;
+import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.enums.PaymentMethod;
 import com.notificationcapture.app.models.Cash;
 import com.notificationcapture.app.models.Credit;
 import com.notificationcapture.app.models.ResumenDeudaTarjeta;
 import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.mappers.TransactionMapper;
+import com.notificationcapture.app.repositories.WalletRepository;
+import com.notificationcapture.app.repositories.CreditCardRepository;
 import com.notificationcapture.app.exceptions.*;
 import com.notificationcapture.app.utils.AppLogger;
 import com.notificationcapture.app.utils.AppResult;
 
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
-import java.util.Calendar;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class TransactionRepository implements GsonAccess {
 
@@ -51,12 +58,28 @@ public class TransactionRepository implements GsonAccess {
     private final ExecutorService executor;
     private final Handler mainHandler;
     private final Gson gson;
+    private final WalletRepository walletRepo;
+    private final CreditCardRepository creditCardRepo;
 
     private static final int MAX_RECORDS = 5000;
 
     private static final String PREF_MIGRATED = "sqlite_migrated";
     private static final String PREF_MIGRATION_IN_PROGRESS = "sqlite_migration_in_progress";
     private static final String PREF_LAST_MAINTENANCE_MONTH = "last_maintenance_month";
+
+    public void shutdown() {
+        if (executor != null && !executor.isShutdown()) {
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 
     public interface RepositoryCallback<T> {
         void onResult(AppResult<T> result);
@@ -82,7 +105,7 @@ public class TransactionRepository implements GsonAccess {
             // Fallback for extreme cases mapping to an unencrypted pref just to not crash
             // completely,
             // though normally it should just fail securely.
-            securePrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            securePrefs = context.getSharedPreferences(GsonAccess.PREFS_NAME, Context.MODE_PRIVATE);
         }
         this.prefs = securePrefs;
 
@@ -90,6 +113,8 @@ public class TransactionRepository implements GsonAccess {
         this.executor = Executors.newSingleThreadExecutor();
         this.mainHandler = new Handler(Looper.getMainLooper());
         this.gson = new Gson();
+        this.walletRepo = RepositoryProvider.getInstance().getWalletRepository();
+        this.creditCardRepo = RepositoryProvider.getInstance().getCreditCardRepository();
 
         performMonthlyMaintenance();
         checkAndPerformMigration();
@@ -115,7 +140,7 @@ public class TransactionRepository implements GsonAccess {
                     prefs.edit().putInt(PREF_LAST_MAINTENANCE_MONTH, currentMonthYear).apply();
                 }
             } catch (Exception e) {
-                AppLogger.e("TransactionRepository", "Error in monthly maintenance", e);
+                AppLogger.e("TransactionRepository", "Error in monthly maintenance: " + e.getClass().getSimpleName(), e);
             }
         });
     }
@@ -136,10 +161,6 @@ public class TransactionRepository implements GsonAccess {
         }
     }
 
-    public void shutdown() {
-        executor.shutdownNow();
-    }
-
     private long getEndOfCurrentMonth() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
@@ -150,14 +171,10 @@ public class TransactionRepository implements GsonAccess {
         return cal.getTimeInMillis();
     }
 
-    private void migrateLegacyList(String key) {
+private void migrateLegacyList(String key) {
         String json = prefs.getString(key, null);
         if (json != null && !json.isEmpty()) {
             try {
-                // Deserializamos como JsonArray para poder inspeccionar cada objeto
-                // individualmente
-                // y decidir su clase concreta (Credit, Cash, Debit) basándonos en
-                // paymentMethod.
                 JsonArray array = gson.fromJson(json, JsonArray.class);
                 if (array != null) {
                     List<TransactionEntity> entities = new ArrayList<>();
@@ -166,12 +183,12 @@ public class TransactionRepository implements GsonAccess {
 
                     for (JsonElement element : array) {
                         JsonObject obj = element.getAsJsonObject();
-                        String method = obj.has("paymentMethod") ? obj.get("paymentMethod").getAsString() : "DEBITO";
+                        String method = obj.has("paymentMethod") ? obj.get("paymentMethod").getAsString() : PaymentMethod.TYPE_DEBIT;
 
                         Transaction t;
-                        if ("CREDITO".equals(method)) {
+                        if (PaymentMethod.TYPE_CREDIT.equals(method)) {
                             t = gson.fromJson(obj, com.notificationcapture.app.models.Credit.class);
-                        } else if ("EFECTIVO".equals(method)) {
+                        } else if (PaymentMethod.TYPE_CASH.equals(method)) {
                             t = gson.fromJson(obj, com.notificationcapture.app.models.Cash.class);
                         } else {
                             t = gson.fromJson(obj, com.notificationcapture.app.models.Debit.class);
@@ -378,12 +395,6 @@ public class TransactionRepository implements GsonAccess {
                 java.util.List<com.notificationcapture.app.models.SaldoCuenta> result = dao
                         .getSaldosPorCuenta(endOfMonth);
 
-                // Set human readable names instead of UUIDs for wallets
-                com.notificationcapture.app.repositories.WalletRepository walletRepo = com.notificationcapture.app.repositories.RepositoryProvider
-                        .getInstance().getWalletRepository();
-                com.notificationcapture.app.repositories.CreditCardRepository creditCardRepo = com.notificationcapture.app.repositories.RepositoryProvider
-                        .getInstance().getCreditCardRepository();
-
                 java.util.Map<String, String> walletNames = new java.util.HashMap<>();
                 for (com.notificationcapture.app.models.Wallets w : walletRepo.getAllWallets()) {
                     walletNames.put(w.getId(), w.getName());
@@ -397,25 +408,25 @@ public class TransactionRepository implements GsonAccess {
                 java.util.List<com.notificationcapture.app.models.SaldoCuenta> finalResult = new java.util.ArrayList<>();
                 for (com.notificationcapture.app.models.SaldoCuenta sc : result) {
                     String finalName = sc.getNombreCuenta();
-                    double saldo = sc.getSaldo();
+                    BigDecimal saldo = sc.getSaldo();
 
-                    if ("DEBITO".equals(sc.getTipoCuenta())) {
+                    if (PaymentMethod.TYPE_DEBIT.equals(sc.getTipoCuenta())) {
                         if (walletNames.containsKey(sc.getSourceId())) {
                             finalName = walletNames.get(sc.getSourceId());
-                        } else if (sc.getSourceId() == null || "EFECTIVO".equals(sc.getSourceId())) {
-                            finalName = "Efectivo";
+                        } else if (sc.getSourceId() == null || PaymentMethod.TYPE_CASH.equals(sc.getSourceId())) {
+                            finalName = PaymentMethod.DISPLAY_CASH;
                         } else {
                             finalName = "Billetera (" + sc.getSourceId() + ")";
                         }
-                    } else if ("CREDITO".equals(sc.getTipoCuenta())) {
+                    } else if (PaymentMethod.TYPE_CREDIT.equals(sc.getTipoCuenta())) {
                         if (cardNames.containsKey(sc.getSourceId())) {
                             finalName = cardNames.get(sc.getSourceId());
                         } else {
                             finalName = "Tarjeta (" + sc.getSourceId() + ")";
                         }
 
-                    } else if ("EFECTIVO".equals(sc.getTipoCuenta())) {
-                        finalName = "Efectivo";
+                    } else if (PaymentMethod.TYPE_CASH.equals(sc.getTipoCuenta())) {
+                        finalName = PaymentMethod.DISPLAY_CASH;
                     }
                     finalResult.add(new com.notificationcapture.app.models.SaldoCuenta(finalName, sc.getTipoCuenta(),
                             saldo, sc.getSourceId()));
@@ -448,26 +459,24 @@ public class TransactionRepository implements GsonAccess {
         });
     }
 
-    /**
-     * Fuente de verdad para el cálculo del arrastre histórico (deuda no pagada).
-     * Arrastre = (Egresos con timestamp < InicioMes) - (Pagos con startTimestamp < InicioMes)
-     */
-    public double getArrastreHistoricoBlocking(String creditCardId, long startOfMonth) {
+/**
+      * Source of truth for historical carryover calculation (unpaid debt).
+      * Carryover = (Expenses with timestamp < MonthStart) - (Payments with startTimestamp < MonthStart)
+      */
+    public BigDecimal getArrastreHistoricoBlocking(String creditCardId, long startOfMonth) {
         try {
-            // 1. Gastos totales antes de este período
-            Double gastosAnteriores = dao.getMontoResumen(creditCardId, 0, startOfMonth - 1);
-            double totalGastado = gastosAnteriores == null ? 0.0 : gastosAnteriores;
+            BigDecimal gastosAnteriores = dao.getMontoResumen(creditCardId, 0, startOfMonth - 1);
+            BigDecimal totalGastado = gastosAnteriores != null ? gastosAnteriores : BigDecimal.ZERO;
 
-            // 2. Pagos totales asignados a períodos anteriores
-            double totalPagado = AppDatabase.getDatabase(context)
+            BigDecimal totalPagado = AppDatabase.getDatabase(context)
                     .creditCardPaymentDao()
                     .getPagosAnteriores(creditCardId, startOfMonth);
 
-            double balance = totalGastado - totalPagado;
-            return Math.max(0, balance); // No devolvemos deuda negativa (crédito a favor) como arrastre por ahora
+            BigDecimal balance = totalGastado.subtract(totalPagado);
+            return balance.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : balance;
         } catch (Exception e) {
-            AppLogger.e("TransactionRepository", "Error calculando arrastre historico", e);
-            return 0.0;
+            AppLogger.e("TransactionRepository", "Error calculating historic carryover", e);
+            return BigDecimal.ZERO;
         }
     }
 
@@ -476,19 +485,15 @@ public class TransactionRepository implements GsonAccess {
             RepositoryCallback<ResumenDeudaTarjeta> callback) {
         executor.execute(() -> {
             try {
-                // Normalizar a precisión de segundos pero asegurar el rango completo
                 long cleanStart = (start / 1000) * 1000;
                 long cleanEnd = ((end / 1000) * 1000) + 999;
 
-                // 1. Gastos reales del mes
-                Double gastos = dao.getMontoResumen(creditCardId, cleanStart, cleanEnd);
-                double gastosDelMes = gastos == null ? 0.0 : gastos;
+                BigDecimal gastos = dao.getMontoResumen(creditCardId, cleanStart, cleanEnd);
+                BigDecimal gastosDelMes = gastos != null ? gastos : BigDecimal.ZERO;
 
-                // 2. Arrastre dinámico (Fuente de Verdad)
-                double arrastre = getArrastreHistoricoBlocking(creditCardId, cleanStart);
+                BigDecimal arrastre = getArrastreHistoricoBlocking(creditCardId, cleanStart);
 
-                // 3. Pagos registrados para este período específico
-                double pagos = AppDatabase.getDatabase(context)
+                BigDecimal pagos = AppDatabase.getDatabase(context)
                         .creditCardPaymentDao()
                         .getTotalPagadoEnPeriodo(creditCardId, cleanStart);
 
@@ -506,11 +511,11 @@ public class TransactionRepository implements GsonAccess {
         });
     }
 
-    public void getMontoResumenTarjeta(String creditCardId, long start, long end, RepositoryCallback<Double> callback) {
+    public void getMontoResumenTarjeta(String creditCardId, long start, long end, RepositoryCallback<BigDecimal> callback) {
         executor.execute(() -> {
             try {
-                Double total = dao.getMontoResumen(creditCardId, start, end);
-                mainHandler.post(() -> callback.onResult(AppResult.success(total == null ? 0.0 : total)));
+                BigDecimal total = dao.getMontoResumen(creditCardId, start, end);
+                mainHandler.post(() -> callback.onResult(AppResult.success(total == null ? new BigDecimal("0.00") : total)));
             } catch (Exception e) {
                 mainHandler.post(() -> callback
                         .onResult(AppResult.failure(new DatabaseException("Error al cargar resumen", e))));
@@ -518,10 +523,10 @@ public class TransactionRepository implements GsonAccess {
         });
     }
 
-    public void getTotalPagadoTarjeta(String creditCardId, long start, long end, RepositoryCallback<Double> callback) {
+    public void getTotalPagadoTarjeta(String creditCardId, long start, long end, RepositoryCallback<BigDecimal> callback) {
         executor.execute(() -> {
             try {
-                double total = AppDatabase.getDatabase(context).creditCardPaymentDao()
+                BigDecimal total = AppDatabase.getDatabase(context).creditCardPaymentDao()
                         .getTotalPagadoEnPeriodo(creditCardId, start);
                 mainHandler.post(() -> callback.onResult(AppResult.success(total)));
             } catch (Exception e) {
@@ -531,12 +536,12 @@ public class TransactionRepository implements GsonAccess {
         });
     }
 
-    public void saveTransfer(String origenId, String destinoId, double monto, long timestamp,
+    public void saveTransfer(String origenId, String destinoId, BigDecimal monto, long timestamp,
                              RepositoryCallback<Void> callback) {
-        // Generar un groupId para vincular ambas transacciones
+        // Generate a groupId to link both transactions
         String groupId = java.util.UUID.randomUUID().toString();
 
-        // Egreso desde el origen
+        // Outgoing debit from origin
         com.notificationcapture.app.models.Debit egreso = new com.notificationcapture.app.models.Debit(
                 "Transferencia", "", timestamp,
                 com.notificationcapture.app.enums.IngresoOEgreso.EGRESO,
@@ -544,7 +549,7 @@ public class TransactionRepository implements GsonAccess {
                 origenId, false);
         egreso.setAmount(monto);
 
-        // Ingreso en el destino
+        // Incoming credit to destination
         com.notificationcapture.app.models.Debit ingreso = new com.notificationcapture.app.models.Debit(
                 "Transferencia", "", timestamp,
                 com.notificationcapture.app.enums.IngresoOEgreso.INGRESO,
@@ -552,7 +557,7 @@ public class TransactionRepository implements GsonAccess {
                 destinoId, false);
         ingreso.setAmount(monto);
 
-        // Guardar ambas como transacciones aprobadas
+        // Save both as approved transactions
         List<Transaction> transferPair = new java.util.ArrayList<>();
         transferPair.add(egreso);
         transferPair.add(ingreso);
