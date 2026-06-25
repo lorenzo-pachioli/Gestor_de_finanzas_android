@@ -164,4 +164,7 @@
     <!-- Google Fonts certificates -->
     <string name="com_google_android_gms_fonts_certs_dev" translatable="false">38918A453D07199354F8B19AF05EC6562CED5788</string>
     <string name="com_google_android_gms_fonts_certs_prod" translatable="false">38918A453D07199354F8B19AF05EC6562CED5788</string>
+    <string name="currency_symbol">$</string>
+    <string name="negative_currency_symbol">-$</string>
+    <string name="credit_label">CREDIT</string>
 </resources>

@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,12 +57,12 @@ public class CategorySummaryAdapter extends RecyclerView.Adapter<CategorySummary
 
         holder.tvCategoryName.setText(category);
 
-        String formattedAmount = "$" + com.notificationcapture.app.utils.MoneyTextWatcher.format(total);
+        String formattedAmount = holder.itemView.getContext().getString(R.string.currency_symbol) + com.notificationcapture.app.utils.MoneyTextWatcher.format(total);
         holder.tvTotalAmount.setText(formattedAmount);
 
         // Percentage Calculation
         if (totalPeriodAmount.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal percentage = total.multiply(BigDecimal.valueOf(100)).divide(totalPeriodAmount, 0, BigDecimal.ROUND_HALF_UP);
+            BigDecimal percentage = total.multiply(BigDecimal.valueOf(100)).divide(totalPeriodAmount, 0, RoundingMode.HALF_UP);
             holder.tvCategoryPercentage.setText(percentage.intValue() + "%");
             holder.tvCategoryPercentage.setVisibility(View.VISIBLE);
         } else {

@@ -6,10 +6,11 @@ import android.os.Bundle;
 import android.os.Process;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import java.lang.ref.WeakReference;
 
 public class MyApplication extends Application implements Application.ActivityLifecycleCallbacks {
 
-    private static volatile Activity currentActivity;
+    private static WeakReference<Activity> currentActivityRef = new WeakReference<>(null);
 
     @Override
     public void onCreate() {
@@ -20,20 +21,12 @@ public class MyApplication extends Application implements Application.ActivityLi
 
     @Override
     public void onTerminate() {
+        // No longer used. Cleanup is handled by AppLifecycleObserver.
         super.onTerminate();
-        if (com.notificationcapture.app.repositories.RepositoryProvider.isInitialized()) {
-            try {
-                com.notificationcapture.app.repositories.RepositoryProvider.getInstance().getTransactionRepository().shutdown();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        Process.killProcess(Process.myPid());
-        System.exit(1);
     }
 
     public static Activity getCurrentActivity() {
-        return currentActivity;
+        return currentActivityRef.get();
     }
 
     @Override
@@ -42,12 +35,12 @@ public class MyApplication extends Application implements Application.ActivityLi
 
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
-        currentActivity = activity;
+        currentActivityRef = new WeakReference<>(activity);
     }
 
     @Override
     public void onActivityResumed(@NonNull Activity activity) {
-        currentActivity = activity;
+        currentActivityRef = new WeakReference<>(activity);
     }
 
     @Override
@@ -56,8 +49,8 @@ public class MyApplication extends Application implements Application.ActivityLi
 
     @Override
     public void onActivityStopped(@NonNull Activity activity) {
-        if (currentActivity == activity) {
-            currentActivity = null;
+        if (currentActivityRef.get() == activity) {
+            currentActivityRef.clear();
         }
     }
 

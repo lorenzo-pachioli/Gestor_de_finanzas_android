@@ -41,13 +41,13 @@ public class SaldoCuentaAdapter extends RecyclerView.Adapter<SaldoCuentaAdapter.
         holder.tvNombreCuenta.setText(saldo.getNombreCuenta());
         holder.tvTipoCuenta.setText(saldo.getTipoCuenta());
         
-        holder.tvSaldo.setText("$" + MoneyTextWatcher.format(saldo.getSaldo().abs()));
+        holder.tvSaldo.setText(holder.itemView.getContext().getString(R.string.currency_symbol) + MoneyTextWatcher.format(saldo.getSaldo().abs()));
 
         if (saldo.getSaldo().compareTo(BigDecimal.ZERO) >= 0) {
             holder.tvSaldo.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.green));
         } else {
             holder.tvSaldo.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.red));
-            holder.tvSaldo.setText("-$" + MoneyTextWatcher.format(saldo.getSaldo().abs()));
+            holder.tvSaldo.setText(holder.itemView.getContext().getString(R.string.negative_currency_symbol) + MoneyTextWatcher.format(saldo.getSaldo().abs()));
         }
 
         if ("CREDITO".equalsIgnoreCase(saldo.getTipoCuenta()) && saldo.getSaldo().compareTo(BigDecimal.ZERO) < 0) {
