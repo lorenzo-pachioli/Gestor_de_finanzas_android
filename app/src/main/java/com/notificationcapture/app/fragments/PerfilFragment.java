@@ -1,7 +1,5 @@
 package com.notificationcapture.app.fragments;
 
-// ARCHIVO COMPLETO: app/src/main/java/com/notificationcapture/app/fragments/PerfilFragment.java
-
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +18,7 @@ import com.notificationcapture.app.fragments.settings.CardsSettingsFragment;
 import com.notificationcapture.app.fragments.settings.CategoriesSettingsFragment;
 import com.notificationcapture.app.fragments.settings.WalletsSettingsFragment;
 import com.notificationcapture.app.utils.CustomLanguageSwitch;
+import com.notificationcapture.app.utils.LocaleUtils;
 import com.notificationcapture.app.utils.SecurityPreferencesManager;
 import com.notificationcapture.app.viewmodels.SettingsViewModel;
 
@@ -113,21 +112,6 @@ public class PerfilFragment extends Fragment {
             }
         };
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), backCallback);
-    }
-
-    private void setLocale(String languageCode) {
-        java.util.Locale locale = new java.util.Locale(languageCode);
-        java.util.Locale.setDefault(locale);
-        android.content.res.Resources resources = requireContext().getResources();
-        android.content.res.Configuration config =
-                new android.content.res.Configuration(resources.getConfiguration());
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            config.setLocale(locale);
-            requireContext().createConfigurationContext(config);
-        } else {
-            config.locale = locale;
-        }
-        resources.updateConfiguration(config, resources.getDisplayMetrics());
     }
 
     private void showDetail(Fragment fragment) {

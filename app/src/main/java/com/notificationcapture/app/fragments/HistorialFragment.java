@@ -1,32 +1,27 @@
 package com.notificationcapture.app.fragments;
 
-import android.content.Intent;
-import android.os.Bundle;
 
+import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-
 import com.notificationcapture.app.adapters.TransactionAdapter;
-import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.R;
-import androidx.lifecycle.ViewModelProvider;
+import com.notificationcapture.app.utils.Dialog;
+import com.notificationcapture.app.enums.DialogType;
 import com.notificationcapture.app.viewmodels.HistorialViewModel;
+import androidx.lifecycle.ViewModelProvider;
+import android.content.Intent;
 
 public class HistorialFragment extends Fragment {
 
@@ -42,11 +37,7 @@ public class HistorialFragment extends Fragment {
         // Required empty public constructor
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-    }
+    
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -84,9 +75,9 @@ public class HistorialFragment extends Fragment {
 
         Button btnClearAll = view.findViewById(R.id.btnClearAll);
         btnClearAll.setOnClickListener(v -> {
-            com.notificationcapture.app.utils.Dialog.show(
+            Dialog.show(
                     "¿Estás seguro de que deseas eliminar todas las notificaciones pendientes?",
-                    com.notificationcapture.app.enums.DialogType.CONFIRMATION,
+                    DialogType.CONFIRMATION,
                     () -> {
                         viewModel.clearAllTransactions();
                     });

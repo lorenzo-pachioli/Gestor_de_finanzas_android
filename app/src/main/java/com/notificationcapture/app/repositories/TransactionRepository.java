@@ -17,22 +17,25 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.notificationcapture.app.database.AppDatabase;
+import com.notificationcapture.app.database.CreditCardPaymentEntity;
 import com.notificationcapture.app.database.TransactionDao;
 import com.notificationcapture.app.database.TransactionEntity;
-import com.notificationcapture.app.interfaces.GsonAccess;
-import com.notificationcapture.app.enums.IngresoOEgreso;
+
 import com.notificationcapture.app.enums.PaymentMethod;
+import com.notificationcapture.app.exceptions.DatabaseException;
+import com.notificationcapture.app.interfaces.GsonAccess;
+import com.notificationcapture.app.mappers.TransactionMapper;
 import com.notificationcapture.app.models.Cash;
 import com.notificationcapture.app.models.Credit;
-import com.notificationcapture.app.models.ResumenDeudaTarjeta;
+import com.notificationcapture.app.models.Debit;
 import com.notificationcapture.app.models.Transaction;
-import com.notificationcapture.app.mappers.TransactionMapper;
-import com.notificationcapture.app.repositories.WalletRepository;
-import com.notificationcapture.app.repositories.CreditCardRepository;
-import com.notificationcapture.app.exceptions.*;
+import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.utils.AppLogger;
 import com.notificationcapture.app.utils.AppResult;
-
+import com.notificationcapture.app.models.SaldoCuenta;
+import com.notificationcapture.app.models.CreditCard;
+import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.models.ResumenDeudaTarjeta;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -42,7 +45,10 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -102,9 +108,6 @@ public class TransactionRepository implements GsonAccess {
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
         } catch (Exception e) {
             e.printStackTrace();
-            // Fallback for extreme cases mapping to an unencrypted pref just to not crash
-            // completely,
-            // though normally it should just fail securely.
             securePrefs = context.getSharedPreferences(GsonAccess.PREFS_NAME, Context.MODE_PRIVATE);
         }
         this.prefs = securePrefs;
@@ -134,7 +137,6 @@ public class TransactionRepository implements GsonAccess {
                     cal.set(Calendar.SECOND, 0);
                     cal.set(Calendar.MILLISECOND, 0);
 
-                    // Delete all PENDING records from previous months
                     dao.deleteOldPending(cal.getTimeInMillis());
 
                     prefs.edit().putInt(PREF_LAST_MAINTENANCE_MONTH, currentMonthYear).apply();
@@ -171,7 +173,7 @@ public class TransactionRepository implements GsonAccess {
         return cal.getTimeInMillis();
     }
 
-private void migrateLegacyList(String key) {
+    private void migrateLegacyList(String key) {
         String json = prefs.getString(key, null);
         if (json != null && !json.isEmpty()) {
             try {
@@ -187,11 +189,11 @@ private void migrateLegacyList(String key) {
 
                         Transaction t;
                         if (PaymentMethod.TYPE_CREDIT.equals(method)) {
-                            t = gson.fromJson(obj, com.notificationcapture.app.models.Credit.class);
+                            t = gson.fromJson(obj, Credit.class);
                         } else if (PaymentMethod.TYPE_CASH.equals(method)) {
-                            t = gson.fromJson(obj, com.notificationcapture.app.models.Cash.class);
+                            t = gson.fromJson(obj, Cash.class);
                         } else {
-                            t = gson.fromJson(obj, com.notificationcapture.app.models.Debit.class);
+                            t = gson.fromJson(obj, Debit.class);
                         }
 
                         if (t != null) {
@@ -311,7 +313,7 @@ private void migrateLegacyList(String key) {
                 Calendar cal = Calendar.getInstance();
                 long start = 0;
                 long end = Long.MAX_VALUE;
-                if (TransactionEntity.STATUS_PENDING.equals(status)) { // Only current month for Pending
+                if (TransactionEntity.STATUS_PENDING.equals(status)) {
                     cal.set(Calendar.DAY_OF_MONTH, 1);
                     cal.set(Calendar.HOUR_OF_DAY, 0);
                     cal.set(Calendar.MINUTE, 0);
@@ -388,25 +390,25 @@ private void migrateLegacyList(String key) {
     }
 
     public void getSaldosPorCuenta(
-            RepositoryCallback<java.util.List<com.notificationcapture.app.models.SaldoCuenta>> callback) {
+            RepositoryCallback<List<SaldoCuenta>> callback) {
         executor.execute(() -> {
             try {
                 long endOfMonth = getEndOfCurrentMonth();
-                java.util.List<com.notificationcapture.app.models.SaldoCuenta> result = dao
+                List<SaldoCuenta> result = dao
                         .getSaldosPorCuenta(endOfMonth);
 
-                java.util.Map<String, String> walletNames = new java.util.HashMap<>();
-                for (com.notificationcapture.app.models.Wallets w : walletRepo.getAllWallets()) {
+                Map<String, String> walletNames = new HashMap<>();
+                for (Wallets w : walletRepo.getAllWallets()) {
                     walletNames.put(w.getId(), w.getName());
                 }
 
-                java.util.Map<String, String> cardNames = new java.util.HashMap<>();
-                for (com.notificationcapture.app.models.CreditCard c : creditCardRepo.getAllCreditCards()) {
+                Map<String, String> cardNames = new HashMap<>();
+                for (CreditCard c : creditCardRepo.getAllCreditCards()) {
                     cardNames.put(c.getId(), c.getName() + " (*" + c.getLast4() + ")");
                 }
 
-                java.util.List<com.notificationcapture.app.models.SaldoCuenta> finalResult = new java.util.ArrayList<>();
-                for (com.notificationcapture.app.models.SaldoCuenta sc : result) {
+                List<SaldoCuenta> finalResult = new ArrayList<>();
+                for (SaldoCuenta sc : result) {
                     String finalName = sc.getNombreCuenta();
                     BigDecimal saldo = sc.getSaldo();
 
@@ -424,11 +426,10 @@ private void migrateLegacyList(String key) {
                         } else {
                             finalName = "Tarjeta (" + sc.getSourceId() + ")";
                         }
-
                     } else if (PaymentMethod.TYPE_CASH.equals(sc.getTipoCuenta())) {
                         finalName = PaymentMethod.DISPLAY_CASH;
                     }
-                    finalResult.add(new com.notificationcapture.app.models.SaldoCuenta(finalName, sc.getTipoCuenta(),
+                    finalResult.add(new SaldoCuenta(finalName, sc.getTipoCuenta(),
                             saldo, sc.getSourceId()));
                 }
 
@@ -441,7 +442,7 @@ private void migrateLegacyList(String key) {
         });
     }
 
-    public void efectuarPagoTarjeta(com.notificationcapture.app.database.CreditCardPaymentEntity pago,
+    public void efectuarPagoTarjeta(CreditCardPaymentEntity pago,
             TransactionEntity gastoDeBilletera,
             RepositoryCallback<Void> callback) {
         executor.execute(() -> {
@@ -459,10 +460,6 @@ private void migrateLegacyList(String key) {
         });
     }
 
-/**
-      * Source of truth for historical carryover calculation (unpaid debt).
-      * Carryover = (Expenses with timestamp < MonthStart) - (Payments with startTimestamp < MonthStart)
-      */
     public BigDecimal getArrastreHistoricoBlocking(String creditCardId, long startOfMonth) {
         try {
             BigDecimal gastosAnteriores = dao.getMontoResumen(creditCardId, 0, startOfMonth - 1);
@@ -538,31 +535,26 @@ private void migrateLegacyList(String key) {
 
     public void saveTransfer(String origenId, String destinoId, BigDecimal monto, long timestamp,
                              RepositoryCallback<Void> callback) {
-        // Generate a groupId to link both transactions
-        String groupId = java.util.UUID.randomUUID().toString();
+        String groupId = UUID.randomUUID().toString();
 
-        // Outgoing debit from origin
-        com.notificationcapture.app.models.Debit egreso = new com.notificationcapture.app.models.Debit(
+        Debit egreso = new Debit(
                 "Transferencia", "", timestamp,
-                com.notificationcapture.app.enums.IngresoOEgreso.EGRESO,
-                com.notificationcapture.app.repositories.CategoryRepository.TRANSFER_OUT_ID,
+                IngresoOEgreso.EGRESO,
+                CategoryRepository.TRANSFER_OUT_ID,
                 origenId, false);
         egreso.setAmount(monto);
 
-        // Incoming credit to destination
-        com.notificationcapture.app.models.Debit ingreso = new com.notificationcapture.app.models.Debit(
+        Debit ingreso = new Debit(
                 "Transferencia", "", timestamp,
-                com.notificationcapture.app.enums.IngresoOEgreso.INGRESO,
-                com.notificationcapture.app.repositories.CategoryRepository.TRANSFER_IN_ID,
+                IngresoOEgreso.INGRESO,
+                CategoryRepository.TRANSFER_IN_ID,
                 destinoId, false);
         ingreso.setAmount(monto);
 
-        // Save both as approved transactions
-        List<Transaction> transferPair = new java.util.ArrayList<>();
+        List<Transaction> transferPair = new ArrayList<>();
         transferPair.add(egreso);
         transferPair.add(ingreso);
 
         saveTransactions(transferPair, callback);
     }
-
 }

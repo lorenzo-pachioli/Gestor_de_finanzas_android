@@ -5,6 +5,7 @@ import static com.notificationcapture.app.utils.StringParser.extractAmount;
 
 import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.enums.PaymentMethod;
+import com.notificationcapture.app.utils.MoneyTextWatcher;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -150,7 +151,7 @@ public abstract class Transaction implements Serializable {
     }
 
     private String formatAmount(java.math.BigDecimal amount) {
-        return "$" + com.notificationcapture.app.utils.MoneyTextWatcher.format(amount);
+        return "$" + MoneyTextWatcher.format(amount);
     }
 
     public boolean hasAmount() {

@@ -4,6 +4,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.EditText;
 
+import androidx.annotation.Nullable;
+
 import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -37,80 +39,56 @@ public class MoneyTextWatcher implements TextWatcher {
         editText.removeTextChangedListener(this);
 
         try {
-            // Logic to handle "MercadoPago" style:
-            // 1. Thousands separator: "." (German style)
-            // 2. Decimal separator: ","
-            // 3. User typing "." should be converted to "," if it's a decimal intent.
-
             String original = s;
 
-            // Detect if the user explicitly typed a dot at the end to start decimals
             boolean endsWithDot = original.endsWith(".");
             boolean endsWithComma = original.endsWith(",");
 
-            // Check if we already have a comma (decimal part exists)
             int commaIndex = original.indexOf(",");
 
             String integerPartStr = "";
             String decimalPartStr = "";
 
             if (commaIndex != -1) {
-                // We have a comma. Split.
-                // "1.234,56" or "1234,56"
                 integerPartStr = original.substring(0, commaIndex);
                 if (commaIndex + 1 < original.length()) {
                     decimalPartStr = original.substring(commaIndex + 1);
                 }
             } else {
-                // No comma.
-                // Does it end with dot? If so, treat that dot as the start of decimal mode
-                // (convert to comma)
                 if (endsWithDot) {
-                    integerPartStr = original.substring(0, original.length() - 1); // remove the dot
-                    decimalPartStr = ""; // Logic will append comma below
+                    integerPartStr = original.substring(0, original.length() - 1);
+                    decimalPartStr = "";
                 } else {
-                    // Just an integer number, potential thousands dots inside
                     integerPartStr = original;
                 }
             }
 
-            // Clean the integer part (remove ALL dots, they are just separators)
             String cleanInteger = integerPartStr.replace(".", "");
 
-            // Clean decimal part (remove non-digits just in case)
             String cleanDecimal = decimalPartStr.replaceAll("[^0-9]", "");
 
-            // prevent empty or excessive generic issues
             if (cleanInteger.isEmpty())
                 cleanInteger = "0";
 
-            // Parse and Format Integer
-            // Use BigDecimal or Long. Long is safer for simple typing, BigDecimal for huge
-            // numbers.
-            // But "05" -> "5".
             if (cleanInteger.length() > 1 && cleanInteger.startsWith("0")) {
                 cleanInteger = cleanInteger.substring(1);
             }
 
-            // Format with thousands dots
             long val = Long.parseLong(cleanInteger);
             DecimalFormat formatter = (DecimalFormat) DecimalFormat.getInstance(Locale.GERMANY);
             formatter.applyPattern("#,###");
             String formattedInteger = formatter.format(val);
 
-            // Reconstruct
             StringBuilder result = new StringBuilder(formattedInteger);
 
-            // If we had a comma OR we ended with a dot (which becomes comma)
             if (commaIndex != -1 || endsWithDot || endsWithComma) {
                 result.append(",");
                 result.append(cleanDecimal);
             }
 
-            // Commit
             if (!result.toString().equals(s)) {
                 editText.setText(result.toString());
-                editText.setSelection(result.length()); // Simple cursor to end
+                editText.setSelection(result.length());
             }
 
         } catch (NumberFormatException e) {
@@ -126,5 +104,19 @@ public class MoneyTextWatcher implements TextWatcher {
         DecimalFormat formatter = (DecimalFormat) DecimalFormat.getInstance(Locale.GERMANY);
         formatter.applyPattern("#,###.##");
         return formatter.format(amount);
+    }
+
+    @Nullable
+    public static BigDecimal parse(String formattedAmount) {
+        if (formattedAmount == null || formattedAmount.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            String clean = formattedAmount.replace(".", "").replace(",", ".");
+            BigDecimal value = new BigDecimal(clean);
+            return value.compareTo(BigDecimal.ZERO) > 0 ? value : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

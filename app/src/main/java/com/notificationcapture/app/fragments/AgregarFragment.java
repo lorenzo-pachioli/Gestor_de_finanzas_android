@@ -1,26 +1,33 @@
 package com.notificationcapture.app.fragments;
 
-// ARCHIVO COMPLETO: app/src/main/java/com/notificationcapture/app/fragments/AgregarFragment.java
-
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
+
 import java.text.SimpleDateFormat;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
@@ -34,8 +41,10 @@ import com.notificationcapture.app.models.Debit;
 import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.repositories.CategoryRepository;
+import com.notificationcapture.app.repositories.CreditCardRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
+import com.notificationcapture.app.repositories.WalletRepository;
 import com.notificationcapture.app.utils.CustomTypeSwitch;
 import com.notificationcapture.app.utils.MoneyTextWatcher;
 
@@ -50,8 +59,8 @@ public class AgregarFragment extends Fragment {
     private TextView tvPaymentMethod;
     private TransactionRepository repository;
     private CategoryRepository categoryRepository;
-    private com.notificationcapture.app.repositories.WalletRepository walletRepository;
-    private com.notificationcapture.app.repositories.CreditCardRepository creditCardRepository;
+    private WalletRepository walletRepository;
+    private CreditCardRepository creditCardRepository;
     private long selectedDateTimestamp;
 
     private PaymentMethod selectedMethod = PaymentMethod.EFECTIVO;
@@ -80,10 +89,10 @@ public class AgregarFragment extends Fragment {
         etAmount.addTextChangedListener(new MoneyTextWatcher(etAmount));
         etAmount.setHint("0");
         etAmount.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
-                android.view.inputmethod.InputMethodManager imm =
-                        (android.view.inputmethod.InputMethodManager) requireContext()
-                        .getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                InputMethodManager imm =
+                        (InputMethodManager) requireContext()
+                        .getSystemService(Context.INPUT_METHOD_SERVICE);
                 if (imm != null) imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 etAmount.clearFocus();
                 return true;
@@ -95,7 +104,6 @@ public class AgregarFragment extends Fragment {
         btnCreate = view.findViewById(R.id.btnCreate);
         etDate = view.findViewById(R.id.etDate);
 
-        // Enlace a TransferenciaFragment
         TextView tvTransferLink = view.findViewById(R.id.tvTransferLink);
         if (tvTransferLink != null) {
             tvTransferLink.setOnClickListener(v -> {
@@ -116,7 +124,6 @@ public class AgregarFragment extends Fragment {
             });
         }
 
-        // Fecha por defecto
         selectedDateTimestamp = System.currentTimeMillis();
         updateDateField(selectedDateTimestamp);
 
@@ -127,13 +134,8 @@ public class AgregarFragment extends Fragment {
         etDate.setOnClickListener(v -> showDatePicker());
         btnCreate.setOnClickListener(v -> createNotification());
 
-        // Scroll automático al campo activo cuando aparece el teclado
-        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
-            int imeHeight = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom;
-            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(),
-                    imeHeight > 0 ? imeHeight : 0);
-            return insets;
-        });
+        view.setPadding(view.getPaddingLeft(), view.getPaddingTop(), view.getPaddingRight(),
+                0);
     }
 
     private void updateToggleUI(boolean isEgreso) {
@@ -143,7 +145,7 @@ public class AgregarFragment extends Fragment {
     private void configurarSpinnerCat() {
         boolean isEgreso = swType.isChecked();
         IngresoOEgreso type = isEgreso ? IngresoOEgreso.EGRESO : IngresoOEgreso.INGRESO;
-        java.util.List<Category> categories = categoryRepository.getCategories(type);
+        List<Category> categories = categoryRepository.getCategories(type);
         UniversalSpinnerAdapter<Category> adapterCategories = new UniversalSpinnerAdapter<>(requireContext(), categories);
         
         String currentSelectionName = "";
@@ -195,17 +197,9 @@ public class AgregarFragment extends Fragment {
             return;
         }
 
-        BigDecimal amountValue;
-        try {
-            String cleanAmount = amountStr.replace(".", "").replace(",", ".");
-            amountValue = new BigDecimal(cleanAmount);
-            if (amountValue.compareTo(BigDecimal.ZERO) <= 0) {
-                Toast.makeText(requireContext(), "El monto debe ser mayor a 0", Toast.LENGTH_SHORT).show();
-                etAmount.requestFocus();
-                return;
-            }
-        } catch (NumberFormatException e) {
-            Toast.makeText(requireContext(), "Formato de monto inválido", Toast.LENGTH_SHORT).show();
+        BigDecimal amountValue = MoneyTextWatcher.parse(amountStr);
+        if (amountValue == null) {
+            Toast.makeText(requireContext(), "El monto debe ser mayor a 0", Toast.LENGTH_SHORT).show();
             etAmount.requestFocus();
             return;
         }
@@ -214,7 +208,7 @@ public class AgregarFragment extends Fragment {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(selectedDateTimestamp);
         int totalInstallments = selectedInstallments > 0 ? selectedInstallments : 1;
-        String installmentGroupId = totalInstallments > 1 ? java.util.UUID.randomUUID().toString() : null;
+        String installmentGroupId = totalInstallments > 1 ? UUID.randomUUID().toString() : null;
 
         for (int i = 1; i <= totalInstallments; i++) {
             long itemTimestamp = calendar.getTimeInMillis();
@@ -237,10 +231,9 @@ public class AgregarFragment extends Fragment {
             calendar.add(Calendar.MONTH, 1);
         }
 
-        android.content.Intent intent = new android.content.Intent("com.notificationcapture.NEW_NOTIFICATION");
+        Intent intent = new Intent("com.notificationcapture.NEW_NOTIFICATION");
         requireContext().sendBroadcast(intent);
 
-        // Limpiar formulario
         etTitle.setText("");
         etAmount.setText("");
         selectedMethod = PaymentMethod.EFECTIVO;
@@ -286,7 +279,6 @@ public class AgregarFragment extends Fragment {
                 .build();
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
-            // FIX T7: reconstruir al mediodía local para evitar offset UTC
             Calendar utcCal = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"));
             utcCal.setTimeInMillis(selection);
             Calendar localCal = Calendar.getInstance();

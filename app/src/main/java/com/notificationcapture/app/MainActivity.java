@@ -20,8 +20,10 @@ import com.notificationcapture.app.fragments.CategoriasFragment;
 import com.notificationcapture.app.fragments.HistorialFragment;
 import com.notificationcapture.app.fragments.InicioFragment;
 import com.notificationcapture.app.fragments.PerfilFragment;
-import com.notificationcapture.app.viewmodels.SettingsViewModel;
+import com.notificationcapture.app.utils.LocaleUtils;
 import com.notificationcapture.app.utils.SecurityPreferencesManager;
+import com.notificationcapture.app.viewmodels.SettingsViewModel;
+
 import androidx.lifecycle.ViewModelProvider;
 import androidx.appcompat.app.AppCompatDelegate;
 
@@ -47,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         settingsViewModel.getLanguageState().observe(this, lang -> {
-            setLocale(lang);
+            LocaleUtils.applyLocale(this, lang);
         });
 
         // Cargar valores iniciales desde almacenamiento seguro
@@ -226,22 +228,5 @@ public class MainActivity extends AppCompatActivity {
             });
             fabAdd.startAnimation(fadeOut);
         }
-    }
-
-    private void setLocale(String languageCode) {
-        java.util.Locale locale = new java.util.Locale(languageCode);
-        java.util.Locale.setDefault(locale);
-
-        android.content.res.Resources resources = getResources();
-        android.content.res.Configuration config = new android.content.res.Configuration(resources.getConfiguration());
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            config.setLocale(locale);
-            createConfigurationContext(config);
-        } else {
-            config.locale = locale;
-        }
-
-        resources.updateConfiguration(config, resources.getDisplayMetrics());
     }
 }
