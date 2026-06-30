@@ -167,4 +167,17 @@
     <string name="currency_symbol">$</string>
     <string name="negative_currency_symbol">-$</string>
     <string name="credit_label">CREDIT</string>
+    <string name="terms_and_privacy_full_text">TÉRMINOS Y CONDICIONES\n\nÚltima actualización: junio 2026\n\n1. Uso de la aplicación\nEsta aplicación es de uso personal. Permite registrar ingresos, egresos y analizar tu situación financiera.\n\n2. Datos y almacenamiento\nTodos tus datos (movimientos, categorías, saldos) se almacenan únicamente en tu dispositivo. No enviamos ni almacenamos ninguna información en servidores externos.\n\n3. Acceso a notificaciones\nCon tu permiso, la app lee notificaciones de aplicaciones de billeteras para detectar pagos automáticamente. Este procesamiento ocurre íntegramente en tu dispositivo.\n\n4. Publicidad\nLa aplicación puede mostrar anuncios a través de Google AdMob. Google puede usar identificadores del dispositivo para mostrar anuncios relevantes. Podés consultar la política de privacidad de Google en: https://policies.google.com/privacy\n\n─────────────────────────────\n\nPOLÍTICA DE PRIVACIDAD\n\n1. ¿Qué datos recopilamos?\nNo recopilamos datos personales. Los movimientos que cargás se guardan solo en tu dispositivo.\n\n2. Notificaciones de pago\nAccedemos a notificaciones de billeteras únicamente para extraer montos y origen de pagos. Ningún contenido de notificaciones se envía fuera del dispositivo.\n\n3. Publicidad (Google AdMob)\nAdMob puede recopilar identificadores publicitarios del dispositivo. Esto es gestionado íntegramente por Google según sus propias políticas.\n\n4. Contacto\nPara dudas o consultas: [TU_EMAIL_DE_CONTACTO]\n\nVersión de términos: 1.0</string>
+
+    <!-- Onboarding Pages -->
+    <string name="onboarding_title_1">Welcome</string>
+    <string name="onboarding_desc_1">Record your income and expenses in seconds, without complications.</string>
+    <string name="onboarding_title_2">Add transactions</string>
+    <string name="onboarding_desc_2">Use the + button to add an income or expense. Choose category, amount, and payment method.</string>
+    <string name="onboarding_title_3">Analyze by categories</string>
+    <string name="onboarding_desc_3">Each transaction is automatically grouped so you can see what you spend most on each month.</string>
+    <string name="onboarding_title_4">Notification capture</string>
+    <string name="onboarding_desc_4">We detect payments from your wallet notifications. Everything is processed and stored only on your device.</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
 </resources>

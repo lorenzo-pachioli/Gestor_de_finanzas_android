@@ -115,6 +115,9 @@ public class MainActivity extends AppCompatActivity {
             viewPager.setCurrentItem(0, false); // InicioFragment, sin animación
             bottomNavigation.setSelectedItemId(R.id.nav_home);
         }
+
+        // Disparar después de que todo el setup del ViewPager esté completo
+        // com.notificationcapture.app.ads.AdManager.getInstance(this).maybeShowAd(this, null);
     }
 
     /**

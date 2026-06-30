@@ -163,5 +163,17 @@
     <string name="currency_symbol">$</string>
     <string name="negative_currency_symbol">-$</string>
     <string name="credit_label">CREDITO</string>
+
+    <!-- Onboarding Pages -->
+    <string name="onboarding_title_1">Bienvenido</string>
+    <string name="onboarding_desc_1">Registrá tus ingresos y egresos en segundos, sin complicaciones.</string>
+    <string name="onboarding_title_2">Cargar movimientos</string>
+    <string name="onboarding_desc_2">Usá el botón + para agregar un ingreso o gasto. Elegí categoría, monto y método de pago.</string>
+    <string name="onboarding_title_3">Analizá por categorías</string>
+    <string name="onboarding_desc_3">Cada movimiento se agrupa automáticamente para que veas en qué gastás más cada mes.</string>
+    <string name="onboarding_title_4">Captura de notificaciones</string>
+    <string name="onboarding_desc_4">Detectamos pagos desde las notificaciones de tus billeteras. Todo se procesa y guarda solo en tu dispositivo.</string>
+    <string name="onboarding_skip">Saltar</string>
+    <string name="onboarding_next">Siguiente</string>
 </resources>
 

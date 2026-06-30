@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.startup)
     annotationProcessor(libs.androidx.room.compiler)
+    implementation(libs.play.services.ads)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.room.testing)
     testImplementation(libs.robolectric)

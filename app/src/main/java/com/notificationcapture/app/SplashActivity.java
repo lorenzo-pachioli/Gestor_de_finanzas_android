@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
+import com.notificationcapture.app.utils.ConsentPreferencesManager;
 import com.notificationcapture.app.utils.SecurityPreferencesManager;
 
 public class SplashActivity extends AppCompatActivity {
@@ -36,7 +37,11 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void navigateToMain() {
-        startActivity(new Intent(this, MainActivity.class));
+        ConsentPreferencesManager consentManager = new ConsentPreferencesManager(this);
+        Intent intent = consentManager.isUpToDateConsentGiven()
+                ? new Intent(this, MainActivity.class)
+                : new Intent(this, OnboardingActivity.class);
+        startActivity(intent);
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         finish();
     }

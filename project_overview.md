@@ -76,3 +76,25 @@ El funcionamiento fundamental de la aplicación se divide en las siguientes fase
     *   Una vez validadas, son enviadas al `NotificationRepository`, el cual ejecuta una capa de persistencia en Room DB usando el Dao asincrónico correspondiente.
 6.  **Reactividad de UI:**
     *   La inserción desencadena una actualización en `LiveData` manejada por el `ViewModel`. La `View` (Fragmento/Actividad) escucha este cambio y refresca el `Adapter` de la vista casi en tiempo real, reflejándole al usuario la nueva información capturada sin bloqueos de la UI principal.
+
+
+## 4. Onboarding y Consentimiento
+
+```
+SplashActivity (3 seg)
+    │
+    ├─ ¿Ya aceptó los términos vigentes?
+    │       NO  ──► OnboardingActivity
+    │                   Página 1 → Bienvenida
+    │                   Página 2 → Cargar ingresos / egresos
+    │                   Página 3 → Categorías y balance
+    │                   Página 4 → Captura de notificaciones
+    │                   Página 5 → Términos y Política de Privacidad
+    │                                   │
+    │                                   └─ [Checkbox + Aceptar] ──► MainActivity
+    │
+    └─ SÍ ──────────────────────────────────────────────────────────► MainActivity
+                                                                          │
+                                                                   AdManager.maybeShowAd()
+                                                                   (máx. 1 vez por semana)
+```
