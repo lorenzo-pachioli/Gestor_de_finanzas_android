@@ -1,25 +1,25 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/bottom_sheet_background"
-    android:padding="20dp">
+    android:padding="@dimen/space_20dp">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/nombre_billetera"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_16sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="@dimen/space_8dp"/>
 
     <EditText
         android:id="@+id/etWalletName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Ej. Mercado Pago"
+        android:hint="@string/wallet_name_hint"
         android:textColor="@color/text_primary"
         android:inputType="textCapWords"/>
 
@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:padding="12dp">
+        android:padding="@dimen/space_12dp">
 
         <Button
             android:id="@+id/btnDelete"
@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             android:text="@string/eliminar"
-            android:layout_marginEnd="5dp"/>
+            android:layout_marginEnd="@dimen/space_8dp"/>
 
         <Button
             android:id="@+id/btnCancel"
@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             android:text="@string/cancelar"
-            android:layout_marginEnd="5dp"/>
+            android:layout_marginEnd="@dimen/space_8dp"/>
 
         <Button
             android:id="@+id/btnCreate"
@@ -56,3 +56,5 @@
     </LinearLayout>
 
 </LinearLayout>
+
+

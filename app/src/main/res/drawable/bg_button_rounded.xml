@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="@color/accent_main">
 
-    <!-- Máscara que define el área de la onda y mantiene las esquinas redondeadas -->
+    <!-- MÃ¡scara que define el Ã¡rea de la onda y mantiene las esquinas redondeadas -->
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">
-            <corners android:radius="10dp" />
+            <corners android:radius="@dimen/radius_12dp" />
             <solid android:color="@color/start_color" />
         </shape>
     </item>
@@ -13,13 +13,14 @@
     <!-- Fondo visible con el gradiente y el borde -->
     <item>
         <shape android:shape="rectangle">
-            <corners android:radius="10dp" />
+            <corners android:radius="@dimen/radius_12dp" />
             <gradient
                 android:angle="0"
                 android:startColor="@color/start_color"
                 android:endColor="@color/end_color"
                 android:type="linear" />
-            <stroke android:width="2dp" android:color="@color/accent_main" />
+            <stroke android:width="@dimen/size_2dp" android:color="@color/accent_main" />
         </shape>
     </item>
 </ripple>
+

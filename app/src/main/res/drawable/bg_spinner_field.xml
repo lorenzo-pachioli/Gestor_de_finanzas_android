@@ -1,17 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/background_card_90" />
-            <corners android:radius="12dp" />
+            <corners android:radius="@dimen/radius_12dp" />
             <padding
-                android:bottom="4dp"
-                android:left="2dp"
-                android:right="2dp"
-                android:top="4dp" />
+                android:bottom="@dimen/size_4dp"
+                android:left="@dimen/size_2dp"
+                android:right="@dimen/size_2dp"
+                android:top="@dimen/size_4dp" />
             <stroke
-                android:width="2dp"
+                android:width="@dimen/size_2dp"
                 android:color="@color/background_card_90" />
         </shape>
     </item>
 </layer-list>
+

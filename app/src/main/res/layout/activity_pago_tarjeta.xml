@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -23,38 +23,38 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="@dimen/space_20dp">
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="16dp"
+                app:cardCornerRadius="@dimen/radius_16dp"
                 app:cardElevation="0dp"
-                app:strokeWidth="1dp"
+                app:strokeWidth="@dimen/stroke_2dp"
                 app:strokeColor="@color/text_secondary"
-                android:layout_marginBottom="24dp">
+                android:layout_marginBottom="@dimen/space_24dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="@dimen/space_20dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/detalle_deuda"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_16sp"
                         android:textStyle="bold"
                         android:textColor="?attr/colorPrimary"
-                        android:layout_marginBottom="20dp" />
+                        android:layout_marginBottom="@dimen/space_20dp" />
 
                     <!-- Fila Mes Actual -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="@dimen/space_12dp">
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -65,7 +65,7 @@
                             android:id="@+id/tv_gastos_del_mes"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="$0.00"
+                            android:text="@string/amount_zero_decimal"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
                     </LinearLayout>
@@ -76,7 +76,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginBottom="12dp"
+                        android:layout_marginBottom="@dimen/space_12dp"
                         android:visibility="gone">
                         <TextView
                             android:layout_width="0dp"
@@ -88,7 +88,7 @@
                             android:id="@+id/tv_arrastre"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="$0.00"
+                            android:text="@string/amount_zero_decimal"
                             android:textStyle="bold"
                             android:textColor="@android:color/holo_red_dark" />
                     </LinearLayout>
@@ -99,7 +99,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginBottom="20dp"
+                        android:layout_marginBottom="@dimen/space_20dp"
                         android:visibility="gone">
                         <TextView
                             android:layout_width="0dp"
@@ -111,17 +111,17 @@
                             android:id="@+id/tv_pagos_registrados"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="-$0.00"
+                            android:text="@string/negative_amount_zero_decimal"
                             android:textStyle="bold"
                             android:textColor="@android:color/holo_green_dark" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
-                        android:layout_height="1dp"
+                        android:layout_height="@dimen/size_2dp"
                         android:background="@color/text_secondary"
                         android:alpha="0.2"
-                        android:layout_marginBottom="20dp" />
+                        android:layout_marginBottom="@dimen/space_20dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -132,15 +132,15 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/total_a_pagar"
-                            android:textSize="18sp"
+                            android:textSize="@dimen/text_20sp"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
                         <TextView
                             android:id="@+id/tv_total_a_pagar"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="$0.00"
-                            android:textSize="22sp"
+                            android:text="@string/amount_zero_decimal"
+                            android:textSize="@dimen/text_20sp"
                             android:textStyle="bold"
                             android:textColor="?attr/colorPrimary" />
                     </LinearLayout>
@@ -151,10 +151,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/realizar_pago"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="@dimen/space_16dp" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -162,7 +162,7 @@
                 android:hint="@string/monto_a_pagar_label"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 app:startIconDrawable="@android:drawable/ic_menu_edit"
-                android:layout_marginBottom="20dp">
+                android:layout_marginBottom="@dimen/space_20dp">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_monto_pago"
                     android:layout_width="match_parent"
@@ -175,18 +175,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/pagar_desde"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="@dimen/space_8dp" />
 
             <Spinner
                 android:id="@+id/spinner_cuentas"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="@dimen/size_60dp"
                 android:background="@drawable/bg_spinner_field"
-                android:padding="5dp"
-                android:layout_marginBottom="32dp" />
+                android:padding="@dimen/space_8dp"
+                android:layout_marginBottom="@dimen/space_32dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -198,21 +198,23 @@
                     android:id="@+id/btn_cancelar"
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
+                    android:layout_height="@dimen/size_56dp"
                     android:layout_weight="1"
                     android:text="@string/cancelar"
-                    android:layout_marginEnd="8dp" />
+                    android:layout_marginEnd="@dimen/space_8dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_confirmar"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
+                    android:layout_height="@dimen/size_56dp"
                     android:layout_weight="1.5"
                     android:text="@string/confirmar_pago"
-                    app:cornerRadius="12dp" />
+                    app:cornerRadius="@dimen/radius_12dp" />
             </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>
+
+

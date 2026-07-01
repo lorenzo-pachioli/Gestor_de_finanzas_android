@@ -1,17 +1,16 @@
 package com.notificationcapture.app.repositories;
 
-import static android.content.ContentValues.TAG;
-
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
-import com.notificationcapture.app.utils.AppLogger;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.notificationcapture.app.constants.CategoryConstants;
+import com.notificationcapture.app.constants.PrefsConstants;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.interfaces.GsonAccess;
 import com.notificationcapture.app.models.Category;
+import com.notificationcapture.app.utils.AppLogger;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -21,53 +20,36 @@ public class CategoryRepository implements GsonAccess {
 
     private SharedPreferences prefs;
     private Gson gson;
-    private List<Category> cachedCategories = null; // Memory Cache
-
-    public static final String OTHER_INCOME_ID = "other_income";
-    public static final String OTHER_OUTCOME_ID = "other_outcome";
-    public static final String PAGO_TARJETA_ID = "pago_tarjeta";
-    public static final String TRANSFER_OUT_ID = "transfer_out";
-    public static final String TRANSFER_IN_ID  = "transfer_in";
-
-    private static final String[] OUTCOME_CATEGORIES = {
-            "Otros", "Comida", "Combustible", "Transporte", "Servicios",
-            "Entretenimiento", "Salud", "Educación", "Compras", "Vivienda", "Pago de Tarjeta"
-    };
-
-    private static final String[] INCOME_CATEGORIES = {
-            "Otros", "Salario", "Inversiones", "Reembolsos", "Familiares", "Venta"
-    };
+    private List<Category> cachedCategories = null;
 
     public CategoryRepository(Context context) {
-        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs = context.getSharedPreferences(PrefsConstants.PREFS_NAME, Context.MODE_PRIVATE);
         gson = new Gson();
         initCategoryDefaults();
     }
 
     private void initCategoryDefaults() {
-        // Initialize Categories if empty
         if (!prefs.contains(KEY_CATEGORIES)) {
             List<Category> defaultCategories = new ArrayList<>();
-            // Income Defaults
-            for (String name : INCOME_CATEGORIES) {
-                if (name.equals("Otros")) {
-                    defaultCategories.add(new Category(OTHER_INCOME_ID, name, IngresoOEgreso.INGRESO));
+            for (String name : CategoryConstants.DEFAULT_INCOME_CATEGORIES) {
+                if (CategoryConstants.OTHER_DISPLAY_NAME.equals(name)) {
+                    defaultCategories.add(new Category(CategoryConstants.OTHER_INCOME_ID, name, IngresoOEgreso.INGRESO));
                 } else {
                     defaultCategories.add(new Category(name, IngresoOEgreso.INGRESO));
                 }
             }
-            defaultCategories.add(new Category(TRANSFER_IN_ID, "Transferencia entrante", IngresoOEgreso.INGRESO));
-            // Outcome Defaults
-            for (String name : OUTCOME_CATEGORIES) {
-                if (name.equals("Otros")) {
-                    defaultCategories.add(new Category(OTHER_OUTCOME_ID, name, IngresoOEgreso.EGRESO));
-                } else if (name.equals("Pago de Tarjeta")) {
-                    defaultCategories.add(new Category(PAGO_TARJETA_ID, name, IngresoOEgreso.EGRESO));
+            defaultCategories.add(new Category(CategoryConstants.TRANSFER_IN_ID, "Transferencia entrante", IngresoOEgreso.INGRESO));
+
+            for (String name : CategoryConstants.DEFAULT_OUTCOME_CATEGORIES) {
+                if (CategoryConstants.OTHER_DISPLAY_NAME.equals(name)) {
+                    defaultCategories.add(new Category(CategoryConstants.OTHER_OUTCOME_ID, name, IngresoOEgreso.EGRESO));
+                } else if ("Pago de Tarjeta".equals(name)) {
+                    defaultCategories.add(new Category(CategoryConstants.PAGO_TARJETA_ID, name, IngresoOEgreso.EGRESO));
                 } else {
                     defaultCategories.add(new Category(name, IngresoOEgreso.EGRESO));
                 }
             }
-            defaultCategories.add(new Category(TRANSFER_OUT_ID, "Transferencia saliente", IngresoOEgreso.EGRESO));
+            defaultCategories.add(new Category(CategoryConstants.TRANSFER_OUT_ID, "Transferencia saliente", IngresoOEgreso.EGRESO));
             saveCategories(defaultCategories);
         }
     }
@@ -113,27 +95,32 @@ public class CategoryRepository implements GsonAccess {
     }
 
     public Category getCategoryById(String id) {
-        if (id == null)
+        if (id == null) {
             return null;
+        }
         List<Category> all = getAllCategories();
         for (Category c : all) {
             if (c.getId().equals(id)) {
                 return c;
             }
         }
-        // Fallback para migraciones de objetos antiguos y IDs por defecto cruzados
         if ("other".equals(id)) {
-            // ID antiguo sin tipo - fallback genérico, buscar primero por tipo después
             for (Category c : all) {
-                if ("Otros".equalsIgnoreCase(c.getName()) && c.getType() == IngresoOEgreso.INGRESO) return c;
+                if (CategoryConstants.OTHER_DISPLAY_NAME.equalsIgnoreCase(c.getName()) && c.getType() == IngresoOEgreso.INGRESO) {
+                    return c;
+                }
             }
-        } else if (OTHER_INCOME_ID.equals(id) || "Otros_INGRESO".equals(id)) {
+        } else if (CategoryConstants.OTHER_INCOME_ID.equals(id) || "Otros_INGRESO".equals(id)) {
             for (Category c : all) {
-                if ("Otros".equalsIgnoreCase(c.getName()) && c.getType() == IngresoOEgreso.INGRESO) return c;
+                if (CategoryConstants.OTHER_DISPLAY_NAME.equalsIgnoreCase(c.getName()) && c.getType() == IngresoOEgreso.INGRESO) {
+                    return c;
+                }
             }
-        } else if (OTHER_OUTCOME_ID.equals(id) || "Otros_EGRESO".equals(id)) {
+        } else if (CategoryConstants.OTHER_OUTCOME_ID.equals(id) || "Otros_EGRESO".equals(id)) {
             for (Category c : all) {
-                if ("Otros".equalsIgnoreCase(c.getName()) && c.getType() == IngresoOEgreso.EGRESO) return c;
+                if (CategoryConstants.OTHER_DISPLAY_NAME.equalsIgnoreCase(c.getName()) && c.getType() == IngresoOEgreso.EGRESO) {
+                    return c;
+                }
             }
         }
         return null;
@@ -153,18 +140,17 @@ public class CategoryRepository implements GsonAccess {
 
     public List<Category> getAllCategories() {
         if (cachedCategories != null) {
-            return new ArrayList<>(cachedCategories); // Devuelve copia rápida desde RAM O(1)
+            return new ArrayList<>(cachedCategories);
         }
-        
+
         try {
             String json = prefs.getString(KEY_CATEGORIES, null);
-            if (json == null)
+            if (json == null) {
                 return new ArrayList<>();
-            Type type = new TypeToken<List<Category>>() {
-            }.getType();
+            }
+            Type type = new TypeToken<List<Category>>() {}.getType();
             List<Category> cats = gson.fromJson(json, type);
 
-            // Migración: asegurar que todos tengan ID y existan categorías base nuevas
             boolean needsSave = false;
             if (cats != null) {
                 boolean hasPagoTarjeta = false;
@@ -173,27 +159,27 @@ public class CategoryRepository implements GsonAccess {
                         c.setId(c.getName() + "_" + c.getType());
                         needsSave = true;
                     }
-                    // Migrar IDs antiguos: "other" debe convertirse según el tipo
                     if ("other".equals(c.getId())) {
-                        String correctId = c.getType() == IngresoOEgreso.INGRESO ? OTHER_INCOME_ID : OTHER_OUTCOME_ID;
+                        String correctId = c.getType() == IngresoOEgreso.INGRESO
+                                ? CategoryConstants.OTHER_INCOME_ID
+                                : CategoryConstants.OTHER_OUTCOME_ID;
                         c.setId(correctId);
                         needsSave = true;
                     }
-                    if ("other_income".equals(c.getId()) || "Otros_INGRESO".equals(c.getId())) {
-                        c.setId(OTHER_INCOME_ID);
+                    if (CategoryConstants.OTHER_INCOME_ID.equals(c.getId()) || "Otros_INGRESO".equals(c.getId())) {
+                        c.setId(CategoryConstants.OTHER_INCOME_ID);
                         needsSave = true;
-                    } else if ("other_outcome".equals(c.getId()) || "Otros_EGRESO".equals(c.getId())) {
-                        c.setId(OTHER_OUTCOME_ID);
+                    } else if (CategoryConstants.OTHER_OUTCOME_ID.equals(c.getId()) || "Otros_EGRESO".equals(c.getId())) {
+                        c.setId(CategoryConstants.OTHER_OUTCOME_ID);
                         needsSave = true;
                     }
-                    if (PAGO_TARJETA_ID.equals(c.getId())) {
+                    if (CategoryConstants.PAGO_TARJETA_ID.equals(c.getId())) {
                         hasPagoTarjeta = true;
                     }
                 }
 
-                // Si no existe la categoría de Pago de Tarjeta, la agregamos
                 if (!hasPagoTarjeta) {
-                    cats.add(new Category(PAGO_TARJETA_ID, "Pago de Tarjeta", IngresoOEgreso.EGRESO));
+                    cats.add(new Category(CategoryConstants.PAGO_TARJETA_ID, "Pago de Tarjeta", IngresoOEgreso.EGRESO));
                     needsSave = true;
                 }
 
@@ -214,7 +200,7 @@ public class CategoryRepository implements GsonAccess {
 
     private void saveCategories(List<Category> categories) {
         try {
-            cachedCategories = new ArrayList<>(categories); // Sincroniza caché en memoria
+            cachedCategories = new ArrayList<>(categories);
             prefs.edit().putString(KEY_CATEGORIES, gson.toJson(categories)).apply();
         } catch (Exception e) {
             AppLogger.e("CategoryRepository", "Error saving categories: " + e.getMessage(), e);

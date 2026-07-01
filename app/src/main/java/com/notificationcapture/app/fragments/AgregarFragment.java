@@ -30,6 +30,8 @@ import java.util.Locale;
 import java.util.UUID;
 
 import com.notificationcapture.app.R;
+import com.notificationcapture.app.constants.CategoryConstants;
+import com.notificationcapture.app.constants.NotificationConstants;
 import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.enums.PaymentMethod;
@@ -40,13 +42,13 @@ import com.notificationcapture.app.models.CreditCard;
 import com.notificationcapture.app.models.Debit;
 import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.models.Wallets;
-import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.CreditCardRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.repositories.WalletRepository;
 import com.notificationcapture.app.utils.CustomTypeSwitch;
 import com.notificationcapture.app.utils.MoneyTextWatcher;
+import com.notificationcapture.app.services.ServiceProvider;
 
 public class AgregarFragment extends Fragment {
 
@@ -58,7 +60,6 @@ public class AgregarFragment extends Fragment {
     private TextInputEditText etDate;
     private TextView tvPaymentMethod;
     private TransactionRepository repository;
-    private CategoryRepository categoryRepository;
     private WalletRepository walletRepository;
     private CreditCardRepository creditCardRepository;
     private long selectedDateTimestamp;
@@ -79,7 +80,6 @@ public class AgregarFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         repository = RepositoryProvider.getInstance().getTransactionRepository();
-        categoryRepository = RepositoryProvider.getInstance().getCategoryRepository();
         walletRepository = RepositoryProvider.getInstance().getWalletRepository();
         creditCardRepository = RepositoryProvider.getInstance().getCreditCardRepository();
 
@@ -145,7 +145,9 @@ public class AgregarFragment extends Fragment {
     private void configurarSpinnerCat() {
         boolean isEgreso = swType.isChecked();
         IngresoOEgreso type = isEgreso ? IngresoOEgreso.EGRESO : IngresoOEgreso.INGRESO;
-        List<Category> categories = categoryRepository.getCategories(type);
+        List<Category> categories = ServiceProvider.getInstance()
+                .getCategoryService()
+                .getCategoriesForType(type);
         UniversalSpinnerAdapter<Category> adapterCategories = new UniversalSpinnerAdapter<>(requireContext(), categories);
         
         String currentSelectionName = "";
@@ -166,8 +168,8 @@ public class AgregarFragment extends Fragment {
         
         if (!found) {
             for (int i = 0; i < categories.size(); i++) {
-                if (CategoryRepository.OTHER_INCOME_ID.equals(categories.get(i).getId())
-                        || CategoryRepository.OTHER_OUTCOME_ID.equals(categories.get(i).getId())
+                if (CategoryConstants.OTHER_INCOME_ID.equals(categories.get(i).getId())
+                        || CategoryConstants.OTHER_OUTCOME_ID.equals(categories.get(i).getId())
                         || "Otros".equalsIgnoreCase(categories.get(i).getName())) {
                     spinnerCategory.setSelection(i);
                     break;
@@ -231,7 +233,7 @@ public class AgregarFragment extends Fragment {
             calendar.add(Calendar.MONTH, 1);
         }
 
-        Intent intent = new Intent("com.notificationcapture.NEW_NOTIFICATION");
+        Intent intent = new Intent(NotificationConstants.ACTION_NEW_NOTIFICATION);
         requireContext().sendBroadcast(intent);
 
         etTitle.setText("");

@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Espaciado general -->
+    <dimen name="space_2dp">2dp</dimen>
+    <dimen name="space_4dp">4dp</dimen>
+    <dimen name="space_8dp">8dp</dimen>
+    <dimen name="space_12dp">12dp</dimen>
+    <dimen name="space_16dp">16dp</dimen>
+    <dimen name="space_20dp">20dp</dimen>
+    <dimen name="space_24dp">24dp</dimen>
+    <dimen name="space_32dp">32dp</dimen>
+    <dimen name="space_40dp">40dp</dimen>
+    <dimen name="space_60dp">60dp</dimen>
+    <dimen name="space_72dp">72dp</dimen>
+    <dimen name="space_80dp">80dp</dimen>
+    <dimen name="space_160dp">180dp</dimen>
+
+    <!-- Tamaños fijos -->
+    <dimen name="size_2dp">2dp</dimen>
+    <dimen name="size_4dp">4dp</dimen>
+    <dimen name="size_8dp">8dp</dimen>
+    <dimen name="size_12dp">12dp</dimen>
+    <dimen name="size_16dp">16dp</dimen>
+    <dimen name="size_20dp">20dp</dimen>
+    <dimen name="size_24dp">24dp</dimen>
+    <dimen name="size_28dp">28dp</dimen>
+    <dimen name="size_40dp">40dp</dimen>
+    <dimen name="size_48dp">48dp</dimen>
+    <dimen name="size_56dp">56dp</dimen>
+    <dimen name="size_60dp">60dp</dimen>
+    <dimen name="size_64dp">64dp</dimen>
+    <dimen name="size_80dp">80dp</dimen>
+    <dimen name="size_108dp">108dp</dimen>
+    <dimen name="size_120dp">120dp</dimen>
+    <dimen name="size_200dp">200dp</dimen>
+    <dimen name="size_208dp">208dp</dimen>
+    <dimen name="size_220dp">220dp</dimen>
+    <dimen name="size_284dp">284dp</dimen>
+    <dimen name="size_300dp">300dp</dimen>
+    <dimen name="size_312dp">312dp</dimen>
+    <dimen name="size_400dp">400dp</dimen>
+    <dimen name="size_496dp">496dp</dimen>
+
+    <!-- Radios y esquinas -->
+    <dimen name="radius_2dp">2dp</dimen>
+    <dimen name="radius_4dp">4dp</dimen>
+    <dimen name="radius_8dp">8dp</dimen>
+    <dimen name="radius_12dp">12dp</dimen>
+    <dimen name="radius_16dp">16dp</dimen>
+    <dimen name="radius_28dp">28dp</dimen>
+    <dimen name="radius_100dp">100dp</dimen>
+    <dimen name="radius_100sp">100sp</dimen>
+
+    <!-- Texto -->
+    <dimen name="text_2sp">2sp</dimen>
+    <dimen name="text_8sp">8sp</dimen>
+    <dimen name="text_12sp">12sp</dimen>
+    <dimen name="text_16sp">16sp</dimen>
+    <dimen name="text_20sp">20sp</dimen>
+    <dimen name="text_24sp">24sp</dimen>
+    <dimen name="text_28sp">28sp</dimen>
+    <dimen name="text_32sp">32sp</dimen>
+    <dimen name="text_36sp">36sp</dimen>
+    <dimen name="text_44sp">44sp</dimen>
+    <dimen name="text_56sp">56sp</dimen>
+
+    <!-- Elevaciones y trazos -->
+    <dimen name="stroke_2dp">2dp</dimen>
+    <dimen name="elevation_2dp">2dp</dimen>
+    <dimen name="elevation_4dp">4dp</dimen>
+    <dimen name="elevation_8dp">8dp</dimen>
+    <dimen name="elevation_16dp">16dp</dimen>
+    <dimen name="elevation_20dp">20dp</dimen>
+</resources>

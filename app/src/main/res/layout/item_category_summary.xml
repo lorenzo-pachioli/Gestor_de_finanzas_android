@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="8dp">
+    android:padding="@dimen/space_8dp">
 
     <TextView
         android:id="@+id/tvCategoryName"
@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="@string/categoria"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_16sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary" />
 
@@ -20,7 +20,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/default_amount"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_16sp"
         android:textColor="@color/red" />
 
 </LinearLayout>
+

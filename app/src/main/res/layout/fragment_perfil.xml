@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- ARCHIVO COMPLETO: app/src/main/res/layout/fragment_perfil.xml -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -11,7 +11,7 @@
         android:id="@+id/layoutSettingsMenu"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="80dp"
+        android:paddingBottom="@dimen/space_80dp"
         android:clipToPadding="false"
         android:fillViewport="false">
 
@@ -19,24 +19,24 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/space_16dp">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/configuracion"
-                android:textSize="24sp"
+                android:textSize="@dimen/text_24sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
-                android:layout_marginBottom="24dp"/>
+                android:layout_marginBottom="@dimen/space_24dp"/>
 
             
             <!-- Idioma -->
             <com.notificationcapture.app.utils.CustomLanguageSwitch
                 android:id="@+id/swLanguage"
                 android:layout_width="match_parent"
-                android:layout_height="58dp"
-                android:layout_marginBottom="8dp" />
+                android:layout_height="@dimen/size_56dp"
+                android:layout_marginBottom="@dimen/space_8dp" />
 
             <!-- Modo Oscuro -->
             <LinearLayout
@@ -44,21 +44,21 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:padding="16dp"
+                android:padding="@dimen/space_16dp"
                 android:background="@drawable/bg_card_rounded"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="@dimen/space_8dp">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/modo_oscuro"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/text_16sp"
                     android:textColor="@color/text_primary"/>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="40dp">
+                    android:layout_height="@dimen/size_40dp">
 
                     <com.google.android.material.materialswitch.MaterialSwitch
                         android:id="@+id/switchDarkMode"
@@ -79,12 +79,12 @@
             <LinearLayout
                 android:id="@+id/itemCategorias"
                 android:layout_width="match_parent"
-                android:layout_height="64dp"
+                android:layout_height="@dimen/size_64dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:padding="16dp"
+                android:padding="@dimen/space_16dp"
                 android:background="@drawable/bg_card_rounded"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="@dimen/space_8dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground">
@@ -94,14 +94,14 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/categorias"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/text_16sp"
                     android:textColor="@color/text_primary"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="›"
-                    android:textSize="22sp"
+                    android:text="@string/forward_chevron"
+                    android:textSize="@dimen/text_20sp"
                     android:textColor="@color/text_secondary"/>
             </LinearLayout>
 
@@ -109,12 +109,12 @@
             <LinearLayout
                 android:id="@+id/itemBilleteras"
                 android:layout_width="match_parent"
-                android:layout_height="64dp"
+                android:layout_height="@dimen/size_64dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:padding="16dp"
+                android:padding="@dimen/space_16dp"
                 android:background="@drawable/bg_card_rounded"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="@dimen/space_8dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground">
@@ -124,14 +124,14 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/billeteras_bancos"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/text_16sp"
                     android:textColor="@color/text_primary"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="›"
-                    android:textSize="22sp"
+                    android:text="@string/forward_chevron"
+                    android:textSize="@dimen/text_20sp"
                     android:textColor="@color/text_secondary"/>
             </LinearLayout>
 
@@ -139,12 +139,12 @@
             <LinearLayout
                 android:id="@+id/itemTarjetas"
                 android:layout_width="match_parent"
-                android:layout_height="64dp"
+                android:layout_height="@dimen/size_64dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:padding="16dp"
+                android:padding="@dimen/space_16dp"
                 android:background="@drawable/bg_card_rounded"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="@dimen/space_8dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground">
@@ -154,14 +154,14 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/tarjetas_credito"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/text_16sp"
                     android:textColor="@color/text_primary"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="›"
-                    android:textSize="22sp"
+                    android:text="@string/forward_chevron"
+                    android:textSize="@dimen/text_20sp"
                     android:textColor="@color/text_secondary"/>
             </LinearLayout>
 
@@ -177,3 +177,5 @@
         android:background="@color/background_main"/>
 
 </FrameLayout>
+
+

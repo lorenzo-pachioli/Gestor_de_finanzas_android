@@ -10,7 +10,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
@@ -38,15 +37,14 @@ import com.notificationcapture.app.interfaces.OnDeleteClickListener;
 import com.notificationcapture.app.models.Cash;
 import com.notificationcapture.app.models.Category;
 import com.notificationcapture.app.models.Credit;
-import com.notificationcapture.app.models.CreditCard;
 import com.notificationcapture.app.models.Debit;
 import com.notificationcapture.app.models.Transaction;
-import com.notificationcapture.app.models.Wallets;
-import com.notificationcapture.app.repositories.CategoryRepository;
-import com.notificationcapture.app.repositories.CreditCardRepository;
+import com.notificationcapture.app.constants.CategoryConstants;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
-import com.notificationcapture.app.repositories.WalletRepository;
+import com.notificationcapture.app.services.CategoryService;
+import com.notificationcapture.app.services.ServiceProvider;
+import com.notificationcapture.app.services.WalletService;
 import com.notificationcapture.app.utils.CustomTypeSwitch;
 import com.notificationcapture.app.utils.Dialog;
 import com.notificationcapture.app.utils.MoneyTextWatcher;
@@ -54,15 +52,14 @@ import com.notificationcapture.app.utils.MoneyTextWatcher;
 public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.ViewHolder> {
 
     private List<Transaction> transactions;
-    private CategoryRepository categoryRepo;
-    private WalletRepository walletRepo;
-    private CreditCardRepository cardRepo;
-    private TransactionRepository repository;
-    private SimpleDateFormat dateFormat;
-    private OnDeleteClickListener deleteListener;
-    private OnAddClickListener addListener;
-    private boolean showAddButton;
-    private FragmentManager fragmentManager;
+    private final CategoryService categoryService;
+    private final WalletService walletService;
+    private final TransactionRepository repository;
+    private final SimpleDateFormat dateFormat;
+    private final OnDeleteClickListener deleteListener;
+    private final OnAddClickListener addListener;
+    private final boolean showAddButton;
+    private final FragmentManager fragmentManager;
 
     public TransactionAdapter(List<Transaction> transactions, FragmentManager fragmentManager,
             OnDeleteClickListener deleteListener,
@@ -73,9 +70,8 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         this.addListener = addListener;
         this.showAddButton = showAddButton;
         this.dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
-        categoryRepo = RepositoryProvider.getInstance().getCategoryRepository();
-        walletRepo = RepositoryProvider.getInstance().getWalletRepository();
-        cardRepo = RepositoryProvider.getInstance().getCreditCardRepository();
+        categoryService = ServiceProvider.getInstance().getCategoryService();
+        walletService = ServiceProvider.getInstance().getWalletService();
         repository = RepositoryProvider.getInstance().getTransactionRepository();
     }
 
@@ -199,25 +195,22 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             notifyItemChanged(holder.getAdapterPosition());
         });
 
-        Category borderCat = categoryRepo.getCategoryById(item.getCategoryId());
-        int borderColor = (borderCat != null) ? borderCat.getDisplayColor() : android.graphics.Color.LTGRAY;
-        holder.getViewNotificationBorder().setBackgroundColor(borderColor);
+        holder.getViewNotificationBorder().setBackgroundColor(
+                categoryService.getTransactionColor(item)
+        );
     }
 
     private void updateToggleUI(ViewHolder holder, boolean isEgreso) {
     }
 
     private Category resolveCategory(String categoryId, IngresoOEgreso type) {
-        Category cat = categoryRepo.getCategoryById(categoryId);
-        if (cat == null) {
-            cat = new Category("Otros", type != null ? type : IngresoOEgreso.EGRESO);
-        }
-        return cat;
+        return categoryService.resolveCategory(categoryId,
+                type != null ? type : IngresoOEgreso.EGRESO);
     }
 
     private void resetCategoryForType(ViewHolder holder, boolean isIngreso) {
         IngresoOEgreso newType = isIngreso ? IngresoOEgreso.INGRESO : IngresoOEgreso.EGRESO;
-        List<Category> newTypeCategories = categoryRepo.getCategories(newType);
+        List<Category> newTypeCategories = categoryService.getCategoriesForType(newType);
 
         String currentName = holder.getSelectedCategory().getName().toLowerCase();
         Category found = null;
@@ -231,8 +224,8 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         if (found != null) {
             holder.setSelectedCategory(found);
         } else {
-            String otherId = isIngreso ? CategoryRepository.OTHER_INCOME_ID : CategoryRepository.OTHER_OUTCOME_ID;
-            holder.setSelectedCategory(categoryRepo.getCategoryById(otherId));
+            String otherId = isIngreso ? CategoryConstants.OTHER_INCOME_ID : CategoryConstants.OTHER_OUTCOME_ID;
+            holder.setSelectedCategory(categoryService.resolveCategory(otherId, newType));
         }
 
         holder.getTvCategorySelector().setText(holder.getSelectedCategory().getName());
@@ -260,8 +253,9 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     }
 
     private void showCategorySelector(Context context, ViewHolder holder, boolean isIngreso) {
-        List<Category> options = categoryRepo
-                .getCategories(isIngreso ? IngresoOEgreso.INGRESO : IngresoOEgreso.EGRESO);
+        List<Category> options = categoryService.getCategoriesForType(
+                isIngreso ? IngresoOEgreso.INGRESO : IngresoOEgreso.EGRESO
+        );
 
         SelectorBottomSheet sheet = SelectorBottomSheet.newInstance(
                 "Seleccionar Categoría",
@@ -345,26 +339,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     }
 
     private String resolveSourceName(Transaction item) {
-        if (item instanceof Debit d) {
-            Wallets w = walletRepo.getWalletById(d.getWalletId());
-            if (w != null)
-                return w.getAppName();
-            return d.getSourceName();
-        } else if (item instanceof Credit c) {
-            CreditCard card = cardRepo.getCreditCardById(c.getCreditCardId());
-            if (card != null)
-                return card.getName();
-            return c.getSourceName();
-        } else if (item instanceof Cash) {
-            return PaymentMethod.DISPLAY_CASH;
-        }
-
-        if (item.getPaymentMethod() != null) {
-            String name = item.getPaymentMethod().name();
-            return name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
-        }
-
-        return "Desconocido";
+        return walletService.resolveSourceDisplayName(item);
     }
 
     @Override

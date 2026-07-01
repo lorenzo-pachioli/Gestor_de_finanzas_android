@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Checked State: Green with rounded Left corners -->
     <item android:state_checked="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/green"/>
             <corners 
-                android:topLeftRadius="8dp" 
-                android:bottomLeftRadius="8dp"
+                android:topLeftRadius="@dimen/radius_8dp" 
+                android:bottomLeftRadius="@dimen/radius_8dp"
                 android:topRightRadius="0dp"
                 android:bottomRightRadius="0dp"/>
         </shape>
@@ -17,10 +17,11 @@
         <shape android:shape="rectangle">
             <solid android:color="@color/grey_unselected"/>
             <corners 
-                android:topLeftRadius="8dp" 
-                android:bottomLeftRadius="8dp"
+                android:topLeftRadius="@dimen/radius_8dp" 
+                android:bottomLeftRadius="@dimen/radius_8dp"
                 android:topRightRadius="0dp"
                 android:bottomRightRadius="0dp"/>
         </shape>
     </item>
 </selector>
+

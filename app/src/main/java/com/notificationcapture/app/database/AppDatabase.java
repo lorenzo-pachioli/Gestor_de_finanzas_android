@@ -9,9 +9,10 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
+import com.notificationcapture.app.constants.DatabaseConstants;
 
 
-@Database(entities = {TransactionEntity.class, CreditCardPaymentEntity.class}, version = 5, exportSchema = true)
+@Database(entities = {TransactionEntity.class, CreditCardPaymentEntity.class}, version = DatabaseConstants.DB_VERSION, exportSchema = true)
 @TypeConverters({Converters.class})
 public abstract class AppDatabase extends RoomDatabase {
 
@@ -24,7 +25,7 @@ public abstract class AppDatabase extends RoomDatabase {
             synchronized (AppDatabase.class) {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
-                                    AppDatabase.class, "notification_database")
+                    AppDatabase.class, DatabaseConstants.DB_NAME)
                             .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                             .build();
                 }

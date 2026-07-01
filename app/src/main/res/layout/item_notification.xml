@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
+    android:layout_margin="@dimen/space_8dp"
     app:cardBackgroundColor="@color/background_card"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    app:cardCornerRadius="@dimen/radius_8dp"
+    app:cardElevation="@dimen/elevation_4dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,7 +17,7 @@
         <View
             android:id="@+id/viewNotificationBorder"
             android:layout_height="match_parent"
-            android:layout_width="10sp"
+            android:layout_width="@dimen/size_12dp"
             android:background="@color/text_secondary" />
 
         <LinearLayout
@@ -31,7 +31,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/space_16dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -48,20 +48,20 @@
                         android:layout_height="wrap_content"
                         android:text="@string/app_name_placeholder"
                         android:textStyle="bold"
-                        android:textSize="12sp"
+                        android:textSize="@dimen/text_12sp"
                         android:textColor="@color/accent_main"
-                        android:layout_marginBottom="4dp"
-                        android:layout_marginRight="20dp"/>
+                        android:layout_marginBottom="@dimen/space_4dp"
+                        android:layout_marginRight="@dimen/space_20dp"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/slash"
                         android:textStyle="bold"
-                        android:textSize="12sp"
+                        android:textSize="@dimen/text_12sp"
                         android:textColor="@color/accent_main"
-                        android:layout_marginBottom="4dp"
-                        android:layout_marginRight="20dp"/>
+                        android:layout_marginBottom="@dimen/space_4dp"
+                        android:layout_marginRight="@dimen/space_20dp"/>
 
                     <TextView
                         android:id="@+id/tvCategory"
@@ -69,9 +69,9 @@
                         android:layout_height="wrap_content"
                         android:text="@string/categoria_placeholder"
                         android:textStyle="bold"
-                        android:textSize="12sp"
+                        android:textSize="@dimen/text_12sp"
                         android:textColor="@color/accent_main"
-                        android:layout_marginBottom="4dp"/>
+                        android:layout_marginBottom="@dimen/space_4dp"/>
                 </LinearLayout>
 
 
@@ -81,13 +81,13 @@
                     android:layout_height="wrap_content"
                     android:text="@string/notificacion"
                     android:textStyle="bold"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_12sp"
                     android:textColor="@color/white"
                     android:background="@drawable/bg_button_rounded_2"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="1dp"
-                    android:layout_marginLeft="60dp"
-                    android:layout_marginBottom="2dp"/>
+                    android:paddingHorizontal="@dimen/space_12dp"
+                    android:paddingVertical="@dimen/space_2dp"
+                    android:layout_marginLeft="@dimen/space_60dp"
+                    android:layout_marginBottom="@dimen/space_2dp"/>
 
             </LinearLayout>
 
@@ -107,30 +107,30 @@
                         android:id="@+id/tvTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
+                        android:layout_marginBottom="@dimen/space_4dp"
                         android:text="@string/notification_title_placeholder"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/text_16sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
+                        android:layout_marginBottom="@dimen/space_4dp"
                         android:text="@string/notification_text_placeholder"
                         android:textColor="@color/text_secondary"
-                        android:textSize="14sp" />
+                        android:textSize="@dimen/text_16sp" />
 
                     <TextView
                         android:id="@+id/tvAmount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:layout_marginBottom="8dp"
+                        android:layout_marginTop="@dimen/space_4dp"
+                        android:layout_marginBottom="@dimen/space_8dp"
                         android:text="@string/amount_placeholder"
                         android:textColor="@color/green"
-                        android:textSize="20sp"
+                        android:textSize="@dimen/text_20sp"
                         android:textStyle="bold"
                         android:visibility="gone" />
 
@@ -140,16 +140,16 @@
                         android:layout_height="wrap_content"
                         android:text="@string/date_placeholder"
                         android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
+                        android:textSize="@dimen/text_12sp" />
                 </LinearLayout>
 
 
                 <ImageButton
                     android:id="@+id/btnAdd"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="@dimen/size_48dp"
+                    android:layout_height="@dimen/size_48dp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/space_8dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@android:drawable/ic_input_add"
                     app:tint="@color/accent_main"
@@ -157,14 +157,14 @@
 
                 <ImageButton
                     android:id="@+id/btnDelete"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="@dimen/size_48dp"
+                    android:layout_height="@dimen/size_48dp"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/space_8dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@android:drawable/ic_menu_delete"
                     app:tint="@color/red"
-                    android:contentDescription="Eliminar notificación"/>
+                    android:contentDescription="Eliminar notificaciÃ³n"/>
 
             </LinearLayout>
 
@@ -172,13 +172,13 @@
 
         </LinearLayout>
 
-        <!-- Vista Edición -->
+        <!-- Vista EdiciÃ³n -->
         <LinearLayout
             android:id="@+id/layoutEdit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp"
+            android:padding="@dimen/space_16dp"
             android:visibility="gone"
             android:background="@color/background_card">
 
@@ -187,48 +187,48 @@
                 android:layout_height="wrap_content"
                 android:text="@string/editar_notificacion"
                 android:textStyle="bold"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_16sp"
                 android:textColor="@color/accent_main"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="@dimen/space_8dp"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/titulo"
-                android:textSize="12sp"/>
+                android:textSize="@dimen/text_12sp"/>
             <EditText
                 android:id="@+id/etTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_card_rounded"
-                android:padding="12dp"
-                android:layout_marginBottom="8dp"/>
+                android:padding="@dimen/space_12dp"
+                android:layout_marginBottom="@dimen/space_8dp"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/contenido"
-                android:textSize="12sp"/>
+                android:textSize="@dimen/text_12sp"/>
             <EditText
                 android:id="@+id/etText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_card_rounded"
-                android:padding="12dp"
+                android:padding="@dimen/space_12dp"
                 android:hint="@string/notification_text_placeholder"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="@dimen/space_8dp"/>
 
             <com.notificationcapture.app.utils.CustomTypeSwitch
                 android:id="@+id/switchType"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginBottom="8dp" />
+                android:layout_height="@dimen/size_40dp"
+                android:layout_marginBottom="@dimen/space_8dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/monto"
-                android:textSize="12sp"/>
+                android:textSize="@dimen/text_12sp"/>
             <EditText
                 android:id="@+id/etAmount"
                 android:layout_width="match_parent"
@@ -236,58 +236,58 @@
                 android:inputType="phone"
                 android:digits="0123456789.,"
                 android:background="@drawable/bg_card_rounded"
-                android:padding="12dp"
-                android:layout_marginBottom="8dp"/>
+                android:padding="@dimen/space_12dp"
+                android:layout_marginBottom="@dimen/space_8dp"/>
             
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/categoria"
-                android:textSize="12sp"/>
+                android:textSize="@dimen/text_12sp"/>
             <TextView
                 android:id="@+id/tvCategorySelector"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="@dimen/size_48dp"
                 android:background="@drawable/bg_card_rounded"
                 android:gravity="center_vertical"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:paddingStart="@dimen/space_12dp"
+                android:paddingEnd="@dimen/space_12dp"
                 android:textColor="@color/text_secondary"
                 android:text="@string/categoria_placeholder"
                 android:drawableEnd="@android:drawable/arrow_down_float"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="@dimen/space_8dp"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/aplicacion_origen"
-                android:textSize="12sp"/>
+                android:textSize="@dimen/text_12sp"/>
             <TextView
                 android:id="@+id/tvPaymentMethod"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="@dimen/size_48dp"
                 android:background="@drawable/bg_card_rounded"
                 android:gravity="center_vertical"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:paddingStart="@dimen/space_12dp"
+                android:paddingEnd="@dimen/space_12dp"
                 android:textColor="@color/text_secondary"
                 android:text="@string/metodo_pago"
                 android:drawableEnd="@android:drawable/arrow_down_float"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="@dimen/space_16dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="@dimen/space_16dp">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/es_notificacion"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/text_16sp"
                     android:textColor="@color/text_primary"/>
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -309,7 +309,7 @@
                     android:text="@string/cancelar"
                     android:backgroundTint="#CCCCCC"
                     android:textColor="@color/black"
-                    android:layout_marginEnd="8dp"/>
+                    android:layout_marginEnd="@dimen/space_8dp"/>
 
                 <Button
                     android:id="@+id/btnSave"

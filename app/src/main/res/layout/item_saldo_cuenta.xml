@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="16dp"
+    android:padding="@dimen/space_16dp"
     android:gravity="center_vertical"
     android:background="?attr/selectableItemBackground">
 
@@ -17,7 +17,7 @@
             android:id="@+id/tvNombreCuenta"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
+            android:textSize="@dimen/text_16sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary" />
 
@@ -25,9 +25,9 @@
             android:id="@+id/tvTipoCuenta"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_16sp"
             android:textColor="@color/text_secondary"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="@dimen/space_4dp"
             android:visibility="gone" />
 
     </LinearLayout>
@@ -36,7 +36,7 @@
         android:id="@+id/tvSaldo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
+        android:textSize="@dimen/text_20sp"
         android:textStyle="bold" />
 
     <Button
@@ -44,9 +44,11 @@
         style="?attr/materialButtonOutlinedStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:text="Pagar"
-        android:textSize="12sp"
+        android:layout_marginStart="@dimen/space_8dp"
+        android:text="@string/pay"
+        android:textSize="@dimen/text_12sp"
         android:visibility="gone" />
 
 </LinearLayout>
+
+

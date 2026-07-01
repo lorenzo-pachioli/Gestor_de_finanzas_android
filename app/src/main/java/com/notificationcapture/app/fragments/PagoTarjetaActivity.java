@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.notificationcapture.app.R;
+import com.notificationcapture.app.constants.DatabaseConstants;
 import com.notificationcapture.app.database.AppDatabase;
 import com.notificationcapture.app.database.CreditCardPaymentEntity;
 import com.notificationcapture.app.database.TransactionEntity;
@@ -23,7 +24,7 @@ import com.notificationcapture.app.enums.PaymentMethod;
 import com.notificationcapture.app.models.ResumenDeudaTarjeta;
 import com.notificationcapture.app.models.SaldoCuenta;
 import com.notificationcapture.app.models.Wallets;
-import com.notificationcapture.app.repositories.CategoryRepository;
+import com.notificationcapture.app.constants.CategoryConstants;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.repositories.WalletRepository;
@@ -199,7 +200,7 @@ public class PagoTarjetaActivity extends AppCompatActivity {
                 UUID.randomUUID().toString(), paymentMethod,
                 "Pago Tarjeta " + resumen.getCardName(), "Pago realizado",
                 now, montoAPagar, IngresoOEgreso.EGRESO,
-                CategoryRepository.PAGO_TARJETA_ID, false, TransactionEntity.STATUS_APPROVED
+                CategoryConstants.PAGO_TARJETA_ID, false, DatabaseConstants.STATUS_APPROVED
         );
         gastoBilletera.setWalletId(walletId);
 

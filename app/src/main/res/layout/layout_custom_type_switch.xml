@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
+    android:layout_height="@dimen/size_48dp"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
     <View
@@ -17,7 +17,7 @@
         android:id="@+id/switch_thumb"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_margin="5dp"
+        android:layout_margin="@dimen/space_8dp"
         android:background="@drawable/bg_custom_switch_thumb"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -31,7 +31,7 @@
         android:gravity="center"
         android:text="@string/ingreso"
         android:textColor="@color/grey"
-        android:textSize="18sp"
+        android:textSize="@dimen/text_20sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/tv_egreso_label"
         app:layout_constraintHorizontal_weight="1"
@@ -44,10 +44,11 @@
         android:gravity="center"
         android:text="@string/egreso"
         android:textColor="@color/grey"
-        android:textSize="18sp"
+        android:textSize="@dimen/text_20sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toEndOf="@+id/tv_ingreso_label" />
 
 </merge>
+

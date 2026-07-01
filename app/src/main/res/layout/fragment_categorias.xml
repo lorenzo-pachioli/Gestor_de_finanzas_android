@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -17,7 +17,7 @@
         app:tabIndicator="@drawable/bg_tab_indicator"
         app:tabIndicatorColor="@null"
         app:tabIndicatorGravity="bottom"
-        app:tabIndicatorHeight="4dp"
+        app:tabIndicatorHeight="@dimen/size_4dp"
         app:tabMode="fixed"
         app:tabGravity="fill"
         app:tabMaxWidth="0dp"
@@ -26,7 +26,7 @@
         app:tabTextColor="@color/text_secondary"
         app:tabRippleColor="@null"
         android:elevation="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/space_8dp"
         xmlns:app="http://schemas.android.com/apk/res-auto">
         
         <com.google.android.material.tabs.TabItem
@@ -52,18 +52,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/periodo"
-            android:textSize="18sp"
+            android:textSize="@dimen/text_20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:paddingHorizontal="16dp"
-            android:layout_marginBottom="8dp" />
+            android:paddingHorizontal="@dimen/space_16dp"
+            android:layout_marginBottom="@dimen/space_8dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp"
-            android:layout_marginBottom="16dp">
+            android:paddingHorizontal="@dimen/space_16dp"
+            android:layout_marginBottom="@dimen/space_16dp">
 
             <Spinner
                 android:id="@+id/spinnerMonth"
@@ -72,7 +72,7 @@
                 android:layout_weight="2"
                 android:background="@drawable/bg_spinner_field"
                 android:textColor="@color/text_secondary"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="@dimen/space_8dp" />
 
             <Spinner
                 android:id="@+id/spinnerYear"
@@ -87,20 +87,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/resumen_categoria"
-            android:textSize="18sp"
+            android:textSize="@dimen/text_20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:paddingHorizontal="16dp"
-            android:layout_marginBottom="8dp" />
+            android:paddingHorizontal="@dimen/space_16dp"
+            android:layout_marginBottom="@dimen/space_8dp" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerCategories"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginBottom="16dp"
-            android:paddingHorizontal="8dp"
-            android:paddingBottom="75dp"
+            android:layout_marginBottom="@dimen/space_16dp"
+            android:paddingHorizontal="@dimen/space_8dp"
+            android:paddingBottom="@dimen/space_72dp"
             android:clipToPadding="false"
             tools:listitem="@layout/item_category_summary" />
 

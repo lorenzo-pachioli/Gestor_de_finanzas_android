@@ -1,11 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
     >
     <shape android:shape="rectangle">
-        <solid android:color="@color/background_card" />
+        <solid android:color="@color/background_card_90" />
         <corners 
-            android:topLeftRadius="16dp"
-            android:topRightRadius="16dp" />
+            android:topLeftRadius="@dimen/radius_16dp"
+            android:topRightRadius="@dimen/radius_16dp" />
     </shape>
 </inset>
+

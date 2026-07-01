@@ -4,14 +4,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
+import com.notificationcapture.app.constants.PrefsConstants;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 public class SecurityPreferencesManager {
     private SharedPreferences encryptedPrefs;
-    private static final String PREFS_NAME = "secure_app_settings";
-    private static final String KEY_LANGUAGE = "app_language";
-    private static final String KEY_NIGHT_MODE = "night_mode";
 
     public SecurityPreferencesManager(Context context) {
         try {
@@ -21,7 +19,7 @@ public class SecurityPreferencesManager {
 
             encryptedPrefs = EncryptedSharedPreferences.create(
                     context,
-                    PREFS_NAME,
+                    PrefsConstants.SECURE_SETTINGS_NAME,
                     masterKey,
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
@@ -33,21 +31,21 @@ public class SecurityPreferencesManager {
 
     public void saveLanguage(String lang) {
         if (encryptedPrefs != null) {
-            encryptedPrefs.edit().putString(KEY_LANGUAGE, lang).apply();
+            encryptedPrefs.edit().putString(PrefsConstants.KEY_LANGUAGE, lang).apply();
         }
     }
 
     public String getLanguage(String defaultLang) {
-        return encryptedPrefs != null ? encryptedPrefs.getString(KEY_LANGUAGE, defaultLang) : defaultLang;
+        return encryptedPrefs != null ? encryptedPrefs.getString(PrefsConstants.KEY_LANGUAGE, defaultLang) : defaultLang;
     }
 
     public void saveNightMode(int mode) {
         if (encryptedPrefs != null) {
-            encryptedPrefs.edit().putInt(KEY_NIGHT_MODE, mode).apply();
+            encryptedPrefs.edit().putInt(PrefsConstants.KEY_NIGHT_MODE, mode).apply();
         }
     }
 
     public int getNightMode(int defaultMode) {
-        return encryptedPrefs != null ? encryptedPrefs.getInt(KEY_NIGHT_MODE, defaultMode) : defaultMode;
+        return encryptedPrefs != null ? encryptedPrefs.getInt(PrefsConstants.KEY_NIGHT_MODE, defaultMode) : defaultMode;
     }
 }

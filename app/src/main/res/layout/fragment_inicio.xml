@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- ARCHIVO COMPLETO: app/src/main/res/layout/fragment_inicio.xml -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -10,23 +10,23 @@
         android:id="@+id/cardSummary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="4dp"
-        android:elevation="4dp"
-        app:cardCornerRadius="12dp"
+        android:layout_marginHorizontal="@dimen/space_16dp"
+        android:layout_marginTop="@dimen/space_12dp"
+        android:layout_marginBottom="@dimen/space_4dp"
+        android:elevation="@dimen/elevation_4dp"
+        app:cardCornerRadius="@dimen/radius_12dp"
         app:cardBackgroundColor="@color/background_card">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="@dimen/space_12dp">
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp">
+                android:layout_marginBottom="@dimen/space_4dp">
                 
                 <TextView
                     android:id="@+id/tvMonthTitle"
@@ -34,7 +34,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:text="@string/resumen_de"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_12sp"
                     android:textColor="@color/text_secondary"/>
 
                 <TextView
@@ -42,8 +42,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
-                    android:text="Ver detalle"
-                    android:textSize="12sp"
+                    android:text="@string/view_detail"
+                    android:textSize="@dimen/text_12sp"
                     android:textStyle="bold"
                     android:textColor="@color/accent_main"
                     android:clickable="true"
@@ -55,37 +55,37 @@
                 android:id="@+id/tvBalance"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="$0"
-                android:textSize="28sp"
+                android:text="@string/balance_zero"
+                android:textSize="@dimen/text_28sp"
                 android:textStyle="bold"
                 android:textColor="@color/green"
                 android:maxLines="1"
                 android:ellipsize="end"
                 app:autoSizeTextType="uniform"
-                app:autoSizeMinTextSize="16sp"
-                app:autoSizeMaxTextSize="28sp"
-                app:autoSizeStepGranularity="1sp"
-                android:layout_marginBottom="8dp"/>
+                app:autoSizeMinTextSize="@dimen/text_16sp"
+                app:autoSizeMaxTextSize="@dimen/text_28sp"
+                app:autoSizeStepGranularity="@dimen/text_2sp"
+                android:layout_marginBottom="@dimen/space_8dp"/>
 
             <!-- Fila Ingresos -->
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="2dp">
+                android:layout_marginBottom="@dimen/space_2dp">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
-                    android:text="Ingreso:"
-                    android:textSize="12sp"
+                    android:text="@string/transactions_income"
+                    android:textSize="@dimen/text_12sp"
                     android:textColor="@color/text_secondary"/>
                 <TextView
                     android:id="@+id/tvIngresos"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
-                    android:text="$0"
-                    android:textSize="12sp"
+                    android:text="@string/balance_zero"
+                    android:textSize="@dimen/text_12sp"
                     android:textStyle="bold"
                     android:textColor="@color/green"/>
             </RelativeLayout>
@@ -98,16 +98,16 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
-                    android:text="Egreso:"
-                    android:textSize="12sp"
+                    android:text="@string/transactions_expense"
+                    android:textSize="@dimen/text_12sp"
                     android:textColor="@color/text_secondary"/>
                 <TextView
                     android:id="@+id/tvEgresos"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
-                    android:text="$0"
-                    android:textSize="12sp"
+                    android:text="@string/balance_zero"
+                    android:textSize="@dimen/text_12sp"
                     android:textStyle="bold"
                     android:textColor="@color/red"/>
             </RelativeLayout>
@@ -121,24 +121,24 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/cardSummary"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="8dp"
-        android:elevation="2dp"
-        app:cardCornerRadius="12dp"
+        android:layout_marginHorizontal="@dimen/space_16dp"
+        android:layout_marginBottom="@dimen/space_8dp"
+        android:elevation="@dimen/elevation_2dp"
+        app:cardCornerRadius="@dimen/radius_12dp"
         app:cardBackgroundColor="@color/background_card">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp">
+            android:padding="@dimen/space_12dp">
             
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:text="Total disponibles:"
-                android:textSize="13sp"
+                android:text="@string/total_available_label"
+                android:textSize="@dimen/text_16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"/>
                 
@@ -148,8 +148,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:text="$0"
-                android:textSize="13sp"
+                android:text="@string/available_zero"
+                android:textSize="@dimen/text_16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"/>
         </RelativeLayout>
@@ -161,7 +161,7 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:text="@string/no_notificaciones"
-        android:textSize="18sp"
+        android:textSize="@dimen/text_20sp"
         android:textColor="#666666"
         android:visibility="visible"/>
 
@@ -170,9 +170,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/cardTotalAvailable"
-        android:layout_marginHorizontal="8dp"
-        android:paddingBottom="75dp"
+        android:layout_marginHorizontal="@dimen/space_8dp"
+        android:paddingBottom="@dimen/space_72dp"
         android:clipToPadding="false"
         android:visibility="gone"/>
 
 </RelativeLayout>
+

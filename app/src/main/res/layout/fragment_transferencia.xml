@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- ARCHIVO NUEVO: app/src/main/res/layout/fragment_transferencia.xml -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="80dp"
+    android:paddingBottom="@dimen/space_80dp"
     android:clipToPadding="false"
     android:fillViewport="true">
 
@@ -12,40 +12,40 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/space_16dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Transferencia entre cuentas"
-            android:textSize="22sp"
+            android:text="@string/transfer_between_accounts"
+            android:textSize="@dimen/text_20sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="@dimen/space_8dp"/>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Registrá un movimiento de dinero entre tus billeteras o efectivo."
-            android:textSize="13sp"
+            android:text="@string/transfer_between_accounts_desc"
+            android:textSize="@dimen/text_16sp"
             android:textColor="@color/text_secondary"
-            android:layout_marginBottom="24dp"/>
+            android:layout_marginBottom="@dimen/space_24dp"/>
 
         <!-- Monto -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="@dimen/space_24dp"
             android:gravity="center"
             android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
-                android:text="$"
+                android:layout_marginEnd="@dimen/space_4dp"
+                android:text="@string/symbol_currency"
                 android:textColor="@color/text_secondary"
-                android:textSize="36sp"/>
+                android:textSize="@dimen/text_36sp"/>
 
             <EditText
                 android:id="@+id/etTransferAmount"
@@ -53,14 +53,14 @@
                 android:layout_height="wrap_content"
                 android:background="@null"
                 android:digits="0123456789.,"
-                android:hint="0"
+                android:hint="@string/hint_zero"
                 android:imeOptions="actionDone"
                 android:inputType="phone"
-                android:minHeight="48dp"
-                android:padding="4dp"
+                android:minHeight="@dimen/size_48dp"
+                android:padding="@dimen/space_4dp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
-                android:textSize="44sp"
+                android:textSize="@dimen/text_44sp"
                 android:textStyle="bold"/>
         </LinearLayout>
 
@@ -68,68 +68,68 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Desde"
-            android:textSize="14sp"
+            android:text="@string/from_label"
+            android:textSize="@dimen/text_16sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="@dimen/space_8dp"/>
 
         <Spinner
             android:id="@+id/spinnerOrigen"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:padding="5dp"
+            android:layout_height="@dimen/size_60dp"
+            android:padding="@dimen/space_8dp"
             android:background="@drawable/bg_spinner_field"
-            android:layout_marginBottom="20dp"/>
+            android:layout_marginBottom="@dimen/space_20dp"/>
 
         <!-- Hacia -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Hacia"
-            android:textSize="14sp"
+            android:text="@string/to_label"
+            android:textSize="@dimen/text_16sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="@dimen/space_8dp"/>
 
         <Spinner
             android:id="@+id/spinnerDestino"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:padding="5dp"
+            android:layout_height="@dimen/size_60dp"
+            android:padding="@dimen/space_8dp"
             android:background="@drawable/bg_spinner_field"
-            android:layout_marginBottom="20dp"/>
+            android:layout_marginBottom="@dimen/space_20dp"/>
 
         <!-- Fecha -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Fecha"
-            android:textSize="14sp"
+            android:text="@string/date_label"
+            android:textSize="@dimen/text_16sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="@dimen/space_8dp"/>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="@dimen/space_24dp"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etTransferDate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Seleccionar fecha"
+                android:hint="@string/transfer_date_hint"
                 android:textColorHint="@color/text_secondary"
                 android:textColor="@color/text_secondary"
-                android:minHeight="48dp"
-                android:padding="12dp"
+                android:minHeight="@dimen/size_48dp"
+                android:padding="@dimen/space_12dp"
                 android:focusable="false"
                 android:clickable="true"
                 android:inputType="none"
                 android:drawableEnd="@android:drawable/ic_menu_today"
-                android:drawablePadding="12dp"/>
+                android:drawablePadding="@dimen/space_12dp"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Botón registrar -->
@@ -137,13 +137,16 @@
             android:id="@+id/btnRegistrarTransferencia"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Registrar transferencia"
-            android:textSize="16sp"
+            android:text="@string/register_transfer"
+            android:textSize="@dimen/text_16sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:background="@drawable/bg_button_rounded"
-            android:padding="5dp"
-            android:minHeight="50dp"/>
+            android:padding="@dimen/space_8dp"
+            android:minHeight="@dimen/size_48dp"/>
 
     </LinearLayout>
 </ScrollView>
+
+
+

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="56dp"
@@ -6,7 +6,7 @@
     android:viewportWidth="56"
     android:viewportHeight="56">
 
-    <!-- Círculo de fondo rosa -->
+    <!-- CÃ­rculo de fondo rosa -->
     <path android:pathData="M28,28m-28,0a28,28 0,1 1,56 0a28,28 0,1 1,-56 0">
         <aapt:attr name="android:fillColor">
             <gradient
@@ -15,7 +15,7 @@
                 android:startY="28"
                 android:endX="56"
                 android:endY="28">
-                <!-- Puedes usar @color/nombre o códigos hexadecimales -->
+                <!-- Puedes usar @color/nombre o cÃ³digos hexadecimales -->
                 <item android:offset="0" android:color="#E63A6CA6" />
                 <item android:offset="1" android:color="#E646B4A9" />
             </gradient>

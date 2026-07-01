@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -12,19 +13,22 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.notificationcapture.app.R;
+import com.notificationcapture.app.adapters.TransactionAdapter;
+import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.models.SaldoCuenta;
+import com.notificationcapture.app.models.Transaction;
+import com.notificationcapture.app.services.ServiceProvider;
+import com.notificationcapture.app.services.AppExecutors;
+import com.notificationcapture.app.services.TransactionService;
+import com.notificationcapture.app.utils.MoneyTextWatcher;
+import com.notificationcapture.app.viewmodels.MainViewModel;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-
-import com.notificationcapture.app.adapters.TransactionAdapter;
-import com.notificationcapture.app.enums.PaymentMethod;
-import com.notificationcapture.app.models.SaldoCuenta;
-import com.notificationcapture.app.models.Transaction;
-import com.notificationcapture.app.utils.MoneyTextWatcher;
-import com.notificationcapture.app.viewmodels.MainViewModel;
-import com.notificationcapture.app.R;
-import com.notificationcapture.app.enums.IngresoOEgreso;
+import java.util.concurrent.CompletableFuture;
 
 public class InicioFragment extends Fragment {
 
@@ -36,8 +40,8 @@ public class InicioFragment extends Fragment {
     private TextView tvEgresos;
     private TextView tvBalance;
     private TextView tvMonthTitle;
-    private TextView tvDeudaCredito;
     private MainViewModel viewModel;
+    private TransactionService transactionService;
 
     @Nullable
     @Override
@@ -51,6 +55,7 @@ public class InicioFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         viewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+        transactionService = ServiceProvider.getInstance().getTransactionService();
 
         recyclerView = view.findViewById(R.id.recyclerView);
         emptyView = view.findViewById(R.id.emptyView);
@@ -84,19 +89,19 @@ public class InicioFragment extends Fragment {
 
         tvMonthTitle.setText(getString(R.string.resumen_de, getMonthName()));
 
-        // Observer 1: transacciones del mes actual
         viewModel.getAllApprovedTransactions().observe(getViewLifecycleOwner(), allTransactions -> {
-            List<Transaction> currentMonth = getCurrentMonthTransactions(allTransactions);
-            adapter.updateData(currentMonth);
-
-            emptyView.setVisibility(currentMonth.isEmpty() ? View.VISIBLE : View.GONE);
-            recyclerView.setVisibility(currentMonth.isEmpty() ? View.GONE : View.VISIBLE);
-
-            updateFinancialSummary(currentMonth);
+            AppExecutors executors = AppExecutors.getInstance();
+            CompletableFuture
+                    .supplyAsync(() -> transactionService.filterCurrentMonth(allTransactions),
+                            executors.computation())
+                    .thenAccept(currentMonth -> executors.mainThread().execute(() -> {
+                        adapter.updateData(currentMonth);
+                        emptyView.setVisibility(currentMonth.isEmpty() ? View.VISIBLE : View.GONE);
+                        recyclerView.setVisibility(currentMonth.isEmpty() ? View.GONE : View.VISIBLE);
+                        updateFinancialSummary(currentMonth);
+                    }));
         });
 
-        // Observer 2: saldos por cuenta — LiveData separado, siempre en hilo principal.
-        // Reemplaza el callback anidado con runOnUiThread que existía antes.
         viewModel.getSaldosPorCuenta().observe(getViewLifecycleOwner(), saldos -> {
             if (saldos == null || tvTotalDisponible == null) return;
 
@@ -117,23 +122,6 @@ public class InicioFragment extends Fragment {
         });
     }
 
-    private List<Transaction> getCurrentMonthTransactions(List<Transaction> all) {
-        Calendar now = Calendar.getInstance();
-        int currentMonth = now.get(Calendar.MONTH);
-        int currentYear = now.get(Calendar.YEAR);
-
-        List<Transaction> result = new ArrayList<>();
-        for (Transaction item : all) {
-            Calendar itemDate = Calendar.getInstance();
-            itemDate.setTimeInMillis(item.getTimestamp());
-            if (itemDate.get(Calendar.MONTH) == currentMonth
-                    && itemDate.get(Calendar.YEAR) == currentYear) {
-                result.add(item);
-            }
-        }
-        return result;
-    }
-
     private String getMonthName() {
         int currentMonth = Calendar.getInstance().get(Calendar.MONTH);
         int[] monthResIds = {
@@ -146,22 +134,8 @@ public class InicioFragment extends Fragment {
     }
 
     private void updateFinancialSummary(List<Transaction> transactions) {
-        BigDecimal totalIngresos = BigDecimal.ZERO;
-        BigDecimal totalEgresos = BigDecimal.ZERO;
-
-        for (Transaction item : transactions) {
-            if (item.hasAmount() && item.getPaymentMethod() != PaymentMethod.CREDITO) {
-                BigDecimal amount = item.getAmount();
-                if (amount != null) {
-                    if (item.getType() == IngresoOEgreso.INGRESO) {
-                        totalIngresos = totalIngresos.add(amount);
-                    } else {
-                        totalEgresos = totalEgresos.add(amount);
-                    }
-                }
-            }
-        }
-
+        BigDecimal totalIngresos = transactionService.sumByType(transactions, IngresoOEgreso.INGRESO);
+        BigDecimal totalEgresos = transactionService.sumByType(transactions, IngresoOEgreso.EGRESO);
         BigDecimal balance = totalIngresos.subtract(totalEgresos);
         tvIngresos.setText(formatAmount(totalIngresos));
         tvEgresos.setText(formatAmount(totalEgresos));

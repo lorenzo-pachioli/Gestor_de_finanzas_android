@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+﻿<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -17,13 +17,13 @@
     <RelativeLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
-        android:layout_height="30dp"
+        android:layout_height="@dimen/size_28dp"
         android:background="@drawable/bg_top_bar"
         >
 
         <ImageView
             android:id="@+id/ivLogo"
-            android:layout_width="120dp"
+            android:layout_width="@dimen/size_120dp"
             android:layout_height="match_parent"
             android:layout_centerInParent="true"
             android:src="@drawable/fluxus_logo"
@@ -40,13 +40,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentBottom="true"
+        android:paddingBottom="@dimen/size_60dp"
         android:clipToPadding="false"
         android:layout_below="@id/topBar"/>
         
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="@dimen/size_60dp"
         android:layout_alignParentBottom="true"
         android:alpha="0.9"
         android:background="@drawable/bg_bottom_nav"
@@ -57,22 +58,22 @@
         app:itemBackground="@android:color/transparent"
         app:itemRippleColor="@android:color/transparent"
         app:itemActiveIndicatorStyle="@null"
-        app:itemIconSize="24dp"
-        app:itemPaddingTop="12dp"
-        app:itemPaddingBottom="8dp"
-        app:elevation="8dp"
-        app:cardElevation="15dp"/>
+        app:itemIconSize="@dimen/size_24dp"
+        app:itemPaddingTop="@dimen/space_12dp"
+        app:itemPaddingBottom="@dimen/space_8dp"
+        app:elevation="@dimen/elevation_8dp"
+        app:cardElevation="@dimen/elevation_16dp"/>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/fabAdd"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
+        android:layout_width="@dimen/size_56dp"
+        android:layout_height="@dimen/size_56dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="32dp"
-        app:cardCornerRadius="28dp"
-        app:cardElevation="15dp"
-        app:cardMaxElevation="20dp"
+        android:layout_marginBottom="@dimen/space_32dp"
+        app:cardCornerRadius="@dimen/radius_28dp"
+        app:cardElevation="@dimen/elevation_16dp"
+        app:cardMaxElevation="@dimen/elevation_20dp"
         app:cardBackgroundColor="#00A896">
 
         <ImageView
@@ -80,7 +81,7 @@
             android:layout_height="match_parent"
             android:src="@drawable/ic_add_circle"
             android:scaleType="centerInside"
-            android:padding="0.7dp" />
+            android:padding="@dimen/space_2dp" />
 
     </androidx.cardview.widget.CardView>
 

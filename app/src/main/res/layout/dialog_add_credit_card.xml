@@ -1,19 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/bottom_sheet_background"
-    android:padding="20dp">
+    android:padding="@dimen/space_20dp">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/nombre_tarjeta"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_16sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="@dimen/space_8dp"/>
 
     <EditText
         android:id="@+id/etCardName"
@@ -22,53 +22,53 @@
         android:hint="@string/hint_tarjeta_nombre"
         android:inputType="textCapWords"
         android:textColor="@color/text_primary"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="@dimen/space_16dp"/>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/dia_cierre"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_16sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="@dimen/space_8dp"/>
 
     <EditText
         android:id="@+id/etClosingDate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="DD (1-31)"
+        android:hint="@string/closing_day_hint"
         android:inputType="number"
         android:textColor="@color/text_primary"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="@dimen/space_16dp"/>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Últimos 4 dígitos"
-        android:textSize="16sp"
+        android:text="@string/last_four_digits"
+        android:textSize="@dimen/text_16sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="@dimen/space_8dp"/>
 
     <EditText
         android:id="@+id/etLast4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="XXXX"
+        android:hint="@string/last_four_digits_hint"
         android:inputType="number"
         android:maxLength="4"
         android:textColor="@color/text_primary"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="@dimen/space_16dp"/>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/seleccionar_color"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_16sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="@dimen/space_8dp"/>
 
     <HorizontalScrollView
         android:layout_width="match_parent"
@@ -80,7 +80,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingBottom="8dp"/>
+            android:paddingBottom="@dimen/space_8dp"/>
         
     </HorizontalScrollView>
 
@@ -89,7 +89,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:padding="12dp">
+        android:padding="@dimen/space_12dp">
 
         <Button
             android:id="@+id/btnDeleteCard"
@@ -97,7 +97,7 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             android:text="@string/eliminar"
-            android:layout_marginEnd="5dp"/>
+            android:layout_marginEnd="@dimen/space_8dp"/>
 
         <Button
             android:id="@+id/btnCancelCard"
@@ -105,7 +105,7 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             android:text="@string/cancelar"
-            android:layout_marginEnd="5dp"/>
+            android:layout_marginEnd="@dimen/space_8dp"/>
 
         <Button
             android:id="@+id/btnCreateCard"
@@ -116,3 +116,5 @@
     </LinearLayout>
 
 </LinearLayout>
+
+

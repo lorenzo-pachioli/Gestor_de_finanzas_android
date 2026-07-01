@@ -10,27 +10,28 @@ import android.widget.Spinner;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.google.android.material.tabs.TabLayout;
 
+import com.google.android.material.tabs.TabLayout;
+import com.notificationcapture.app.R;
 import com.notificationcapture.app.adapters.CategorySummaryAdapter;
 import com.notificationcapture.app.adapters.TransactionAdapter;
+import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
 import com.notificationcapture.app.enums.IngresoOEgreso;
+import com.notificationcapture.app.models.Category;
 import com.notificationcapture.app.models.Transaction;
-import com.notificationcapture.app.repositories.CategoryRepository;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
+import com.notificationcapture.app.services.CategoryService;
+import com.notificationcapture.app.services.ServiceProvider;
+import com.notificationcapture.app.services.TransactionService;
 import com.notificationcapture.app.utils.MoneyTextWatcher;
 import com.notificationcapture.app.viewmodels.CategoriasViewModel;
-import androidx.lifecycle.ViewModelProvider;
-import com.notificationcapture.app.R;
-import com.notificationcapture.app.adapters.UniversalSpinnerAdapter;
-import com.notificationcapture.app.models.Category;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -42,7 +43,6 @@ import java.util.Map;
 public class CategoriasFragment extends Fragment {
 
     private RecyclerView recyclerCategories;
-    // private RecyclerView recyclerDetails;
     private Spinner spinnerMonth;
     private Spinner spinnerYear;
     private TabLayout tabLayout;
@@ -50,31 +50,26 @@ public class CategoriasFragment extends Fragment {
     private IngresoOEgreso currentType = IngresoOEgreso.EGRESO;
 
     private CategorySummaryAdapter summaryAdapter;
-    private TransactionAdapter detailsAdapter;
     private TransactionRepository repository;
-    private CategoryRepository categoryRepository;
     private CategoriasViewModel viewModel;
     private List<Transaction> currentTransactions = new ArrayList<>();
-
-    // Period handling
-    private List<Calendar> periodList;
-    private List<String> periodNames;
+    private CategoryService categoryService;
+    private TransactionService transactionService;
 
     public CategoriasFragment() {
-        // Required empty public constructor
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         repository = RepositoryProvider.getInstance().getTransactionRepository();
-        categoryRepository = RepositoryProvider.getInstance().getCategoryRepository();
+        categoryService = ServiceProvider.getInstance().getCategoryService();
+        transactionService = ServiceProvider.getInstance().getTransactionService();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_categorias, container, false);
     }
 
@@ -85,7 +80,7 @@ public class CategoriasFragment extends Fragment {
         initViews(view);
         setupAdapters();
         setupPeriodSpinner();
-        
+
         viewModel = new ViewModelProvider(this).get(CategoriasViewModel.class);
         viewModel.getAllTransactions().observe(getViewLifecycleOwner(), transactions -> {
             if (transactions != null) {
@@ -99,18 +94,15 @@ public class CategoriasFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Removed sync refresh; handled automatically by LiveData observer
     }
 
     private void initViews(View view) {
         recyclerCategories = view.findViewById(R.id.recyclerCategories);
-        // recyclerDetails = view.findViewById(R.id.recyclerDetails);
         spinnerMonth = view.findViewById(R.id.spinnerMonth);
         spinnerYear = view.findViewById(R.id.spinnerYear);
         tabLayout = view.findViewById(R.id.tabLayout);
 
         recyclerCategories.setLayoutManager(new LinearLayoutManager(getContext()));
-
         setupTabLayout();
     }
 
@@ -118,11 +110,7 @@ public class CategoriasFragment extends Fragment {
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                if (tab.getPosition() == 0) {
-                    currentType = IngresoOEgreso.EGRESO;
-                } else {
-                    currentType = IngresoOEgreso.INGRESO;
-                }
+                currentType = tab.getPosition() == 0 ? IngresoOEgreso.EGRESO : IngresoOEgreso.INGRESO;
                 refreshData();
             }
 
@@ -137,8 +125,7 @@ public class CategoriasFragment extends Fragment {
     }
 
     private void setupAdapters() {
-        // Fetch categories to get colors
-        List<Category> categories = categoryRepository.getCategories(currentType);
+        List<Category> categories = categoryService.getCategoriesForType(currentType);
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : categories) {
             colorMap.put(c.getName(), c.getDisplayColor());
@@ -147,18 +134,13 @@ public class CategoriasFragment extends Fragment {
         summaryAdapter = new CategorySummaryAdapter(new HashMap<>(), colorMap, this::onCategoryClick);
         recyclerCategories.setAdapter(summaryAdapter);
 
-        // Ensure TransactionAdapter handles deletions if necessary, though mainly for
-        // viewing here
-        detailsAdapter = new TransactionAdapter(new ArrayList<>(), getChildFragmentManager(), item -> {
-            // Optional: Implement deletion from details view if needed
+        new TransactionAdapter(new ArrayList<>(), getChildFragmentManager(), item -> {
             repository.deleteTransaction(item.getId());
             refreshData();
-        }, null, false); // showAddButton = false para transacciones aprobadas
-        // recyclerDetails.setAdapter(detailsAdapter);
+        }, null, false);
     }
 
     private void setupPeriodSpinner() {
-        // --- Setup Month Spinner ---
         List<String> monthNames = new ArrayList<>();
         SimpleDateFormat monthSdf = new SimpleDateFormat("MMMM", new Locale("es", "ES"));
         Calendar tempCal = Calendar.getInstance();
@@ -173,10 +155,8 @@ public class CategoriasFragment extends Fragment {
         spinnerMonth.setAdapter(monthAdapter);
         spinnerMonth.setSelection(Calendar.getInstance().get(Calendar.MONTH));
 
-        // --- Setup Year Spinner ---
         updateYearsSpinnerIfNeeded();
 
-        // --- Listeners ---
         AdapterView.OnItemSelectedListener periodChangeListener = new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -206,52 +186,29 @@ public class CategoriasFragment extends Fragment {
         }
 
         if (years.isEmpty()) {
-            Calendar fechaActual = Calendar.getInstance();
-            int year = fechaActual.get(Calendar.YEAR);
-            years.add(String.valueOf(year));
+            years.add(String.valueOf(Calendar.getInstance().get(Calendar.YEAR)));
         }
         Collections.sort(years, Collections.reverseOrder());
 
         String previousSelectedYear = (String) spinnerYear.getSelectedItem();
-
         UniversalSpinnerAdapter<String> yearAdapter = new UniversalSpinnerAdapter<>(requireContext(), years);
         spinnerYear.setAdapter(yearAdapter);
 
-        String targetYear = previousSelectedYear != null ? previousSelectedYear : String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+        String targetYear = previousSelectedYear != null ? previousSelectedYear
+                : String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
         int yearIndex = years.indexOf(targetYear);
-        if (yearIndex != -1) {
-            spinnerYear.setSelection(yearIndex);
-        } else {
-            spinnerYear.setSelection(0);
-        }
+        spinnerYear.setSelection(yearIndex != -1 ? yearIndex : 0);
     }
 
     private void loadDataForPeriod(int month, int year) {
+        Map<String, BigDecimal> groupedById = transactionService.groupByCategoryId(currentTransactions, currentType);
         Map<String, BigDecimal> categoryTotals = new HashMap<>();
-
-        for (Transaction item : currentTransactions) {
-            // Filter by date
-            Calendar itemCal = Calendar.getInstance();
-            itemCal.setTimeInMillis(item.getTimestamp());
-
-            if (itemCal.get(Calendar.MONTH) == month && itemCal.get(Calendar.YEAR) == year) {
-                // Filter by type
-                if (item.getType() == currentType && item.hasAmount()) {
-                    String category = "Sin Categoría";
-                    Category cat = categoryRepository.getCategoryById(item.getCategoryId());
-                    if (cat != null) {
-                        category = cat.getDisplayName();
-                    }
-
-                    BigDecimal amount = item.getAmount();
-                    BigDecimal current = categoryTotals.get(category);
-                    categoryTotals.put(category, (current != null ? current : BigDecimal.ZERO).add(amount));
-                }
-            }
+        for (Map.Entry<String, BigDecimal> entry : groupedById.entrySet()) {
+            Category cat = categoryService.resolveCategory(entry.getKey(), currentType);
+            categoryTotals.put(cat.getDisplayName(), entry.getValue());
         }
 
-        // Update colors as well
-        List<Category> categories = categoryRepository.getCategories(currentType);
+        List<Category> categories = categoryService.getCategoriesForType(currentType);
         Map<String, Integer> colorMap = new HashMap<>();
         for (Category c : categories) {
             colorMap.put(c.getName(), c.getDisplayColor());
@@ -261,40 +218,24 @@ public class CategoriasFragment extends Fragment {
     }
 
     private void onCategoryClick(String category, BigDecimal totalAmount) {
-        // Filter transactions for this category and current period
         int month = spinnerMonth.getSelectedItemPosition();
         String selectedYearStr = (String) spinnerYear.getSelectedItem();
-        if (selectedYearStr == null)
-            return;
+        if (selectedYearStr == null) return;
 
         int year = Integer.parseInt(selectedYearStr);
-
         List<Transaction> filteredList = new ArrayList<>();
 
         for (Transaction item : currentTransactions) {
             Calendar itemCal = Calendar.getInstance();
             itemCal.setTimeInMillis(item.getTimestamp());
-
-            if (itemCal.get(Calendar.MONTH) == month && itemCal.get(Calendar.YEAR) == year) {
-                if (item.getType() == currentType) {
-                    String itemCategory = "Sin Categoría";
-                    Category cat = categoryRepository.getCategoryById(item.getCategoryId());
-                    if (cat != null) {
-                        itemCategory = cat.getDisplayName();
-                    }
-
-                    if (itemCategory.equals(category)) {
-                        filteredList.add(item);
-                    }
+            if (itemCal.get(Calendar.MONTH) == month
+                    && itemCal.get(Calendar.YEAR) == year
+                    && item.getType() == currentType) {
+                Category cat = categoryService.resolveCategory(item.getCategoryId(), currentType);
+                if (cat.getDisplayName().equals(category)) {
+                    filteredList.add(item);
                 }
             }
-        }
-
-        // Fetch categories to get colors
-        List<Category> categories = categoryRepository.getCategories(currentType);
-        Map<String, Integer> colorMap = new HashMap<>();
-        for (Category c : categories) {
-            colorMap.put(c.getName(), c.getDisplayColor());
         }
 
         String formattedAmount = "$" + MoneyTextWatcher.format(totalAmount);

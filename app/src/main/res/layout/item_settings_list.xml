@@ -1,20 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="12dp"
+    android:padding="@dimen/space_12dp"
     android:gravity="center_vertical">
 
     <!-- Color indicator (visible only for categories) -->
     <androidx.cardview.widget.CardView
         android:id="@+id/viewColorIndicator"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        app:cardCornerRadius="10dp"
+        android:layout_width="@dimen/size_20dp"
+        android:layout_height="@dimen/size_20dp"
+        app:cardCornerRadius="@dimen/radius_12dp"
         app:cardElevation="0dp"
-        android:layout_marginEnd="12dp"
+        android:layout_marginEnd="@dimen/space_12dp"
         android:visibility="gone">
         <View
             android:id="@+id/colorView"
@@ -28,7 +28,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_16sp"
         android:textColor="@color/text_primary"
         android:text="@string/item_name"/>
 
@@ -38,7 +38,8 @@
         android:layout_height="wrap_content"
         android:src="@android:drawable/ic_menu_delete"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:padding="8dp"
+        android:padding="@dimen/space_8dp"
         app:tint="@color/red"/>
 
 </LinearLayout>
+

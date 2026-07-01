@@ -16,6 +16,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.notificationcapture.app.constants.AppConstants;
+import com.notificationcapture.app.constants.CategoryConstants;
+import com.notificationcapture.app.constants.DatabaseConstants;
+import com.notificationcapture.app.constants.PaymentConstants;
+import com.notificationcapture.app.constants.PrefsConstants;
 import com.notificationcapture.app.database.AppDatabase;
 import com.notificationcapture.app.database.CreditCardPaymentEntity;
 import com.notificationcapture.app.database.TransactionDao;
@@ -36,6 +41,7 @@ import com.notificationcapture.app.models.SaldoCuenta;
 import com.notificationcapture.app.models.CreditCard;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.models.ResumenDeudaTarjeta;
+import com.notificationcapture.app.services.AppExecutors;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -67,12 +73,6 @@ public class TransactionRepository implements GsonAccess {
     private final WalletRepository walletRepo;
     private final CreditCardRepository creditCardRepo;
 
-    private static final int MAX_RECORDS = 5000;
-
-    private static final String PREF_MIGRATED = "sqlite_migrated";
-    private static final String PREF_MIGRATION_IN_PROGRESS = "sqlite_migration_in_progress";
-    private static final String PREF_LAST_MAINTENANCE_MONTH = "last_maintenance_month";
-
     public void shutdown() {
         if (executor != null && !executor.isShutdown()) {
             executor.shutdown();
@@ -102,13 +102,13 @@ public class TransactionRepository implements GsonAccess {
                     .build();
             securePrefs = EncryptedSharedPreferences.create(
                     context,
-                    "encrypted_secure_prefs",
+                    PrefsConstants.SECURE_PREFS_NAME,
                     masterKey,
                     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
         } catch (Exception e) {
             e.printStackTrace();
-            securePrefs = context.getSharedPreferences(GsonAccess.PREFS_NAME, Context.MODE_PRIVATE);
+            securePrefs = context.getSharedPreferences(PrefsConstants.PREFS_NAME, Context.MODE_PRIVATE);
         }
         this.prefs = securePrefs;
 
@@ -124,11 +124,11 @@ public class TransactionRepository implements GsonAccess {
     }
 
     private void performMonthlyMaintenance() {
-        executor.execute(() -> {
+        AppExecutors.getInstance().diskIO().execute(() -> {
             try {
                 Calendar cal = Calendar.getInstance();
                 int currentMonthYear = cal.get(Calendar.YEAR) * 100 + cal.get(Calendar.MONTH);
-                int lastMonthYear = prefs.getInt(PREF_LAST_MAINTENANCE_MONTH, -1);
+                int lastMonthYear = prefs.getInt(PrefsConstants.KEY_LAST_MAINTENANCE_MONTH, -1);
 
                 if (currentMonthYear != lastMonthYear) {
                     cal.set(Calendar.DAY_OF_MONTH, 1);
@@ -139,7 +139,7 @@ public class TransactionRepository implements GsonAccess {
 
                     dao.deleteOldPending(cal.getTimeInMillis());
 
-                    prefs.edit().putInt(PREF_LAST_MAINTENANCE_MONTH, currentMonthYear).apply();
+                    prefs.edit().putInt(PrefsConstants.KEY_LAST_MAINTENANCE_MONTH, currentMonthYear).apply();
                 }
             } catch (Exception e) {
                 AppLogger.e("TransactionRepository", "Error in monthly maintenance: " + e.getClass().getSimpleName(), e);
@@ -148,16 +148,16 @@ public class TransactionRepository implements GsonAccess {
     }
 
     private void checkAndPerformMigration() {
-        if (!prefs.getBoolean(PREF_MIGRATED, false)) {
+        if (!prefs.getBoolean(PrefsConstants.KEY_MIGRATED, false)) {
             executor.execute(() -> {
                 try {
-                    prefs.edit().putBoolean(PREF_MIGRATION_IN_PROGRESS, true).apply();
-                    migrateLegacyList(KEY_NOTIFICATIONS);
-                    migrateLegacyList(KEY_NOTIFICATIONS_NOT_FILTERED);
-                    prefs.edit().putBoolean(PREF_MIGRATED, true).remove(PREF_MIGRATION_IN_PROGRESS).apply();
+                    prefs.edit().putBoolean(PrefsConstants.KEY_MIGRATION_IN_PROGRESS, true).apply();
+                    migrateLegacyList(PrefsConstants.KEY_NOTIFICATIONS);
+                    migrateLegacyList(PrefsConstants.KEY_NOTIFICATIONS_PENDING);
+                    prefs.edit().putBoolean(PrefsConstants.KEY_MIGRATED, true).remove(PrefsConstants.KEY_MIGRATION_IN_PROGRESS).apply();
                 } catch (Exception e) {
                     AppLogger.e("TransactionRepository", "Migration failed", e);
-                    prefs.edit().putBoolean(PREF_MIGRATION_IN_PROGRESS, false).apply();
+                    prefs.edit().putBoolean(PrefsConstants.KEY_MIGRATION_IN_PROGRESS, false).apply();
                 }
             });
         }
@@ -180,17 +180,17 @@ public class TransactionRepository implements GsonAccess {
                 JsonArray array = gson.fromJson(json, JsonArray.class);
                 if (array != null) {
                     List<TransactionEntity> entities = new ArrayList<>();
-                    String status = KEY_NOTIFICATIONS.equals(key) ? TransactionEntity.STATUS_APPROVED
-                            : TransactionEntity.STATUS_PENDING;
+                    String status = PrefsConstants.KEY_NOTIFICATIONS.equals(key) ? DatabaseConstants.STATUS_APPROVED
+                            : DatabaseConstants.STATUS_PENDING;
 
                     for (JsonElement element : array) {
                         JsonObject obj = element.getAsJsonObject();
-                        String method = obj.has("paymentMethod") ? obj.get("paymentMethod").getAsString() : PaymentMethod.TYPE_DEBIT;
+                        String method = obj.has("paymentMethod") ? obj.get("paymentMethod").getAsString() : PaymentConstants.TYPE_DEBIT;
 
                         Transaction t;
-                        if (PaymentMethod.TYPE_CREDIT.equals(method)) {
+                        if (PaymentConstants.TYPE_CREDIT.equals(method)) {
                             t = gson.fromJson(obj, Credit.class);
-                        } else if (PaymentMethod.TYPE_CASH.equals(method)) {
+                        } else if (PaymentConstants.TYPE_CASH.equals(method)) {
                             t = gson.fromJson(obj, Cash.class);
                         } else {
                             t = gson.fromJson(obj, Debit.class);
@@ -214,7 +214,7 @@ public class TransactionRepository implements GsonAccess {
     public void saveTransactionNotFiltered(Transaction transaction) {
         executor.execute(() -> {
             try {
-                TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_PENDING);
+                TransactionEntity entity = TransactionMapper.toEntity(transaction, DatabaseConstants.STATUS_PENDING);
                 dao.insert(entity);
                 checkCleanup();
             } catch (Exception e) {
@@ -226,7 +226,7 @@ public class TransactionRepository implements GsonAccess {
     public void saveTransaction(Transaction transaction) {
         executor.execute(() -> {
             try {
-                TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_APPROVED);
+                TransactionEntity entity = TransactionMapper.toEntity(transaction, DatabaseConstants.STATUS_APPROVED);
                 dao.insert(entity);
                 checkCleanup();
             } catch (Exception e) {
@@ -241,7 +241,7 @@ public class TransactionRepository implements GsonAccess {
                 List<TransactionEntity> entities = new ArrayList<>();
                 for (Transaction t : transactions) {
                     if (t != null) {
-                        entities.add(TransactionMapper.toEntity(t, TransactionEntity.STATUS_APPROVED));
+                        entities.add(TransactionMapper.toEntity(t, DatabaseConstants.STATUS_APPROVED));
                     }
                 }
                 dao.insertAll(entities);
@@ -260,7 +260,7 @@ public class TransactionRepository implements GsonAccess {
     public void updateTransaction(Transaction transaction) {
         executor.execute(() -> {
             try {
-                TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_APPROVED);
+                TransactionEntity entity = TransactionMapper.toEntity(transaction, DatabaseConstants.STATUS_APPROVED);
                 dao.update(entity);
             } catch (Exception e) {
                 AppLogger.e("TransactionRepository", "Error updating transaction", e);
@@ -269,7 +269,7 @@ public class TransactionRepository implements GsonAccess {
     }
 
     private void checkCleanup() {
-        if (dao.getCount() > MAX_RECORDS) {
+        if (dao.getCount() > AppConstants.MAX_TRANSACTION_RECORDS) {
             Long oldest = dao.getOldestRecordTimestamp();
             if (oldest != null) {
                 Calendar cal = Calendar.getInstance();
@@ -290,20 +290,20 @@ public class TransactionRepository implements GsonAccess {
     }
 
     public List<Transaction> getAllTransactionNotFiltered() {
-        return getByStatusBlocking(TransactionEntity.STATUS_PENDING);
+        return getByStatusBlocking(DatabaseConstants.STATUS_PENDING);
     }
 
     public List<Transaction> getAllTransactions() {
-        return getByStatusBlocking(TransactionEntity.STATUS_APPROVED);
+        return getByStatusBlocking(DatabaseConstants.STATUS_APPROVED);
     }
 
     public LiveData<List<Transaction>> getAllTransactionsLiveData() {
-        return Transformations.map(dao.getAllByStatusLiveData(TransactionEntity.STATUS_APPROVED),
+        return Transformations.map(dao.getAllByStatusLiveData(DatabaseConstants.STATUS_APPROVED),
                 TransactionMapper::fromEntityList);
     }
 
     public LiveData<List<Transaction>> getAllTransactionNotFilteredLiveData() {
-        return Transformations.map(dao.getAllByStatusLiveData(TransactionEntity.STATUS_PENDING),
+        return Transformations.map(dao.getAllByStatusLiveData(DatabaseConstants.STATUS_PENDING),
                 TransactionMapper::fromEntityList);
     }
 
@@ -313,7 +313,7 @@ public class TransactionRepository implements GsonAccess {
                 Calendar cal = Calendar.getInstance();
                 long start = 0;
                 long end = Long.MAX_VALUE;
-                if (TransactionEntity.STATUS_PENDING.equals(status)) {
+                if (DatabaseConstants.STATUS_PENDING.equals(status)) {
                     cal.set(Calendar.DAY_OF_MONTH, 1);
                     cal.set(Calendar.HOUR_OF_DAY, 0);
                     cal.set(Calendar.MINUTE, 0);
@@ -333,7 +333,7 @@ public class TransactionRepository implements GsonAccess {
         executor.execute(() -> {
             try {
                 List<TransactionEntity> entities = dao.getByMonthAndStatus(0, Long.MAX_VALUE,
-                        TransactionEntity.STATUS_APPROVED);
+                        DatabaseConstants.STATUS_APPROVED);
                 List<Transaction> result = TransactionMapper.fromEntityList(entities);
                 mainHandler.post(() -> callback.onResult(AppResult.success(result)));
             } catch (Exception e) {
@@ -349,7 +349,7 @@ public class TransactionRepository implements GsonAccess {
     }
 
     public void moveTransactionToApproved(String id) {
-        executor.execute(() -> dao.updateStatus(id, TransactionEntity.STATUS_APPROVED));
+        executor.execute(() -> dao.updateStatus(id, DatabaseConstants.STATUS_APPROVED));
     }
 
     public void clearAllTransactionNotFiltered() {
@@ -540,14 +540,14 @@ public class TransactionRepository implements GsonAccess {
         Debit egreso = new Debit(
                 "Transferencia", "", timestamp,
                 IngresoOEgreso.EGRESO,
-                CategoryRepository.TRANSFER_OUT_ID,
+                CategoryConstants.TRANSFER_OUT_ID,
                 origenId, false);
         egreso.setAmount(monto);
 
         Debit ingreso = new Debit(
                 "Transferencia", "", timestamp,
                 IngresoOEgreso.INGRESO,
-                CategoryRepository.TRANSFER_IN_ID,
+                CategoryConstants.TRANSFER_IN_ID,
                 destinoId, false);
         ingreso.setAmount(monto);
 

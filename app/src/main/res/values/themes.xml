@@ -61,10 +61,10 @@
         <item name="backgroundTint">@color/background_card</item>
         <item name="tint">@color/secondary_main</item>
         <item name="android:textColor">@color/text_primary</item>
-        <item name="cornerRadius">5dp</item>
+        <item name="cornerRadius">@dimen/radius_4dp</item>
         <item name="rippleColor">@color/accent_secondary</item>
         <!--<item name="strokeColor">@color/text_secondary</item>
-        <item name="strokeWidth">2dp</item>-->
+        <item name="strokeWidth">@dimen/stroke_2dp</item>-->
     </style>
     <style name="Widget.App.Spinner" parent="Widget.AppCompat.Spinner">
         <item name="android:popupBackground">@drawable/bg_spinner_field</item>

@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
+import com.notificationcapture.app.constants.DatabaseConstants;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.enums.PaymentMethod;
 import java.math.BigDecimal;
@@ -11,9 +12,6 @@ import java.math.BigDecimal;
 @Entity(tableName = "transactions", 
         indices = {@Index(value = {"timestamp"}), @Index(value = {"status"}), @Index(value = {"creditCardId"})})
 public class TransactionEntity {
-
-    public static final String STATUS_PENDING = "PENDING";
-    public static final String STATUS_APPROVED = "APPROVED";
 
     @PrimaryKey
     @NonNull

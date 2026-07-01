@@ -1,32 +1,32 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="@dimen/space_16dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/seleccionar_tarjeta"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_16sp"
         android:textColor="@color/text_primary"
-        android:layout_marginBottom="12dp"/>
+        android:layout_marginBottom="@dimen/space_12dp"/>
 
     <Spinner
         android:id="@+id/spinnerCards"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginBottom="16dp"
+        android:layout_height="@dimen/size_48dp"
+        android:layout_marginBottom="@dimen/space_16dp"
         android:background="@drawable/bg_spinner_field"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/cuotas"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_16sp"
         android:textColor="@color/text_primary"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="@dimen/space_8dp"/>
 
     <EditText
         android:id="@+id/etInstallments"
@@ -35,19 +35,21 @@
         android:hint="@string/cantidad_de_cuotas"
         android:inputType="number"
         android:textColor="@color/text_primary"
-        android:text="1"
-        android:layout_marginBottom="24dp"/>
+        android:text="@string/payment_method_one"
+        android:layout_marginBottom="@dimen/space_24dp"/>
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnConfirmCredit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_button_rounded"
-        android:minHeight="50dp"
-        android:padding="5dp"
+        android:minHeight="@dimen/size_48dp"
+        android:padding="@dimen/space_8dp"
         android:text="@string/confirmar"
         android:textColor="@color/primary_main"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_16sp"
         android:textStyle="bold" />
 
 </LinearLayout>
+
+
