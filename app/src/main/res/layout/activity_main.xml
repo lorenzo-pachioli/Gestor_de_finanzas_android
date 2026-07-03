@@ -40,7 +40,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentBottom="true"
-        android:paddingBottom="@dimen/size_60dp"
         android:clipToPadding="false"
         android:layout_below="@id/topBar"/>
         
@@ -49,8 +48,9 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/size_60dp"
         android:layout_alignParentBottom="true"
-        android:alpha="0.9"
+
         android:background="@drawable/bg_bottom_nav"
+
         app:menu="@menu/bottom_nav_menu"
         app:labelVisibilityMode="labeled"
         app:itemIconTint="@color/menu_item_color_selector"

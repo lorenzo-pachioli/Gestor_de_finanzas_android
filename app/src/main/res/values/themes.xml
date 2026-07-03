@@ -57,7 +57,6 @@
 
     <!-- Buttons styles -->
     <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">
-        <item name="backgroundTint">@color/background_card</item>"
         <item name="backgroundTint">@color/background_card</item>
         <item name="tint">@color/secondary_main</item>
         <item name="android:textColor">@color/text_primary</item>

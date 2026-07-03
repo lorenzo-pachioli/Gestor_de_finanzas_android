@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:padding="0dp"
     tools:context=".fragments.CategoriasFragment"
-    android:background="@color/background_card">
+    android:background="@android:color/transparent">
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
@@ -45,7 +45,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="@color/background_main"
+        android:background="@android:color/transparent"
         >
 
         <TextView

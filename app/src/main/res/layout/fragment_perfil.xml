@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_main">
+    android:background="@android:color/transparent">
 
     <!-- MENÚ PRINCIPAL de configuración -->
     <androidx.core.widget.NestedScrollView
@@ -13,7 +13,8 @@
         android:layout_height="match_parent"
         android:paddingBottom="@dimen/space_80dp"
         android:clipToPadding="false"
-        android:fillViewport="false">
+        android:fillViewport="false"
+        android:background="@android:color/transparent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -174,7 +175,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
-        android:background="@color/background_main"/>
+        android:background="@android:color/transparent"/>
 
 </FrameLayout>
 
