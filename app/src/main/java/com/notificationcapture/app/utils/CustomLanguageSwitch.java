@@ -4,6 +4,8 @@ import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -17,6 +19,37 @@ import androidx.transition.TransitionManager;
 import com.notificationcapture.app.R;
 
 public class CustomLanguageSwitch extends ConstraintLayout {
+
+    private static class SavedState extends BaseSavedState {
+        boolean isRightSelected;
+
+        SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        private SavedState(Parcel in) {
+            super(in);
+            isRightSelected = in.readByte() != 0;
+        }
+
+        @Override
+        public void writeToParcel(@NonNull Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeByte((byte) (isRightSelected ? 1 : 0));
+        }
+
+        public static final Creator<SavedState> CREATOR = new Creator<SavedState>() {
+            @Override
+            public SavedState createFromParcel(Parcel in) {
+                return new SavedState(in);
+            }
+
+            @Override
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
+    }
 
     private View switchThumb;
     private TextView tvLeft;
@@ -68,21 +101,45 @@ public class CustomLanguageSwitch extends ConstraintLayout {
     }
 
     public void setChecked(boolean checked, boolean animate) {
+        setChecked(checked, animate, true);
+    }
+
+    public void setChecked(boolean checked, boolean animate, boolean notifyListener) {
         if (isRightSelected == checked)
             return;
         isRightSelected = checked;
 
         if (animate) {
-            animateToggle(isRightSelected);
+            animateToggle(isRightSelected, notifyListener);
         } else {
             updateUI(isRightSelected);
-            if (listener != null) {
+            if (notifyListener && listener != null) {
                 listener.onCheckedChanged(isRightSelected);
             }
         }
     }
 
-    private void animateToggle(boolean isRightSelected) {
+    @Override
+    public Parcelable onSaveInstanceState() {
+        Parcelable superState = super.onSaveInstanceState();
+        SavedState state = new SavedState(superState);
+        state.isRightSelected = isRightSelected;
+        return state;
+    }
+
+    @Override
+    public void onRestoreInstanceState(Parcelable state) {
+        if (!(state instanceof SavedState)) {
+            super.onRestoreInstanceState(state);
+            return;
+        }
+
+        SavedState savedState = (SavedState) state;
+        super.onRestoreInstanceState(savedState.getSuperState());
+        setChecked(savedState.isRightSelected, false, false);
+    }
+
+    private void animateToggle(boolean isRightSelected, boolean notifyListener) {
         ConstraintSet constraintSet = new ConstraintSet();
         constraintSet.clone(this);
 
@@ -104,7 +161,7 @@ public class CustomLanguageSwitch extends ConstraintLayout {
 
             @Override
             public void onTransitionEnd(@NonNull androidx.transition.Transition transition) {
-                if (listener != null) {
+                if (notifyListener && listener != null) {
                     listener.onCheckedChanged(isRightSelected);
                 }
             }

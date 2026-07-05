@@ -7,6 +7,8 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
+import java.util.Locale;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
@@ -54,7 +56,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Cargar valores iniciales desde almacenamiento seguro
         int nightMode = prefsManager.getNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-        String savedLanguage = prefsManager.getLanguage("es");
+        String savedLanguage = prefsManager.getLanguage(null);
+        if (savedLanguage == null) {
+            savedLanguage = resolveDefaultLanguage();
+            prefsManager.saveLanguage(savedLanguage);
+        }
         
         settingsViewModel.setNightMode(nightMode);
         settingsViewModel.setLanguage(savedLanguage);
@@ -231,5 +237,10 @@ public class MainActivity extends AppCompatActivity {
             });
             fabAdd.startAnimation(fadeOut);
         }
+    }
+
+    private String resolveDefaultLanguage() {
+        String systemLanguage = Locale.getDefault().getLanguage();
+        return "es".equalsIgnoreCase(systemLanguage) ? "es" : "en";
     }
 }

@@ -4,6 +4,8 @@ import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +20,37 @@ import androidx.transition.TransitionManager;
 import com.notificationcapture.app.R;
 
 public class CustomTypeSwitch extends ConstraintLayout {
+
+    private static class SavedState extends BaseSavedState {
+        boolean isEgreso;
+
+        SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        private SavedState(Parcel in) {
+            super(in);
+            isEgreso = in.readByte() != 0;
+        }
+
+        @Override
+        public void writeToParcel(@NonNull Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeByte((byte) (isEgreso ? 1 : 0));
+        }
+
+        public static final Creator<SavedState> CREATOR = new Creator<SavedState>() {
+            @Override
+            public SavedState createFromParcel(Parcel in) {
+                return new SavedState(in);
+            }
+
+            @Override
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
+    }
 
     private View switchTrack;
     private View switchThumb;
@@ -72,6 +105,10 @@ public class CustomTypeSwitch extends ConstraintLayout {
     }
 
     public void setChecked(boolean checked, boolean animate) {
+        setChecked(checked, animate, true);
+    }
+
+    public void setChecked(boolean checked, boolean animate, boolean notifyListener) {
         if (isEgreso == checked)
             return;
         isEgreso = checked;
@@ -82,9 +119,29 @@ public class CustomTypeSwitch extends ConstraintLayout {
             updateUI(isEgreso);
         }
 
-        if (listener != null) {
+        if (notifyListener && listener != null) {
             listener.onCheckedChanged(isEgreso);
         }
+    }
+
+    @Override
+    public Parcelable onSaveInstanceState() {
+        Parcelable superState = super.onSaveInstanceState();
+        SavedState state = new SavedState(superState);
+        state.isEgreso = isEgreso;
+        return state;
+    }
+
+    @Override
+    public void onRestoreInstanceState(Parcelable state) {
+        if (!(state instanceof SavedState)) {
+            super.onRestoreInstanceState(state);
+            return;
+        }
+
+        SavedState savedState = (SavedState) state;
+        super.onRestoreInstanceState(savedState.getSuperState());
+        setChecked(savedState.isEgreso, false, false);
     }
 
     private void animateToggle(boolean isEgreso) {

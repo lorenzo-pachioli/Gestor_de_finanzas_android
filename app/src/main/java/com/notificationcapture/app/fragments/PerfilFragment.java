@@ -5,6 +5,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.Locale;
+
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -72,9 +74,18 @@ public class PerfilFragment extends Fragment {
         });
 
         // Setup Language Switch
+        String savedLanguage = prefsManager.getLanguage(null);
+        String resolvedLanguage = savedLanguage != null ? savedLanguage : resolveDefaultLanguage();
+        boolean isEnglish = "en".equalsIgnoreCase(resolvedLanguage);
+        swLanguage.setChecked(isEnglish, false, false);
+        if (savedLanguage == null) {
+            prefsManager.saveLanguage(resolvedLanguage);
+            settingsViewModel.setLanguage(resolvedLanguage);
+        }
+
         swLanguage.setOnCheckedChangeListener(isChecked -> {
             String newLanguage = isChecked ? "en" : "es";
-            String currentLanguage = prefsManager.getLanguage("es");
+            String currentLanguage = prefsManager.getLanguage(resolveDefaultLanguage());
 
             if (!newLanguage.equals(currentLanguage)) {
                 // Save new language preference securely
@@ -112,6 +123,11 @@ public class PerfilFragment extends Fragment {
             }
         };
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), backCallback);
+    }
+
+    private String resolveDefaultLanguage() {
+        String systemLanguage = Locale.getDefault().getLanguage();
+        return "es".equalsIgnoreCase(systemLanguage) ? "es" : "en";
     }
 
     private void showDetail(Fragment fragment) {
