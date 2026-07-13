@@ -56,4 +56,14 @@ public class NotificationParserService {
         }
         return true;
     }
+
+    public boolean hasPaymentKeyword(String title, String text) {
+        String fullText = ((title != null ? title : "") + " " + (text != null ? text : "")).toLowerCase();
+        for (String kw : keywordSet) {
+            if (fullText.contains(kw)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

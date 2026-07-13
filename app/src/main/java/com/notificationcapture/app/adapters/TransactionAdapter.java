@@ -30,6 +30,7 @@ import com.notificationcapture.app.enums.CatColors;
 import com.notificationcapture.app.enums.DialogType;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.enums.PaymentMethod;
+import com.notificationcapture.app.fragments.AddUnrecognizedWalletDialog;
 import com.notificationcapture.app.fragments.PaymentMethodBottomSheet;
 import com.notificationcapture.app.fragments.SelectorBottomSheet;
 import com.notificationcapture.app.interfaces.OnAddClickListener;
@@ -42,6 +43,7 @@ import com.notificationcapture.app.models.Transaction;
 import com.notificationcapture.app.constants.CategoryConstants;
 import com.notificationcapture.app.repositories.RepositoryProvider;
 import com.notificationcapture.app.repositories.TransactionRepository;
+import com.notificationcapture.app.repositories.WalletRepository;
 import com.notificationcapture.app.services.CategoryService;
 import com.notificationcapture.app.services.ServiceProvider;
 import com.notificationcapture.app.services.WalletService;
@@ -154,7 +156,12 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         holder.getLayoutSummary().setVisibility(View.VISIBLE);
         holder.getLayoutEdit().setVisibility(View.GONE);
 
-        holder.getTvAppName().setText(resolveSourceName(item));
+        if (isUnrecognized(item)) {
+            String suggested = WalletRepository.suggestNameFromPackage(item.getSourcePackageName());
+            holder.getTvAppName().setText("❓ " + suggested);
+        } else {
+            holder.getTvAppName().setText(resolveSourceName(item));
+        }
         Category displayCat = resolveCategory(item.getCategoryId(), item.getType());
         holder.getTvCategory().setText(displayCat.getName());
         holder.getTvTitle().setText(item.getTitle());
@@ -177,9 +184,35 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
 
         if (showAddButton) {
             holder.getBtnAdd().setVisibility(View.VISIBLE);
-            holder.getBtnAdd().setOnClickListener(v -> {
-                if (addListener != null) addListener.onAddClick(item);
-            });
+            if (isUnrecognized(item)) {
+                holder.getBtnAdd().setOnClickListener(v -> {
+                    AddUnrecognizedWalletDialog dialog = AddUnrecognizedWalletDialog
+                            .newInstance(item.getSourcePackageName(), item.getId());
+                    dialog.setListener(new AddUnrecognizedWalletDialog.Listener() {
+                        @Override
+                        public void onAddAndApprove(String walletId) {
+                            repository.approveUnrecognizedTransaction(item.getId(), walletId);
+                            if (addListener != null) addListener.onAddClick(item);
+                        }
+
+                        @Override
+                        public void onApproveOnly() {
+                            repository.approveUnrecognizedTransaction(item.getId(), null);
+                            if (addListener != null) addListener.onAddClick(item);
+                        }
+
+                        @Override
+                        public void onIgnore() {
+                            if (deleteListener != null) deleteListener.onDeleteClick(item);
+                        }
+                    });
+                    dialog.show(fragmentManager, "AddUnrecognizedWallet");
+                });
+            } else {
+                holder.getBtnAdd().setOnClickListener(v -> {
+                    if (addListener != null) addListener.onAddClick(item);
+                });
+            }
         } else {
             holder.getBtnAdd().setVisibility(View.GONE);
         }
@@ -195,9 +228,20 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             notifyItemChanged(holder.getAdapterPosition());
         });
 
-        holder.getViewNotificationBorder().setBackgroundColor(
-                categoryService.getTransactionColor(item)
-        );
+        if (isUnrecognized(item)) {
+            holder.getViewNotificationBorder().setBackgroundColor(
+                    androidx.core.content.ContextCompat.getColor(holder.itemView.getContext(), R.color.accent_main)
+            );
+        } else {
+            holder.getViewNotificationBorder().setBackgroundColor(
+                    categoryService.getTransactionColor(item)
+            );
+        }
+    }
+
+    private boolean isUnrecognized(Transaction item) {
+        String pkg = item != null ? item.getSourcePackageName() : null;
+        return pkg != null && !pkg.isEmpty();
     }
 
     private void updateToggleUI(ViewHolder holder, boolean isEgreso) {

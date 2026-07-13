@@ -8,5 +8,6 @@ public final class DatabaseConstants {
     public static final String TABLE_CREDIT_PAYMENTS = "credit_card_payments";
     public static final String STATUS_PENDING = "PENDING";
     public static final String STATUS_APPROVED = "APPROVED";
-    public static final int DB_VERSION = 5;
+    public static final String STATUS_UNRECOGNIZED = "UNRECOGNIZED";
+    public static final int DB_VERSION = 6;
 }

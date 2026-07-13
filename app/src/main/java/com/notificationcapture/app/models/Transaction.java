@@ -9,8 +9,8 @@ import com.notificationcapture.app.utils.MoneyTextWatcher;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.UUID;
 import java.util.Objects;
+import java.util.UUID;
 
 public abstract class Transaction implements Serializable {
     private String id;
@@ -21,7 +21,8 @@ public abstract class Transaction implements Serializable {
     private BigDecimal amount;
     private IngresoOEgreso type;
     private String categoryId;
-    private Category category; // Mantener para migración de datos viejos
+    private String sourcePackageName;
+    private Category category;
     private boolean expanded = false;
     private boolean isNotification;
 
@@ -34,12 +35,9 @@ public abstract class Transaction implements Serializable {
         this.amount = extractAmount(title, text);
         this.type = detectTransactionType(title, text);
         this.isNotification = isNotification;
-        // Asignar ID por defecto de "Otros" según el tipo detectado
         this.categoryId = (this.type == IngresoOEgreso.INGRESO) ? "other_income" : "other_outcome";
-        // necesario
     }
 
-    // Constructor con tipo y categoría explícitos (para formulario manual)
     public Transaction(PaymentMethod paymentMethod, String title, String text, long timestamp,
             IngresoOEgreso type, String categoryId, boolean isNotification) {
         this.id = generateId();
@@ -115,7 +113,6 @@ public abstract class Transaction implements Serializable {
 
     public String getCategoryId() {
         if (categoryId == null && category != null) {
-            // Migración: si no hay ID pero hay objeto, devolver el ID del objeto
             return category.getId();
         }
         return categoryId;
@@ -123,7 +120,15 @@ public abstract class Transaction implements Serializable {
 
     public void setCategoryId(String categoryId) {
         this.categoryId = categoryId;
-        this.category = null; // Limpiar objeto viejo al asignar nuevo ID
+        this.category = null;
+    }
+
+    public String getSourcePackageName() {
+        return sourcePackageName;
+    }
+
+    public void setSourcePackageName(String sourcePackageName) {
+        this.sourcePackageName = sourcePackageName;
     }
 
     public boolean isExpanded() {
@@ -146,11 +151,6 @@ public abstract class Transaction implements Serializable {
         if (amount == null) {
             return null;
         }
-
-        return formatAmount(amount);
-    }
-
-    private String formatAmount(java.math.BigDecimal amount) {
         return "$" + MoneyTextWatcher.format(amount);
     }
 

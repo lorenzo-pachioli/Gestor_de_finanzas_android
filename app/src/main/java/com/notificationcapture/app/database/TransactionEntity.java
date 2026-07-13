@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
-import com.notificationcapture.app.constants.DatabaseConstants;
 import com.notificationcapture.app.enums.IngresoOEgreso;
 import com.notificationcapture.app.enums.PaymentMethod;
 import java.math.BigDecimal;
@@ -26,6 +25,7 @@ public class TransactionEntity {
     private String categoryId;
     private boolean isNotification; // UI flag only
     private String status; // Logical state (PENDING/APPROVED)
+    public static final String STATUS_UNRECOGNIZED = "UNRECOGNIZED";
     
     private boolean expanded;
     
@@ -35,6 +35,7 @@ public class TransactionEntity {
     private int currentInstallment;
     private String installmentGroupId;
     private String walletId;
+    private String sourcePackageName;
     
     private String rawNotification;
 
@@ -102,6 +103,9 @@ public class TransactionEntity {
 
     public String getWalletId() { return walletId; }
     public void setWalletId(String walletId) { this.walletId = walletId; }
+
+    public String getSourcePackageName() { return sourcePackageName; }
+    public void setSourcePackageName(String sourcePackageName) { this.sourcePackageName = sourcePackageName; }
 
     public String getRawNotification() { return rawNotification; }
     public void setRawNotification(String rawNotification) { this.rawNotification = rawNotification; }

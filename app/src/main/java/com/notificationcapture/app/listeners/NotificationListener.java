@@ -15,7 +15,9 @@ import com.notificationcapture.app.repositories.TransactionRepository;
 import com.notificationcapture.app.repositories.WalletRepository;
 import com.notificationcapture.app.services.ServiceProvider;
 import com.notificationcapture.app.utils.AppLogger;
+import com.notificationcapture.app.utils.StringParser;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,17 +55,29 @@ public class NotificationListener extends NotificationListenerService {
                 : "";
 
         List<Wallets> userWallets = walletsRepository.getAllWallets();
+        boolean isKnownWallet = false;
         try {
-            if (!ServiceProvider.getInstance()
+            isKnownWallet = ServiceProvider.getInstance()
                     .getNotificationParserService()
-                    .isPaymentNotification(packageName, title, text, userWallets)) {
-                return;
-            }
+                    .isPaymentNotification(packageName, title, text, userWallets);
         } catch (ParserException e) {
             AppLogger.d("NotificationListener", "Filtro skipping: " + e.getMessage());
+            isKnownWallet = false;
+        }
+
+        if (isKnownWallet) {
+            saveKnownWalletNotification(sbn, packageName, title, text);
             return;
         }
 
+        if (!isUnrecognizedPaymentCandidate(packageName, title, text)) {
+            return;
+        }
+
+        saveUnrecognizedNotification(sbn, packageName, title, text);
+    }
+
+    private void saveKnownWalletNotification(StatusBarNotification sbn, String packageName, String title, String text) {
         long timestamp = sbn.getPostTime();
 
         ioExecutor.execute(() -> {
@@ -76,12 +90,49 @@ public class NotificationListener extends NotificationListenerService {
                     timestamp,
                     wallet != null ? wallet.getId() : "1",
                     true);
+            item.setSourcePackageName(packageName);
 
             repository.saveTransactionNotFiltered(item);
 
             Intent intent = new Intent(NotificationConstants.ACTION_NEW_NOTIFICATION);
             sendBroadcast(intent);
         });
+    }
+
+    private void saveUnrecognizedNotification(StatusBarNotification sbn, String packageName, String title, String text) {
+        long timestamp = sbn.getPostTime();
+
+        ioExecutor.execute(() -> {
+            Debit item = new Debit(
+                    title != null ? title : "Sin título",
+                    text,
+                    timestamp,
+                    (String) null,
+                    true);
+            item.setSourcePackageName(packageName);
+
+            BigDecimal amount = StringParser.extractAmount(title, text);
+            item.setAmount(amount);
+            item.setType(StringParser.detectTransactionType(title, text));
+
+            repository.saveUnrecognizedTransaction(item);
+
+            Intent intent = new Intent(NotificationConstants.ACTION_NEW_NOTIFICATION);
+            sendBroadcast(intent);
+        });
+    }
+
+    private boolean isUnrecognizedPaymentCandidate(String packageName, String title, String text) {
+        if (packageName == null) return false;
+        if (packageName.equals(getPackageName())) return false;
+
+        String fullText = ((title != null ? title : "") + " " + (text != null ? text : "")).toLowerCase();
+        if (!ServiceProvider.getInstance().getNotificationParserService().hasPaymentKeyword(title, text)) {
+            return false;
+        }
+
+        BigDecimal amount = StringParser.extractAmount(title, text);
+        return amount != null && amount.compareTo(BigDecimal.ZERO) > 0;
     }
 
     @Override

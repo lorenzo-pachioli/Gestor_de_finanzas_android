@@ -19,8 +19,7 @@ public class HistorialViewModel extends AndroidViewModel {
     public HistorialViewModel(@NonNull Application application) {
         super(application);
         repository = RepositoryProvider.getInstance().getTransactionRepository();
-        // Hook up directly to the reactive LiveData from Room
-        pendingTransactions = repository.getAllTransactionNotFilteredLiveData();
+        pendingTransactions = repository.getAllPendingAndUnrecognizedLiveData();
     }
 
     public LiveData<List<Transaction>> getPendingTransactions() {
@@ -29,6 +28,10 @@ public class HistorialViewModel extends AndroidViewModel {
 
     public void deleteTransaction(String id) {
         repository.deleteTransactionNotFiltered(id);
+    }
+
+    public void approveUnrecognized(String id) {
+        repository.moveTransactionToApproved(id);
     }
 
     public void moveTransactionToApproved(String id) {

@@ -235,6 +235,18 @@ public class TransactionRepository implements GsonAccess {
         });
     }
 
+    public void saveUnrecognizedTransaction(Transaction transaction) {
+        executor.execute(() -> {
+            try {
+                TransactionEntity entity = TransactionMapper.toEntity(transaction, TransactionEntity.STATUS_UNRECOGNIZED);
+                dao.insert(entity);
+                checkCleanup();
+            } catch (Exception e) {
+                AppLogger.e("TransactionRepository", "Error saving unrecognized transaction", e);
+            }
+        });
+    }
+
     public void saveTransactions(List<Transaction> transactions, RepositoryCallback<Void> callback) {
         executor.execute(() -> {
             try {
@@ -307,6 +319,13 @@ public class TransactionRepository implements GsonAccess {
                 TransactionMapper::fromEntityList);
     }
 
+    public LiveData<List<Transaction>> getAllPendingAndUnrecognizedLiveData() {
+        List<String> statuses = new ArrayList<>();
+        statuses.add(DatabaseConstants.STATUS_PENDING);
+        statuses.add(TransactionEntity.STATUS_UNRECOGNIZED);
+        return Transformations.map(dao.getByStatusesLiveData(statuses), TransactionMapper::fromEntityList);
+    }
+
     private List<Transaction> getByStatusBlocking(String status) {
         try {
             return executor.submit(() -> {
@@ -350,6 +369,15 @@ public class TransactionRepository implements GsonAccess {
 
     public void moveTransactionToApproved(String id) {
         executor.execute(() -> dao.updateStatus(id, DatabaseConstants.STATUS_APPROVED));
+    }
+
+    public void approveUnrecognizedTransaction(String id, String walletId) {
+        executor.execute(() -> {
+            dao.updateStatus(id, DatabaseConstants.STATUS_APPROVED);
+            if (walletId != null) {
+                dao.updateWalletId(id, walletId);
+            }
+        });
     }
 
     public void clearAllTransactionNotFiltered() {

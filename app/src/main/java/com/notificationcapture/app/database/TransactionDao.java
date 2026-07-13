@@ -30,6 +30,12 @@ public interface TransactionDao {
     @Query("UPDATE transactions SET status = :status WHERE id = :id")
     void updateStatus(String id, String status);
 
+    @Query("UPDATE transactions SET walletId = :walletId WHERE id = :id")
+    void updateWalletId(String id, String walletId);
+
+    @Query("SELECT * FROM transactions WHERE status IN (:statuses) ORDER BY timestamp DESC")
+    LiveData<List<TransactionEntity>> getByStatusesLiveData(List<String> statuses);
+
     @Query("SELECT * FROM transactions WHERE status = 'APPROVED' AND timestamp BETWEEN :start AND :end ORDER BY timestamp DESC")
     List<TransactionEntity> getByMonth(long start, long end);
 

@@ -140,6 +140,24 @@ public class WalletRepository implements GsonAccess {
         }
     }
 
+    public static String suggestNameFromPackage(String packageName) {
+        if (packageName == null || packageName.isEmpty()) return "Billetera";
+
+        java.util.Set<String> generic = new java.util.HashSet<>(
+                java.util.Arrays.asList("app", "android", "mobile", "com", "ar", "mx", "br", "co")
+        );
+
+        String[] parts = packageName.split("\\.");
+        for (int i = parts.length - 1; i >= 0; i--) {
+            String segment = parts[i].toLowerCase();
+            if (!generic.contains(segment) && segment.length() > 2) {
+                return segment.substring(0, 1).toUpperCase() + segment.substring(1);
+            }
+        }
+        String last = parts[parts.length - 1];
+        return last.substring(0, 1).toUpperCase() + last.substring(1);
+    }
+
     private void saveWallets(List<Wallets> wallets) {
         cachedWallets = new ArrayList<>(wallets); // Sync memory cache
         prefs.edit().putString(KEY_WALLETS, gson.toJson(wallets)).apply();

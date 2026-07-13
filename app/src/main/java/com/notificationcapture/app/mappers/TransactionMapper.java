@@ -35,6 +35,7 @@ public class TransactionMapper {
         );
         e.setExpanded(t.isExpanded());
         e.setRawNotification(t.getText()); // Defaulting text as raw
+        e.setSourcePackageName(t.getSourcePackageName());
 
         if (t instanceof Credit) {
             Credit c = (Credit) t;
@@ -80,6 +81,7 @@ public class TransactionMapper {
         t.setType(e.getType());
         t.setCategoryId(e.getCategoryId());
         t.setExpanded(e.isExpanded());
+        t.setSourcePackageName(e.getSourcePackageName());
         return t;
     }
 
