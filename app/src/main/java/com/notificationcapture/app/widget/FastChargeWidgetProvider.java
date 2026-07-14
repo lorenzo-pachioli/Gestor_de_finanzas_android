@@ -18,31 +18,58 @@ import com.notificationcapture.app.views.FastChargeActivity;
 
 public class FastChargeWidgetProvider extends AppWidgetProvider {
 
+    private static final String EXTRA_NIGHT_MODE_OVERRIDE = "night_mode_override";
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (AppWidgetManager.ACTION_APPWIDGET_UPDATE.equals(intent.getAction())) {
+            // Si el Intent trae un override de modo oscuro (enviado desde PerfilFragment),
+            // lo usamos directamente sin leer del disco (evita race condition con .apply())
+            int nightModeOverride = intent.getIntExtra(EXTRA_NIGHT_MODE_OVERRIDE, -1);
+            int[] ids = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS);
+            if (ids != null && ids.length > 0) {
+                AppWidgetManager mgr = AppWidgetManager.getInstance(context);
+                for (int id : ids) {
+                    updateAppWidget(context, mgr, id, nightModeOverride);
+                }
+                return;
+            }
+        }
+        super.onReceive(context, intent);
+    }
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId);
+            updateAppWidget(context, appWidgetManager, appWidgetId, -1);
         }
     }
 
     @Override
     public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
-        updateAppWidget(context, appWidgetManager, appWidgetId);
+        updateAppWidget(context, appWidgetManager, appWidgetId, -1);
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
     }
 
-    public static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
-        SecurityPreferencesManager prefsManager = new SecurityPreferencesManager(context);
-        int nightMode = prefsManager.getNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-
+    public static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, int nightModeOverride) {
         boolean isDarkMode;
-        if (nightMode == AppCompatDelegate.MODE_NIGHT_YES) {
+
+        if (nightModeOverride == AppCompatDelegate.MODE_NIGHT_YES) {
             isDarkMode = true;
-        } else if (nightMode == AppCompatDelegate.MODE_NIGHT_NO) {
+        } else if (nightModeOverride == AppCompatDelegate.MODE_NIGHT_NO) {
             isDarkMode = false;
         } else {
-            int currentNightMode = context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-            isDarkMode = (currentNightMode == Configuration.UI_MODE_NIGHT_YES);
+            // Fallback: leer de las preferencias (para updates periódicos del sistema)
+            SecurityPreferencesManager prefsManager = new SecurityPreferencesManager(context);
+            int nightMode = prefsManager.getNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+            if (nightMode == AppCompatDelegate.MODE_NIGHT_YES) {
+                isDarkMode = true;
+            } else if (nightMode == AppCompatDelegate.MODE_NIGHT_NO) {
+                isDarkMode = false;
+            } else {
+                int currentNightMode = context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+                isDarkMode = (currentNightMode == Configuration.UI_MODE_NIGHT_YES);
+            }
         }
 
         Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
@@ -80,7 +107,6 @@ public class FastChargeWidgetProvider extends AppWidgetProvider {
                     mainIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
-            // widget_logo solo existe en el layout grande (widget_fast_charge / dark)
             if (minWidth == 0 || minWidth >= 180) {
                 views.setOnClickPendingIntent(R.id.widget_logo, mainPendingIntent);
             }

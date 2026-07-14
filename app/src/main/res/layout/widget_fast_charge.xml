@@ -1,52 +1,86 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- app/src/main/res/layout/widget_fast_charge.xml -->
+<!--
+    LIGHT MODE — Full widget.
+    Root is fully transparent so the wallpaper shows through.
+    The inner button row gets the neomorphism drawable.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
+    android:background="@android:color/transparent"
     android:weightSum="10">
 
+    <!-- Top spacer — transparent, wallpaper visible -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2" />
+        android:layout_weight="2"
+        android:background="@android:color/transparent" />
 
+    <!--
+        Button row: neomorphism frosted-glass card.
+        Uses bg_widget_button_light.xml for the border + shadow effect.
+    -->
     <LinearLayout
         android:id="@+id/widget_root"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="6"
-        android:background="@drawable/bg_spinner_field"
+        android:layout_marginHorizontal="8dp"
+        android:background="@drawable/bg_widget_button_light"
         android:gravity="center"
         android:orientation="horizontal"
-        android:padding="@dimen/space_4dp">
+        android:padding="6dp">
 
+        <!-- Logo tap area (navigates to MainActivity) -->
         <ImageView
             android:id="@+id/widget_logo"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:src="@drawable/fluxus_logo"
-            android:padding="@dimen/space_4dp"
+            android:padding="6dp"
             android:adjustViewBounds="true" />
 
-        <TextView
-            android:id="@+id/widget_text"
+        <!-- Divider between logo and label -->
+        <FrameLayout
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:background="#3000A896"
+            android:layout_marginHorizontal="4dp" />
+
+        <!-- "Crear" label with a subtle pill background to emphasize it's tappable -->
+        <FrameLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="2"
-            android:text="@string/create_short"
-            android:textColor="@color/text_primary"
-            android:textSize="@dimen/text_20sp"
-            android:textStyle="bold"
-            android:gravity="center" />
+            android:padding="6dp">
+
+            <TextView
+                android:id="@+id/widget_text"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="@string/crear"
+                android:textColor="#CC00A896"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:background="@drawable/bg_widget_create_pill_light" />
+
+        </FrameLayout>
+
     </LinearLayout>
 
+    <!-- Bottom spacer -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2" />
+        android:layout_weight="2"
+        android:background="@android:color/transparent" />
 
 </LinearLayout>
-
-

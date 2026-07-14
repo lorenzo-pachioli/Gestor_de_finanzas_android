@@ -13,3 +13,14 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Apk y archivos de compilación
+*.apk
+*.dm
+
+# Llaves de firma (por seguridad)
+*.jks
+*.keystore
+
+# Ignorar metadatos de compilación
+output-metadata.json

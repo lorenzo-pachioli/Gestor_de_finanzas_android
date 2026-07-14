@@ -71,6 +71,16 @@ public class PerfilFragment extends Fragment {
             int mode = isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO;
             settingsViewModel.setNightMode(mode);
             prefsManager.saveNightMode(mode);
+
+            // Pasar el modo directamente como extra para evitar race condition
+            // con el EncryptedSharedPreferences que escribe de forma asíncrona
+            android.content.Intent intent = new android.content.Intent(requireContext(), com.notificationcapture.app.widget.FastChargeWidgetProvider.class);
+            intent.setAction(android.appwidget.AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            intent.putExtra("night_mode_override", mode);
+            int[] ids = android.appwidget.AppWidgetManager.getInstance(requireContext())
+                    .getAppWidgetIds(new android.content.ComponentName(requireContext(), com.notificationcapture.app.widget.FastChargeWidgetProvider.class));
+            intent.putExtra(android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
+            requireContext().sendBroadcast(intent);
         });
 
         // Setup Language Switch

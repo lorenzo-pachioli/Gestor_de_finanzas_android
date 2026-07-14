@@ -12,7 +12,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import com.notificationcapture.app.constants.DatabaseConstants;
 
 
-@Database(entities = {TransactionEntity.class, CreditCardPaymentEntity.class}, version = DatabaseConstants.DB_VERSION, exportSchema = true)
+@Database(entities = {TransactionEntity.class, CreditCardPaymentEntity.class}, version = DatabaseConstants.DB_VERSION, exportSchema = false)
 @TypeConverters({Converters.class})
 public abstract class AppDatabase extends RoomDatabase {
 

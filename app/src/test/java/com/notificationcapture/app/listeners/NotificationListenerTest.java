@@ -21,9 +21,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.notificationcapture.app.repositories.WalletRepository;
 import com.notificationcapture.app.models.Wallets;
 import com.notificationcapture.app.exceptions.*;
+import com.notificationcapture.app.services.NotificationParserService;
+import com.notificationcapture.app.services.ServiceProvider;
 
 import static org.junit.Assert.*;
 
@@ -37,7 +38,7 @@ import static org.junit.Assert.*;
 @Config(manifest = Config.NONE) // No requiere manifest real para este test tan ligero
 public class NotificationListenerTest {
 
-    private NotificationListener listener;
+    private NotificationParserService parserService;
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_GREEN = "\u001B[32m";
@@ -63,18 +64,15 @@ public class NotificationListenerTest {
 
     @Before
     public void setUp() throws Exception {
-        listener = new NotificationListener();
-
         // 1. Crear un contexto en Runtime falso de Robolectric
         Context context = RuntimeEnvironment.getApplication();
         
         // 2. Inicializar Singletons globales (necesarios para evitar IllegalStateException)
         com.notificationcapture.app.utils.ConfigManager.init(context);
         com.notificationcapture.app.repositories.RepositoryProvider.initialize(context);
+        ServiceProvider.resetForTesting();
 
-        // 3. Setear las variables globales que el NotificationListener obtiene internamente en su onCreate()
-        // 3a. Cargar keywords reales desde el ConfigManager de producción (vía assets de Robolectric)
-        // Esto garantiza que el test valide exactamente la misma lógica que corre en el dispositivo.
+        // 3. Setear las variables globales que el parser obtiene internamente
         com.notificationcapture.app.utils.ConfigManager config = com.notificationcapture.app.utils.ConfigManager.getInstance();
 
         List<String> rawKeywords = config.getPaymentKeywords();
@@ -83,38 +81,20 @@ public class NotificationListenerTest {
                 "Verificar que Robolectric puede acceder a src/main/assets/config/",
                 rawKeywords.isEmpty()
         );
-        Set<String> productionKeywords = new HashSet<>();
-        for (String kw : rawKeywords) {
-            productionKeywords.add(kw.toLowerCase());
-        }
 
-        // 3b. Cargar wallets globales desde el ConfigManager (raw resource wallets_global.json)
+        parserService = ServiceProvider.getInstance().getNotificationParserService();
+
+        // Fallback: Robolectric no pudo cargar el raw resource con Config.NONE
+        // En este caso se mantiene el set mínimo necesario para los casos del mock JSON
         List<com.notificationcapture.app.models.GlobalWallet> globalWalletsList = config.getGlobalWallets();
-        Set<String> productionGlobalWallets = new HashSet<>();
-        if (!globalWalletsList.isEmpty()) {
-            for (com.notificationcapture.app.models.GlobalWallet w : globalWalletsList) {
-                productionGlobalWallets.addAll(w.getPackageNames());
-            }
-        } else {
-            // Fallback: Robolectric no pudo cargar el raw resource con Config.NONE
-            // En este caso se mantiene el set mínimo necesario para los casos del mock JSON
-            productionGlobalWallets.addAll(Arrays.asList(
+        if (globalWalletsList.isEmpty()) {
+            Set<String> fallbackWallets = new HashSet<>(Arrays.asList(
                     "com.mercadopago.wallet",
                     "com.uala.app",
                     "brubank.app"
             ));
+            setPrivateField(parserService, "globalWalletPackages", fallbackWallets);
         }
-
-        // 4. Inicializar el repositorio real de forma local
-        WalletRepository walletRepository = new WalletRepository(context);
-        // Creamos y guardamos una custom wallet configurada por el "usuario"
-        walletRepository.addWallet(new Wallets("Mi Custom Wallet", "com.custom.wallet"));
-
-        // 5. Inyectar las variables privadas directas por reflection
-        // Esto evita tener que ejecutar el .onCreate() del Service de Android que acopla instancias como Database y ConfigManager globales
-        setPrivateField(listener, "globalWalletPackagesSet", productionGlobalWallets);
-        setPrivateField(listener, "keywordSet", productionKeywords);
-        setPrivateField(listener, "walletsRepository", walletRepository);
     }
 
     private void setPrivateField(Object object, String fieldName, Object value) throws Exception {
@@ -139,6 +119,9 @@ public class NotificationListenerTest {
             e.printStackTrace();
         }
         
+        // Custom wallets expected by test
+        List<Wallets> userWallets = new ArrayList<>();
+        userWallets.add(new Wallets("Mi Custom Wallet", "com.custom.wallet"));
 
         // EVALUACIÓN ITERATIVA DEL ARRAY
         System.out.println("\n");
@@ -150,7 +133,7 @@ public class NotificationListenerTest {
             
             boolean result;
             try {
-                result = listener.isPaymentRelatedNotification(mock.packageName, mock.title, mock.text);
+                result = parserService.isPaymentNotification(mock.packageName, mock.title, mock.text, userWallets);
             } catch (ParserException e) {
                 // Si lanzamos una excepción de parseo, lo consideramos false en el resultado final de captura
                 result = false;
@@ -170,5 +153,6 @@ public class NotificationListenerTest {
         System.out.println("\n");
     }
 }
+
 
 

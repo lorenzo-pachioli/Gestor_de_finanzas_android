@@ -60,7 +60,8 @@
                 app:layout_constraintEnd_toStartOf="@+id/tvCategoryAmount"
                 app:layout_constraintStart_toEndOf="@+id/viewLeftBorder"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="@string/category_example" />
+                tools:text="@string/category_example"
+                tools:ignore="NotSibling" />
 
             <LinearLayout
                 android:id="@+id/amountContainer"

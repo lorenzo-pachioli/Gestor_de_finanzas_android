@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Sombra del botón sobre el fondo del widget -->
+    <item android:left="0dp" android:top="2dp" android:right="0dp" android:bottom="0dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="#40000000" />
+        </shape>
+    </item>
+    <!-- Fill oscuro igual que background_card dark -->
+    <item android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="#1E293B" />
+        </shape>
+    </item>
+</layer-list>
