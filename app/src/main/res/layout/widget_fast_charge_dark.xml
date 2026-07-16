@@ -29,7 +29,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="6"
-        android:layout_marginHorizontal="8dp"
         android:background="@drawable/bg_widget_button_dark"
         android:gravity="center"
         android:orientation="horizontal"

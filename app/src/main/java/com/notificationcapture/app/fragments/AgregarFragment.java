@@ -18,6 +18,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -134,8 +138,16 @@ public class AgregarFragment extends Fragment {
         etDate.setOnClickListener(v -> showDatePicker());
         btnCreate.setOnClickListener(v -> createNotification());
 
-        view.setPadding(view.getPaddingLeft(), view.getPaddingTop(), view.getPaddingRight(),
-                0);
+        // Aplicar paddingBottom dinámico según la barra de navegación real del dispositivo.
+        // Antes era un setPadding(..., 0) fijo que ignoraba el nav bar en dispositivos físicos.
+        int bottomNavHeight = getResources().getDimensionPixelSize(R.dimen.size_60dp);
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(),
+                    bottomNavHeight + systemBars.bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(view);
     }
 
     private void updateToggleUI(boolean isEgreso) {

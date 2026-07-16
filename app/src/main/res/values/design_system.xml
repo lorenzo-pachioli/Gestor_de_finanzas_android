@@ -63,6 +63,8 @@
     <dimen name="text_36sp">36sp</dimen>
     <dimen name="text_44sp">44sp</dimen>
     <dimen name="text_56sp">56sp</dimen>
+    <dimen name="text_44dp">44dp</dimen>
+    <dimen name="text_56dp">56dp</dimen>
 
     <!-- Elevaciones y trazos -->
     <dimen name="stroke_2dp">2dp</dimen>

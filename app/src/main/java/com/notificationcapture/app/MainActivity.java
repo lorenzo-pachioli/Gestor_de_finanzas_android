@@ -4,14 +4,20 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.RelativeLayout;
 
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
@@ -34,11 +40,17 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigation;
     private CardView fabAdd;
     private ViewPager2 viewPager;
+    private View topBar;
     private SettingsViewModel settingsViewModel;
     private SecurityPreferencesManager prefsManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Habilitar edge-to-edge ANTES de setContentView para que el contenido
+        // se dibuje detrás de las barras del sistema (status bar + nav bar).
+        // Sin esto, en dispositivos físicos modernos el nav bar tapa el contenido.
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
         super.onCreate(savedInstanceState);
 
         // Inicializar Gestor de Preferencias Seguro y ViewModel
@@ -61,15 +73,22 @@ public class MainActivity extends AppCompatActivity {
             savedLanguage = resolveDefaultLanguage();
             prefsManager.saveLanguage(savedLanguage);
         }
-        
+
         settingsViewModel.setNightMode(nightMode);
         settingsViewModel.setLanguage(savedLanguage);
 
         setContentView(R.layout.activity_main);
 
+        topBar = findViewById(R.id.topBar);
         bottomNavigation = findViewById(R.id.bottomNavigationView);
         fabAdd = findViewById(R.id.fabAdd);
         viewPager = findViewById(R.id.viewPager);
+
+        // Aplicar insets del sistema a las vistas fijas de la Activity.
+        // Esto reemplaza los valores hardcodeados que funcionaban en el emulador
+        // pero fallaban en el dispositivo físico por diferencias en la altura
+        // de la barra de navegación (gestos vs. botones, distintos fabricantes).
+        applyWindowInsets();
 
         // Configurar ViewPager2 con el adaptador
         ViewPagerAdapter adapter = new ViewPagerAdapter(this);
@@ -121,9 +140,47 @@ public class MainActivity extends AppCompatActivity {
             viewPager.setCurrentItem(0, false); // InicioFragment, sin animación
             bottomNavigation.setSelectedItemId(R.id.nav_home);
         }
+    }
 
-        // Disparar después de que todo el setup del ViewPager esté completo
-        // com.notificationcapture.app.ads.AdManager.getInstance(this).maybeShowAd(this, null);
+    /**
+     * Registra un listener de Window Insets sobre el decor view para reposicionar
+     * las vistas fijas (topBar, bottomNavigation, fabAdd) según la altura real de
+     * las barras del sistema en cada dispositivo.
+     *
+     * Al retornar los insets sin consumirlos, el sistema continúa dispatching hacia
+     * los fragments dentro del ViewPager2, donde cada vista scrolleable aplica su
+     * propio paddingBottom dinámico.
+     */
+    private void applyWindowInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(getWindow().getDecorView(), (v, windowInsets) -> {
+            Insets systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            // --- TopBar: empujar el bar entero DEBAJO del status bar con marginTop.
+            // Usar paddingTop + altura expandida causaba que el ivLogo (match_parent)
+            // quedara renderizado desde y=0 y el status bar tapara el logo.
+            // Con marginTop el topBar mantiene su altura original (28dp) y baja
+            // limpiamente; el ViewPager (layout_below topBar) se ajusta solo.
+            RelativeLayout.LayoutParams topBarLp = (RelativeLayout.LayoutParams) topBar.getLayoutParams();
+            topBarLp.topMargin = systemBars.top;
+            topBar.setLayoutParams(topBarLp);
+
+            // --- BottomNav: extenderse hacia abajo de la barra de gestos/navegación ---
+            // El fondo del BottomNavigationView cubre el área del nav bar;
+            // el padding interno empuja los ítems hacia arriba, fuera del área de gestos.
+            bottomNavigation.setPadding(0, 0, 0, systemBars.bottom);
+            ViewGroup.LayoutParams bnLp = bottomNavigation.getLayoutParams();
+            bnLp.height = getResources().getDimensionPixelSize(R.dimen.size_60dp) + systemBars.bottom;
+            bottomNavigation.setLayoutParams(bnLp);
+
+            // --- FAB: subir para quedar visible sobre la barra de navegación ---
+            RelativeLayout.LayoutParams fabLp = (RelativeLayout.LayoutParams) fabAdd.getLayoutParams();
+            fabLp.bottomMargin = systemBars.bottom
+                    + getResources().getDimensionPixelSize(R.dimen.space_32dp);
+            fabAdd.setLayoutParams(fabLp);
+
+            // No consumir: los insets siguen propagándose a los fragments
+            return windowInsets;
+        });
     }
 
     /**

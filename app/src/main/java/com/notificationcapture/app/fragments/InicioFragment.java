@@ -29,6 +29,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 public class InicioFragment extends Fragment {
 
@@ -86,6 +89,17 @@ public class InicioFragment extends Fragment {
             viewModel.deleteTransaction(item.getId());
         }, null, false);
         recyclerView.setAdapter(adapter);
+        // Ajustar paddingBottom de forma dinámica según la barra de navegación real
+        // del dispositivo. Reemplaza el valor hardcodeado del XML que funcionaba en
+        // el emulador pero fallaba en dispositivos físicos con gestos o nav bar distintos.
+        int bottomNavHeight = getResources().getDimensionPixelSize(R.dimen.size_60dp);
+        ViewCompat.setOnApplyWindowInsetsListener(recyclerView, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(),
+                    bottomNavHeight + systemBars.bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(recyclerView);
 
         tvMonthTitle.setText(getString(R.string.resumen_de, getMonthName()));
 

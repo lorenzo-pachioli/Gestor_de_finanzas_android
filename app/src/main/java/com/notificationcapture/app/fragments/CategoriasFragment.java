@@ -39,6 +39,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 public class CategoriasFragment extends Fragment {
 
@@ -103,6 +106,17 @@ public class CategoriasFragment extends Fragment {
         tabLayout = view.findViewById(R.id.tabLayout);
 
         recyclerCategories.setLayoutManager(new LinearLayoutManager(getContext()));
+        // Ajustar paddingBottom de forma dinámica según la barra de navegación real
+        // del dispositivo. Reemplaza el valor hardcodeado del XML que funcionaba en
+        // el emulador pero fallaba en dispositivos físicos con gestos o nav bar distintos.
+        int bottomNavHeight = getResources().getDimensionPixelSize(R.dimen.size_60dp);
+        ViewCompat.setOnApplyWindowInsetsListener(recyclerCategories, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(),
+                    bottomNavHeight + systemBars.bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(recyclerCategories);
         setupTabLayout();
     }
 

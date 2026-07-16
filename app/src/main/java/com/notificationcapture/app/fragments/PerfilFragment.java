@@ -23,6 +23,9 @@ import com.notificationcapture.app.utils.CustomLanguageSwitch;
 import com.notificationcapture.app.utils.LocaleUtils;
 import com.notificationcapture.app.utils.SecurityPreferencesManager;
 import com.notificationcapture.app.viewmodels.SettingsViewModel;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 public class PerfilFragment extends Fragment {
 
@@ -46,6 +49,17 @@ public class PerfilFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         layoutSettingsMenu = view.findViewById(R.id.layoutSettingsMenu);
+        // Ajustar paddingBottom de forma dinámica según la barra de navegación real
+        // del dispositivo. Reemplaza el valor hardcodeado del XML que funcionaba en
+        // el emulador pero fallaba en dispositivos físicos con gestos o nav bar distintos.
+        int bottomNavHeight = getResources().getDimensionPixelSize(R.dimen.size_60dp);
+        ViewCompat.setOnApplyWindowInsetsListener(layoutSettingsMenu, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(),
+                    bottomNavHeight + systemBars.bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(layoutSettingsMenu);
         settingsDetailContainer = view.findViewById(R.id.settingsDetailContainer);
         swDarkMode = view.findViewById(R.id.switchDarkMode);
         swLanguage = view.findViewById(R.id.swLanguage);

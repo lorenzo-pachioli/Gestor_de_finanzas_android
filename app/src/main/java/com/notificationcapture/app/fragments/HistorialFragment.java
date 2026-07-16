@@ -22,6 +22,9 @@ import com.notificationcapture.app.enums.DialogType;
 import com.notificationcapture.app.viewmodels.HistorialViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import android.content.Intent;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 public class HistorialFragment extends Fragment {
 
@@ -71,6 +74,17 @@ public class HistorialFragment extends Fragment {
         checkNotificationPermission();
 
         recyclerView.setAdapter(adapter);
+        // Ajustar paddingBottom de forma dinámica según la barra de navegación real
+        // del dispositivo. Reemplaza el valor hardcodeado del XML que funcionaba en
+        // el emulador pero fallaba en dispositivos físicos con gestos o nav bar distintos.
+        int bottomNavHeight = getResources().getDimensionPixelSize(R.dimen.size_60dp);
+        ViewCompat.setOnApplyWindowInsetsListener(recyclerView, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(),
+                    bottomNavHeight + systemBars.bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(recyclerView);
         btnEnableAccess.setOnClickListener(v -> showPermissionDialog());
 
         Button btnClearAll = view.findViewById(R.id.btnClearAll);
